@@ -1,13 +1,13 @@
-// Mapa país → moneda para las 5 monedas manuales de 01-CONTEXTO-NEGOCIO.md /
-// 03-ARQUITECTURA-TECNICA.md. Cualquier otro país cae a USD y Adaptive Pricing de Stripe
-// resuelve la conversión en el Checkout (mismo fallback que M8 usará en el middleware de
-// geolocalización).
+// Mapa país → moneda para las 6 monedas manuales de 01-CONTEXTO-NEGOCIO.md /
+// 03-ARQUITECTURA-TECNICA.md (BRL agregado en M8, agosto 2026). Cualquier otro país cae a
+// USD y Adaptive Pricing de Stripe resuelve la conversión en el Checkout.
 export const COUNTRY_CURRENCY: Record<string, string> = {
   MX: "MXN",
   CO: "COP",
   CL: "CLP",
   PE: "PEN",
   AR: "ARS",
+  BR: "BRL",
 };
 
 export const SUPPORTED_COUNTRIES = [
@@ -16,6 +16,7 @@ export const SUPPORTED_COUNTRIES = [
   { code: "CL", name: "Chile" },
   { code: "PE", name: "Perú" },
   { code: "AR", name: "Argentina" },
+  { code: "BR", name: "Brasil" },
 ] as const;
 
 export function currencyForCountry(countryCode: string): string {
