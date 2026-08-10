@@ -119,6 +119,42 @@ export type Database = {
           },
         ]
       }
+      client_competitors: {
+        Row: {
+          client_id: string | null
+          competitor_client_id: string | null
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          client_id?: string | null
+          competitor_client_id?: string | null
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          client_id?: string | null
+          competitor_client_id?: string | null
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_competitors_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_competitors_competitor_client_id_fkey"
+            columns: ["competitor_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           business_name: string
