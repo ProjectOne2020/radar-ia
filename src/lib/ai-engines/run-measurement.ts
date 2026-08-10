@@ -106,13 +106,13 @@ export async function runMeasurementForPromptSet(promptSetId: string): Promise<M
     }
 
     let citationCount = 0;
-    for (const citedUrl of outcome.citedUrls) {
-      const domain = extractDomain(citedUrl);
+    for (const citation of outcome.citations) {
+      const domain = citation.domainHint ?? extractDomain(citation.url);
       if (!domain) continue;
 
       const { error: citationError } = await admin.from("citations").insert({
         tracking_run_id: trackingRun.id,
-        cited_url: citedUrl,
+        cited_url: citation.url,
         cited_domain: domain,
         is_client_domain: isClientDomain(domain, clientDomains),
         is_directory: isDirectoryDomain(domain, directorySources ?? []),

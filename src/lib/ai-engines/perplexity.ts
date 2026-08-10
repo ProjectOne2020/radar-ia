@@ -25,7 +25,8 @@ export async function runPerplexity(promptText: string): Promise<EngineOutcome> 
 
   const data = await res.json();
   const raw: string = data.choices?.[0]?.message?.content ?? "";
-  const citedUrls: string[] = Array.isArray(data.citations) ? data.citations : [];
+  const rawCitations: string[] = Array.isArray(data.citations) ? data.citations : [];
+  const citations = rawCitations.map((url) => ({ url }));
 
-  return { engine: "perplexity", raw, citedUrls };
+  return { engine: "perplexity", raw, citations };
 }

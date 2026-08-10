@@ -39,14 +39,10 @@ export async function runOpenAI(promptText: string): Promise<EngineOutcome> {
   const textBlocks = message?.content?.filter((c) => c.type === "output_text") ?? [];
 
   const raw = textBlocks.map((b) => b.text ?? "").join("\n");
-  const citedUrls = Array.from(
-    new Set(
-      textBlocks
-        .flatMap((b) => b.annotations ?? [])
-        .filter((a) => a.type === "url_citation" && a.url)
-        .map((a) => a.url as string)
-    )
-  );
+  const citations = textBlocks
+    .flatMap((b) => b.annotations ?? [])
+    .filter((a) => a.type === "url_citation" && a.url)
+    .map((a) => ({ url: a.url as string }));
 
-  return { engine: "openai", raw, citedUrls };
+  return { engine: "openai", raw, citations };
 }

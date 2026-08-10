@@ -1,9 +1,8 @@
 import type { EngineOutcome } from "./types";
 
 // Anthropic Messages API con la herramienta de web search nativa.
-// NO PROBADO EN VIVO todavia — implementado siguiendo la documentacion oficial
-// (tool type "web_search_20250305"). Falta ANTHROPIC_API_KEY para verificar el shape
-// real de la respuesta (bloques de citas adjuntos a cada text block).
+// Usa Claude Haiku (el modelo mas barato disponible) por indicacion explicita del
+// fundador — este motor es medicion pura, no requiere el modelo mas capaz.
 export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { engine: "anthropic", reason: "ANTHROPIC_API_KEY no configurada" };
@@ -16,7 +15,7 @@ export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-5",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       messages: [{ role: "user", content: promptText }],
       tools: [{ type: "web_search_20250305", name: "web_search" }],
@@ -37,14 +36,10 @@ export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
   const textBlocks = blocks.filter((b) => b.type === "text");
 
   const raw = textBlocks.map((b) => b.text ?? "").join("\n");
-  const citedUrls = Array.from(
-    new Set(
-      textBlocks
-        .flatMap((b) => b.citations ?? [])
-        .filter((c) => c.url)
-        .map((c) => c.url as string)
-    )
-  );
+  const citations = textBlocks
+    .flatMap((b) => b.citations ?? [])
+    .filter((c) => c.url)
+    .map((c) => ({ url: c.url as string }));
 
-  return { engine: "anthropic", raw, citedUrls };
+  return { engine: "anthropic", raw, citations };
 }

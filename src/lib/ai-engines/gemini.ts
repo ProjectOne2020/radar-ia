@@ -27,11 +27,13 @@ export async function runGemini(promptText: string): Promise<EngineOutcome> {
   const raw: string =
     candidate?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("\n") ?? "";
 
-  const chunks: Array<{ web?: { uri?: string } }> =
+  // web.uri es un link de redirect de Vertex AI Search, no la URL real citada.
+  // web.title trae el dominio real (ej. "dentalia.com") — se usa como domainHint.
+  const chunks: Array<{ web?: { uri?: string; title?: string } }> =
     candidate?.groundingMetadata?.groundingChunks ?? [];
-  const citedUrls = Array.from(
-    new Set(chunks.map((c) => c.web?.uri).filter((u): u is string => Boolean(u)))
-  );
+  const citations = chunks
+    .filter((c): c is { web: { uri: string; title?: string } } => Boolean(c.web?.uri))
+    .map((c) => ({ url: c.web.uri, domainHint: c.web.title }));
 
-  return { engine: "gemini", raw, citedUrls };
+  return { engine: "gemini", raw, citations };
 }
