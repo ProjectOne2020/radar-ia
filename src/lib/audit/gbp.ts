@@ -121,10 +121,22 @@ export async function auditGoogleBusinessProfile({
     detail_locked: false,
   });
 
+  // Pilar 7 (reputación/reseñas) es distinto del pilar 2 (completitud de perfil) —
+  // 02-METODOLOGIA-SCORING.md los trata como pilares separados con pesos propios.
   if (place.rating !== undefined) {
+    const reviewCount = place.user_ratings_total ?? 0;
     findings.push({
-      pillar: 2,
-      finding: `Según datos públicos: rating ${place.rating} con ${place.user_ratings_total ?? 0} reseñas.`,
+      pillar: 7,
+      finding:
+        reviewCount > 0
+          ? `Según datos públicos, el negocio tiene reseñas públicas en Google (rating ${place.rating}).`
+          : "Según datos públicos, el negocio no tiene reseñas públicas en Google.",
+      severity: reviewCount > 0 ? "info" : "warning",
+      detail_locked: false,
+    });
+    findings.push({
+      pillar: 7,
+      finding: `Según datos públicos: rating ${place.rating} con ${reviewCount} reseñas en Google.`,
       severity: "info",
       detail_locked: true,
     });

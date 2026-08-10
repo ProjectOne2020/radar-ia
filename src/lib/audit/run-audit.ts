@@ -4,6 +4,7 @@ import { fetchRawHtml, extractJsonLd, auditSchema } from "./schema";
 import { auditNapConsistency } from "./nap";
 import { auditGoogleBusinessProfile } from "./gbp";
 import { auditBingIndexation } from "./bing-indexation";
+import { auditQuestionCoverage } from "./question-coverage";
 import type { AuditFindingDraft } from "./types";
 
 export interface AuditSummary {
@@ -18,9 +19,14 @@ export interface AuditSummary {
 export async function runAuditForClient(clientId: string): Promise<AuditSummary> {
   const admin = createAdminClient();
 
-  const [{ data: client, error: clientError }, { data: locations, error: locationsError }] = await Promise.all([
+  const [
+    { data: client, error: clientError },
+    { data: locations, error: locationsError },
+    { data: activePrompts, error: promptsError },
+  ] = await Promise.all([
     admin.from("clients").select("business_name").eq("id", clientId).single(),
     admin.from("locations").select("name, website_url, phone, address, city").eq("client_id", clientId),
+    admin.from("prompt_sets").select("prompt_text").eq("client_id", clientId).eq("active", true),
   ]);
 
   if (clientError || !client) {
@@ -28,6 +34,9 @@ export async function runAuditForClient(clientId: string): Promise<AuditSummary>
   }
   if (locationsError) {
     throw new Error(`No se pudieron leer las sedes del cliente ${clientId}: ${locationsError.message}`);
+  }
+  if (promptsError) {
+    throw new Error(`No se pudieron leer los prompts del cliente ${clientId}: ${promptsError.message}`);
   }
 
   const summary: AuditSummary = { clientId, locationsAudited: 0, findingsInserted: 0, errors: [] };
@@ -55,16 +64,25 @@ export async function runAuditForClient(clientId: string): Promise<AuditSummary>
       summary.errors.push(`robots.txt (${websiteUrl}): ${err instanceof Error ? err.message : String(err)}`);
     }
 
+    let fetchedHtml = { fetched: false, html: "" };
     try {
-      const { fetched, html } = await fetchRawHtml(websiteUrl);
-      allFindings.push(...auditSchema(html, fetched));
+      fetchedHtml = await fetchRawHtml(websiteUrl);
+      allFindings.push(...auditSchema(fetchedHtml.html, fetchedHtml.fetched));
 
-      if (fetched) {
-        const entities = extractJsonLd(html);
+      if (fetchedHtml.fetched) {
+        const entities = extractJsonLd(fetchedHtml.html);
         allFindings.push(...auditNapConsistency(entities, location));
       }
     } catch (err) {
       summary.errors.push(`schema/NAP (${websiteUrl}): ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    try {
+      allFindings.push(
+        ...(await auditQuestionCoverage(fetchedHtml.html, fetchedHtml.fetched, activePrompts ?? []))
+      );
+    } catch (err) {
+      summary.errors.push(`cobertura de preguntas (${websiteUrl}): ${err instanceof Error ? err.message : String(err)}`);
     }
 
     try {
