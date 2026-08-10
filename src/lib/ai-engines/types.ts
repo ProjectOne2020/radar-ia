@@ -1,4 +1,8 @@
-export type EngineName = "openai" | "anthropic" | "gemini" | "perplexity" | "bing_copilot";
+// bing_copilot deliberadamente NO esta aqui: la API de citas reales de Copilot (AI
+// Performance) no tiene acceso programatico (confirmado en vivo, agosto 2026) — el
+// producto mide el pilar 8 con 4 motores reales, no 5 forzados con una aproximacion.
+// La señal de indexacion de Bing vive en el pilar 3 (ver src/lib/audit/bing-indexation.ts).
+export type EngineName = "openai" | "anthropic" | "gemini" | "perplexity";
 
 export interface Citation {
   url: string;

@@ -3,7 +3,6 @@ import { runOpenAI } from "./openai";
 import { runAnthropic } from "./anthropic";
 import { runGemini } from "./gemini";
 import { runPerplexity } from "./perplexity";
-import { runBingCopilot } from "./bing";
 import { classifyMention } from "./classify";
 import { extractDomain, isClientDomain, isDirectoryDomain } from "./classify-domain";
 import { isSkipped, type EngineOutcome } from "./types";
@@ -18,7 +17,8 @@ export interface MeasurementSummary {
   >;
 }
 
-// M2 — corre un prompt_set contra los 5 motores, parsea, y persiste tracking_runs + citations.
+// M2 — corre un prompt_set contra los 4 motores reales del pilar 8, parsea, y persiste
+// tracking_runs + citations. bing_copilot NO participa aqui — ver ai-engines/types.ts.
 export async function runMeasurementForPromptSet(promptSetId: string): Promise<MeasurementSummary> {
   const admin = createAdminClient();
 
@@ -63,7 +63,6 @@ export async function runMeasurementForPromptSet(promptSetId: string): Promise<M
     runAnthropic(prompt.prompt_text),
     runGemini(prompt.prompt_text),
     runPerplexity(prompt.prompt_text),
-    runBingCopilot(),
   ]);
 
   const summary: MeasurementSummary = { promptSetId, promptText: prompt.prompt_text, results: [] };

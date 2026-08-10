@@ -3,6 +3,7 @@ import { auditRobotsTxt } from "./robots";
 import { fetchRawHtml, extractJsonLd, auditSchema } from "./schema";
 import { auditNapConsistency } from "./nap";
 import { auditGoogleBusinessProfile } from "./gbp";
+import { auditBingIndexation } from "./bing-indexation";
 import type { AuditFindingDraft } from "./types";
 
 export interface AuditSummary {
@@ -17,11 +18,14 @@ export interface AuditSummary {
 export async function runAuditForClient(clientId: string): Promise<AuditSummary> {
   const admin = createAdminClient();
 
-  const { data: locations, error: locationsError } = await admin
-    .from("locations")
-    .select("name, website_url, phone, address")
-    .eq("client_id", clientId);
+  const [{ data: client, error: clientError }, { data: locations, error: locationsError }] = await Promise.all([
+    admin.from("clients").select("business_name").eq("id", clientId).single(),
+    admin.from("locations").select("name, website_url, phone, address, city").eq("client_id", clientId),
+  ]);
 
+  if (clientError || !client) {
+    throw new Error(`No se encontro el cliente ${clientId}: ${clientError?.message ?? "not found"}`);
+  }
   if (locationsError) {
     throw new Error(`No se pudieron leer las sedes del cliente ${clientId}: ${locationsError.message}`);
   }
@@ -62,12 +66,25 @@ export async function runAuditForClient(clientId: string): Promise<AuditSummary>
     } catch (err) {
       summary.errors.push(`schema/NAP (${websiteUrl}): ${err instanceof Error ? err.message : String(err)}`);
     }
+
+    try {
+      allFindings.push(...(await auditBingIndexation(websiteUrl)));
+    } catch (err) {
+      summary.errors.push(`Bing (${websiteUrl}): ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
-  try {
-    allFindings.push(...(await auditGoogleBusinessProfile()));
-  } catch (err) {
-    summary.errors.push(`GBP: ${err instanceof Error ? err.message : String(err)}`);
+  for (const location of locations ?? []) {
+    try {
+      allFindings.push(
+        ...(await auditGoogleBusinessProfile({
+          businessName: client.business_name,
+          city: location.city,
+        }))
+      );
+    } catch (err) {
+      summary.errors.push(`GBP (${location.name}): ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   if (allFindings.length > 0) {
