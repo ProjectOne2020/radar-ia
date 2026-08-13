@@ -1,15 +1,18 @@
 // WhatsApp Cloud API — canal principal de notificacion/verificacion (01-CONTEXTO-NEGOCIO.md
-// regla no negociable #4). WHATSAPP_CLOUD_API_TOKEN esta vacio en este entorno todavia, asi
-// que el envio real no se ha podido probar en vivo. Cuando falten credenciales, esta funcion
-// NO falla el flujo — loguea el mensaje en el servidor (nunca en la respuesta HTTP al
-// navegador) para poder seguir probando el resto del flujo de verificacion.
+// regla no negociable #4). Probado en vivo con credenciales reales en M10 (agosto 2026).
+// Si en algun otro entorno faltan credenciales, esta funcion NO falla el flujo — loguea el
+// mensaje en el servidor (nunca en la respuesta HTTP al navegador) para poder seguir
+// probando el resto del flujo sin bloquear todo por una key ausente.
 //
 // Nota importante para produccion, mas alla de solo tener el token: los mensajes de
 // negocio-a-usuario fuera de una ventana de 24h de conversacion (como un OTP) requieren un
 // "message template" pre-aprobado por Meta bajo la categoria "Authentication" — no basta con
 // la API key, hace falta pasar por el proceso de aprobacion de plantillas de WhatsApp
 // Business. Eso es un proceso de negocio, no solo tecnico, y esta fuera de alcance de M5.
-export async function sendWhatsAppText(phone: string, message: string): Promise<{ sent: boolean; reason?: string }> {
+export async function sendWhatsAppText(
+  phone: string,
+  message: string
+): Promise<{ sent: boolean; reason?: string; messageId?: string; status?: number }> {
   const token = process.env.WHATSAPP_CLOUD_API_TOKEN;
   const phoneNumberId = process.env.WHATSAPP_CLOUD_API_PHONE_NUMBER_ID;
 
@@ -35,8 +38,10 @@ export async function sendWhatsAppText(phone: string, message: string): Promise<
   if (!res.ok) {
     const body = await res.text();
     console.error(`[WhatsApp ERROR] ${res.status}: ${body}`);
-    return { sent: false, reason: `WhatsApp API error ${res.status}` };
+    return { sent: false, reason: `WhatsApp API error ${res.status}: ${body}`, status: res.status };
   }
 
-  return { sent: true };
+  const json = await res.json();
+  const messageId: string | undefined = json.messages?.[0]?.id;
+  return { sent: true, messageId, status: res.status };
 }
