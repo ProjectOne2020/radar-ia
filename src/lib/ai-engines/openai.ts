@@ -1,12 +1,20 @@
 import type { EngineOutcome } from "./types";
 
 // OpenAI Responses API con la herramienta de web search nativa.
-// NO PROBADO EN VIVO todavia — implementado siguiendo la documentacion oficial de la
-// Responses API (POST /v1/responses, tools: [{ type: "web_search" }]). Falta OPENAI_API_KEY
-// para verificar el shape real de la respuesta (anotaciones de citas en el content).
+//
+// Modelo configurable via OPENAI_MODEL — en desarrollo se usa gpt-5.6-luna (barato,
+// indicacion explicita del fundador, agosto 2026) en vez del alias corto "gpt-5.6", que
+// apunta a Sol (el modelo caro), no a Luna. En produccion se puede fijar OPENAI_MODEL a
+// otro valor sin tocar codigo. IMPORTANTE: esta es la medicion real del pilar 8 (no es
+// procesamiento intermedio) — el modelo economico es solo para no gastar credito en
+// pruebas de desarrollo, no una sustitucion permanente del motor de medicion.
+const DEFAULT_MODEL = "gpt-5.6-luna";
+
 export async function runOpenAI(promptText: string): Promise<EngineOutcome> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return { engine: "openai", reason: "OPENAI_API_KEY no configurada" };
+
+  const model = process.env.OPENAI_MODEL || DEFAULT_MODEL;
 
   const res = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -15,7 +23,7 @@ export async function runOpenAI(promptText: string): Promise<EngineOutcome> {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-4.1",
+      model,
       input: promptText,
       tools: [{ type: "web_search" }],
     }),
