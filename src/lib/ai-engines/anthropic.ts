@@ -1,11 +1,17 @@
 import type { EngineOutcome } from "./types";
 
 // Anthropic Messages API con la herramienta de web search nativa.
-// Usa Claude Haiku (el modelo mas barato disponible) por indicacion explicita del
-// fundador — este motor es medicion pura, no requiere el modelo mas capaz.
+// Modelo configurable via ANTHROPIC_MODEL — default claude-haiku-4-5-20251001 (el nivel
+// mas economico disponible), indicacion explicita del fundador: este motor es medicion
+// pura, no requiere el modelo mas capaz. Igual que en openai.ts, es para no gastar
+// credito en pruebas de desarrollo, no un cambio de que se mide en el pilar 8.
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+
 export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { engine: "anthropic", reason: "ANTHROPIC_API_KEY no configurada" };
+
+  const model = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -15,7 +21,7 @@ export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
+      model,
       max_tokens: 1024,
       messages: [{ role: "user", content: promptText }],
       tools: [{ type: "web_search_20250305", name: "web_search" }],
