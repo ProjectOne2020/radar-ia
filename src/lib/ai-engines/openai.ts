@@ -26,6 +26,9 @@ export async function runOpenAI(promptText: string): Promise<EngineOutcome> {
       model,
       input: promptText,
       tools: [{ type: "web_search" }],
+      // Forzado por seguridad/consistencia (ver mismo fix en anthropic.ts) — verificado
+      // en vivo que sin esto el modelo a veces decide no buscar por su cuenta.
+      tool_choice: "required",
     }),
   });
 

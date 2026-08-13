@@ -7,6 +7,13 @@ import type { EngineOutcome } from "./types";
 // credito en pruebas de desarrollo, no un cambio de que se mide en el pilar 8.
 const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
 
+// BUG REAL encontrado en pruebas (agosto 2026): a diferencia de OpenAI, Anthropic deja la
+// invocacion de web_search a discreccion del modelo — probado en vivo, con este mismo
+// prompt el modelo a veces respondio "no tengo acceso a informacion actualizada" SIN
+// buscar, en vez de usar la herramienta. Eso invalidaria la medicion (pareceria
+// "no mencionado" cuando en realidad nunca se busco). tool_choice fuerza la busqueda
+// siempre — verificado en vivo que asi si trae server_tool_use + citas reales.
+
 export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { engine: "anthropic", reason: "ANTHROPIC_API_KEY no configurada" };
@@ -25,6 +32,7 @@ export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
       max_tokens: 1024,
       messages: [{ role: "user", content: promptText }],
       tools: [{ type: "web_search_20250305", name: "web_search" }],
+      tool_choice: { type: "tool", name: "web_search" },
     }),
   });
 
