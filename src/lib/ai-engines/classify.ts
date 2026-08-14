@@ -1,5 +1,7 @@
+import { GROQ_MODEL } from "@/lib/groq/model";
+
 // Procesamiento intermedio barato (regla de costo de 03-ARQUITECTURA-TECNICA.md: usar
-// Groq/Llama para todo lo que no sea la medicion final). Aqui solo se decide si el
+// Groq para todo lo que no sea la medicion final). Aqui solo se decide si el
 // negocio fue mencionado — no es el dato del producto, es parseo de la respuesta cruda
 // que ya se obtuvo del motor real.
 export async function classifyMention(rawText: string, businessName: string): Promise<boolean> {
@@ -18,7 +20,7 @@ export async function classifyMention(rawText: string, businessName: string): Pr
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
+      model: GROQ_MODEL,
       temperature: 0,
       response_format: { type: "json_object" },
       messages: [

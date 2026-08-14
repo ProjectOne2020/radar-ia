@@ -1,4 +1,5 @@
 import type { AuditFindingDraft } from "./types";
+import { GROQ_MODEL } from "@/lib/groq/model";
 
 interface PromptLike {
   prompt_text: string;
@@ -91,7 +92,7 @@ async function classifyAnswersQuestion(pageText: string, question: string, apiKe
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
+      model: GROQ_MODEL,
       temperature: 0,
       response_format: { type: "json_object" },
       messages: [
