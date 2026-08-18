@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/require-admin";
+import { getVisitCounts } from "@/lib/vercel-analytics/query";
 import LiveOnline from "./live-online";
 
 // Trafico web pedido por el fundador. "Online ahora" se construye con Supabase Realtime
 // Presence (src/components/presence-tracker.tsx) porque Vercel Analytics no ofrece
 // presencia en tiempo real, solo pageviews agregados con retraso. El reporte
-// diario/semanal/mensual/anual usa Vercel Web Analytics — requiere un token de Vercel
-// guardado como VERCEL_API_TOKEN, pendiente de que el fundador lo genere.
+// diario/semanal/mensual/anual usa la API REST de Vercel Web Analytics
+// (src/lib/vercel-analytics/query.ts) con VERCEL_API_TOKEN.
 export default async function TraficoPage() {
   await requireAdmin();
 
-  const hasVercelToken = Boolean(process.env.VERCEL_API_TOKEN);
+  const visits = await getVisitCounts();
 
   return (
     <main style={{ padding: 60, maxWidth: 800, fontFamily: "sans-serif" }}>
@@ -22,22 +23,25 @@ export default async function TraficoPage() {
       <LiveOnline />
 
       <h2>Visitas por período</h2>
-      {hasVercelToken ? (
-        <p>(pendiente de construir la consulta a Vercel Web Analytics)</p>
-      ) : (
-        <p style={{ color: "#666" }}>
-          Falta configurar <code>VERCEL_API_TOKEN</code> para mostrar el reporte de visitas
-          diarias/semanales/mensuales/anuales aquí — mientras tanto puedes verlo directo en{" "}
+      {visits.error && (
+        <p style={{ color: "#666", fontSize: 14 }}>
+          {visits.error}{" "}
           <a
             href="https://vercel.com/alejandros-projects-729c3d69/radar-ia/analytics"
             target="_blank"
             rel="noopener noreferrer"
           >
-            el dashboard de Vercel
+            Ver en el dashboard de Vercel
           </a>
           .
         </p>
       )}
+      <ul style={{ fontSize: 18, lineHeight: 1.8 }}>
+        <li>Últimas 24 horas: {visits.last24h ?? "—"}</li>
+        <li>Últimos 7 días: {visits.last7d ?? "—"}</li>
+        <li>Últimos 30 días: {visits.last30d ?? "—"}</li>
+        <li>Últimos 365 días: {visits.last365d ?? "—"}</li>
+      </ul>
     </main>
   );
 }
