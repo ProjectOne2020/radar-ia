@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { NICHES, SUPPORTED_COUNTRIES } from "@/lib/auth/country";
 
 export default function AuditoriaGratisPage() {
+  const t = useTranslations("AuditoriaGratis");
+  const tNiches = useTranslations("Niches");
+  const tCountries = useTranslations("Countries");
   const router = useRouter();
   const [form, setForm] = useState({
     businessName: "",
@@ -34,7 +38,7 @@ export default function AuditoriaGratisPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "No se pudo procesar la auditoría.");
+        setError(data.error ?? t("genericError"));
         setLoading(false);
         return;
       }
@@ -48,15 +52,12 @@ export default function AuditoriaGratisPage() {
 
   return (
     <main style={{ padding: 60, maxWidth: 480, fontFamily: "sans-serif" }}>
-      <h1>Auditoría gratis de visibilidad en IA</h1>
-      <p>
-        ¿Sabes si ChatGPT, Claude o Gemini recomiendan tu negocio cuando alguien pregunta en tu
-        ciudad? Te lo mostramos en un par de minutos.
-      </p>
+      <h1>{t("title")}</h1>
+      <p>{t("hook")}</p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 24 }}>
         <label>
-          Nombre del negocio
+          {t("businessName")}
           <input
             required
             value={form.businessName}
@@ -65,27 +66,27 @@ export default function AuditoriaGratisPage() {
         </label>
 
         <label>
-          Rubro
+          {t("niche")}
           <select value={form.niche} onChange={(e) => setForm({ ...form, niche: e.target.value })}>
             {NICHES.map((n) => (
               <option key={n.value} value={n.value}>
-                {n.label}
+                {tNiches(n.value)}
               </option>
             ))}
           </select>
         </label>
 
         <label>
-          Ciudad
+          {t("city")}
           <input required value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
         </label>
 
         <label>
-          País
+          {t("country")}
           <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}>
             {SUPPORTED_COUNTRIES.map((c) => (
               <option key={c.code} value={c.code}>
-                {c.name}
+                {tCountries(c.code)}
               </option>
             ))}
           </select>
@@ -94,17 +95,17 @@ export default function AuditoriaGratisPage() {
         {isApp && (
           <>
             <label>
-              ID de App Store (Apple)
+              {t("iosAppId")}
               <input
-                placeholder="ej. 123456789"
+                placeholder={t("iosAppIdPlaceholder")}
                 value={form.iosAppId}
                 onChange={(e) => setForm({ ...form, iosAppId: e.target.value })}
               />
             </label>
             <label>
-              Package de Google Play
+              {t("androidPackageId")}
               <input
-                placeholder="ej. com.tuempresa.tuapp"
+                placeholder={t("androidPackageIdPlaceholder")}
                 value={form.androidPackageId}
                 onChange={(e) => setForm({ ...form, androidPackageId: e.target.value })}
               />
@@ -113,21 +114,21 @@ export default function AuditoriaGratisPage() {
         )}
 
         <label>
-          {isApp ? "Sitio web de la app (opcional)" : "Sitio web"}
+          {isApp ? t("websiteUrlApp") : t("websiteUrl")}
           <input
             required={!isApp}
             type="url"
-            placeholder="https://tunegocio.com"
+            placeholder={t("websiteUrlPlaceholder")}
             value={form.websiteUrl}
             onChange={(e) => setForm({ ...form, websiteUrl: e.target.value })}
           />
         </label>
 
         <label>
-          WhatsApp (formato +52...)
+          {t("whatsapp")}
           <input
             required
-            placeholder="+528100000000"
+            placeholder={t("whatsappPlaceholder")}
             value={form.phoneWhatsapp}
             onChange={(e) => setForm({ ...form, phoneWhatsapp: e.target.value })}
           />
@@ -136,7 +137,7 @@ export default function AuditoriaGratisPage() {
         {error && <p style={{ color: "crimson" }}>{error}</p>}
 
         <button type="submit" disabled={loading}>
-          {loading ? "Auditando tu negocio... (puede tardar un momento)" : "Auditar mi negocio gratis"}
+          {loading ? t("submitting") : t("submit")}
         </button>
       </form>
     </main>

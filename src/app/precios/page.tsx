@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 import { PLANS, getSetupFee, getRecurringFee, isManualCurrency } from "@/lib/pricing/plans";
 
 const CURRENCY_LOCALE: Record<string, string> = {
@@ -23,14 +24,15 @@ function formatMoney(amount: number, currency: string): string {
 // Si el pais no tiene moneda manual configurada, cae a USD y Adaptive Pricing de Stripe
 // resuelve la conversion real en el Checkout (M9) — aqui solo se muestra el precio.
 export default async function PreciosPage() {
+  const t = await getTranslations("Precios");
   const headerList = await headers();
   const detectedCurrency = headerList.get("x-radar-currency") ?? "USD";
   const currency = isManualCurrency(detectedCurrency) ? detectedCurrency : "USD";
 
   return (
     <main style={{ padding: 60, maxWidth: 900, fontFamily: "sans-serif" }}>
-      <h1>Precios</h1>
-      <p style={{ color: "#666" }}>Precios mostrados en {currency}.</p>
+      <h1>{t("title")}</h1>
+      <p style={{ color: "#666" }}>{t("shownIn", { currency })}</p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 24 }}>
         {PLANS.map((plan) => {
@@ -52,22 +54,24 @@ export default async function PreciosPage() {
 
               {!plan.hasStripeCheckout ? (
                 <>
-                  <p>Cotización custom</p>
-                  <button>Contactar para cotización</button>
+                  <p>{t("customQuote")}</p>
+                  <button>{t("contactQuote")}</button>
                 </>
               ) : recurring !== null ? (
                 <>
                   <p style={{ fontSize: 24, fontWeight: 600 }}>
                     {formatMoney(recurring, currency)}
-                    <span style={{ fontSize: 14, fontWeight: 400 }}>/mes</span>
+                    <span style={{ fontSize: 14, fontWeight: 400 }}>{t("perMonth")}</span>
                   </p>
                   <p style={{ color: "#666" }}>
-                    Setup: {setup === 0 ? "$0 (autoguiado)" : setup !== null ? formatMoney(setup, currency) : "—"}
+                    {t("setupLabel", {
+                      amount: setup === 0 ? t("setupFree") : setup !== null ? formatMoney(setup, currency) : t("setupUnknown"),
+                    })}
                   </p>
-                  <button>Elegir {plan.name}</button>
+                  <button>{t("choosePlan", { plan: plan.name })}</button>
                 </>
               ) : (
-                <p>Precio disponible en checkout (USD, conversión automática).</p>
+                <p>{t("priceAtCheckout")}</p>
               )}
             </div>
           );

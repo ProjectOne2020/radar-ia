@@ -6,7 +6,7 @@ import { currencyForCountry } from "@/lib/auth/country";
 // para que las Server Components/Route Handlers siempre lean cookies vigentes. Tambien
 // resuelve pais->moneda (M8) y lo inyecta como header para que Server Components lean el
 // precio localizado sin repetir esta logica.
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // x-vercel-ip-country: header que Vercel inyecta automaticamente en el edge (la API
   // request.geo de Next.js quedo deprecada). x-test-country tiene prioridad para pruebas
   // locales/automatizadas — exactamente lo que pide el criterio de "terminado" de M8.

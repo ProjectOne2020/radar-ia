@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import CatalogForm from "./catalog-form";
 
@@ -7,6 +8,8 @@ import CatalogForm from "./catalog-form";
 // e-commerce (04-MODULOS-CONSTRUCCION.md M14). Tener una fila en sku_catalogs es lo que
 // activa la variante e-commerce del score (pilares 2 y 4) — ver calculate-score.ts.
 export default async function CatalogPage() {
+  const t = await getTranslations("DashboardCatalogo");
+  const tCommon = await getTranslations("Common");
   const supabase = await createClient();
   const {
     data: { user },
@@ -18,21 +21,16 @@ export default async function CatalogPage() {
   return (
     <main style={{ padding: 60, maxWidth: 720, fontFamily: "sans-serif" }}>
       <p>
-        <Link href="/dashboard">← Volver</Link>
+        <Link href="/dashboard">{tCommon("back")}</Link>
       </p>
-      <h1>Catálogo de productos</h1>
-      <p>
-        Configura tu tienda para activar el score de la variante e-commerce (pilar 2: completitud del feed de
-        Google Merchant Center; pilar 4: GTIN y consistencia feed-vs-sitio).
-      </p>
+      <h1>{t("title")}</h1>
+      <p>{t("intro")}</p>
 
       <CatalogForm catalog={catalog} />
 
       {catalog && (
         <p style={{ marginTop: 16, fontSize: 12, color: "#666" }}>
-          {catalog.merchant_center_id
-            ? "Merchant Center configurado — la próxima medición sincronizará el feed."
-            : "Sin Merchant Center ID: el feed no se puede sincronizar todavía, solo se audita el sitio (robots.txt, schema)."}
+          {catalog.merchant_center_id ? t("merchantCenterConfigured") : t("merchantCenterMissing")}
         </p>
       )}
     </main>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface Catalog {
   id: string;
@@ -12,6 +13,7 @@ interface Catalog {
 }
 
 export default function CatalogForm({ catalog }: { catalog: Catalog | null }) {
+  const t = useTranslations("DashboardCatalogo");
   const router = useRouter();
   const [platform, setPlatform] = useState(catalog?.platform ?? "shopify");
   const [storeUrl, setStoreUrl] = useState(catalog?.store_url ?? "");
@@ -39,7 +41,7 @@ export default function CatalogForm({ catalog }: { catalog: Catalog | null }) {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "Error");
+      setError(data.error ?? t("genericError"));
       return;
     }
 
@@ -49,7 +51,7 @@ export default function CatalogForm({ catalog }: { catalog: Catalog | null }) {
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 400 }}>
       <label>
-        Plataforma
+        {t("platform")}
         <br />
         <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
           <option value="shopify">Shopify</option>
@@ -58,19 +60,19 @@ export default function CatalogForm({ catalog }: { catalog: Catalog | null }) {
         </select>
       </label>
       <label>
-        URL de la tienda
+        {t("storeUrl")}
         <br />
         <input
           type="url"
           value={storeUrl}
           onChange={(e) => setStoreUrl(e.target.value)}
-          placeholder="https://tutienda.com"
+          placeholder={t("storeUrlPlaceholder")}
           required
           style={{ width: "100%" }}
         />
       </label>
       <label>
-        Número de SKUs
+        {t("skuCount")}
         <br />
         <input
           type="number"
@@ -81,17 +83,17 @@ export default function CatalogForm({ catalog }: { catalog: Catalog | null }) {
         />
       </label>
       <label>
-        Merchant Center ID
+        {t("merchantCenterId")}
         <br />
         <input
           value={merchantCenterId}
           onChange={(e) => setMerchantCenterId(e.target.value)}
-          placeholder="opcional, requerido para sincronizar el feed"
+          placeholder={t("merchantCenterIdPlaceholder")}
           style={{ width: "100%" }}
         />
       </label>
       <button type="submit" disabled={loading}>
-        {loading ? "Guardando..." : catalog ? "Actualizar catálogo" : "Crear catálogo"}
+        {loading ? t("saving") : catalog ? t("update") : t("create")}
       </button>
       {error && <span style={{ color: "red" }}>{error}</span>}
     </form>

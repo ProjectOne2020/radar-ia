@@ -2,8 +2,10 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 function VerificarContent() {
+  const t = useTranslations("AuditoriaGratisVerificar");
   const router = useRouter();
   const searchParams = useSearchParams();
   const freeAuditId = searchParams.get("freeAuditId");
@@ -27,16 +29,12 @@ function VerificarContent() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "No se pudo enviar el código.");
+      setError(data.error ?? t("sendError"));
       return;
     }
 
     setSent(true);
-    setInfo(
-      data.whatsappConfigured
-        ? "Te enviamos un código por WhatsApp."
-        : "WhatsApp no está configurado en este entorno todavía — revisa los logs del servidor para ver el código (solo en desarrollo)."
-    );
+    setInfo(data.whatsappConfigured ? t("whatsappSent") : t("whatsappNotConfigured"));
   }
 
   async function handleVerify(e: React.FormEvent) {
@@ -53,7 +51,7 @@ function VerificarContent() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "Código inválido.");
+      setError(data.error ?? t("invalidCode"));
       return;
     }
 
@@ -61,17 +59,17 @@ function VerificarContent() {
   }
 
   if (!freeAuditId || !clientId) {
-    return <p>Falta información de la solicitud — vuelve a intentar la auditoría gratis.</p>;
+    return <p>{t("missingInfo")}</p>;
   }
 
   return (
     <main style={{ padding: 60, maxWidth: 420, fontFamily: "sans-serif" }}>
-      <h1>Ya tenemos tu auditoría lista</h1>
-      <p>Verifica tu WhatsApp para ver el reporte.</p>
+      <h1>{t("title")}</h1>
+      <p>{t("subtitle")}</p>
 
       {!sent && (
         <button onClick={handleSend} disabled={loading}>
-          {loading ? "Enviando..." : "Enviar código"}
+          {loading ? t("sending") : t("sendCode")}
         </button>
       )}
 
@@ -80,12 +78,12 @@ function VerificarContent() {
       {sent && (
         <form onSubmit={handleVerify} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
           <label>
-            Código
+            {t("code")}
             <input required value={code} onChange={(e) => setCode(e.target.value)} maxLength={6} />
           </label>
           {error && <p style={{ color: "crimson" }}>{error}</p>}
           <button type="submit" disabled={loading}>
-            {loading ? "Verificando..." : "Ver mi reporte"}
+            {loading ? t("verifying") : t("viewReport")}
           </button>
         </form>
       )}

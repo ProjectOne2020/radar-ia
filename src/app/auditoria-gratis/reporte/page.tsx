@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface Finding {
   pillar: number;
@@ -17,18 +18,20 @@ interface ReportData {
   findings: Finding[];
 }
 
-const PILLAR_NAMES: Record<string, string> = {
-  "1": "Identidad/consistencia (NAP)",
-  "2": "Google Business Profile",
-  "3": "Crawlability + schema técnico",
-  "4": "Estructura semántica",
-  "5": "Cobertura de preguntas",
-  "6": "Citas y autoridad externa",
-  "7": "Reputación (reseñas)",
-  "8": "Medición directa en motores de IA",
+const PILLAR_KEYS: Record<string, string> = {
+  "1": "1",
+  "2": "2_local",
+  "3": "3",
+  "4": "4_local",
+  "5": "5",
+  "6": "6",
+  "7": "7_local",
+  "8": "8",
 };
 
 function ReporteContent() {
+  const t = useTranslations("AuditoriaGratisReporte");
+  const tPillars = useTranslations("Pillars");
   const searchParams = useSearchParams();
   const freeAuditId = searchParams.get("freeAuditId");
   const clientId = searchParams.get("clientId");
@@ -41,41 +44,39 @@ function ReporteContent() {
     fetch(`/api/free-audit/report?freeAuditId=${freeAuditId}&clientId=${clientId}`)
       .then(async (res) => {
         const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "No se pudo cargar el reporte.");
+        if (!res.ok) throw new Error(json.error ?? t("loadError"));
         setData(json);
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [freeAuditId, clientId]);
 
   if (error) return <p style={{ color: "crimson", padding: 60 }}>{error}</p>;
-  if (!data) return <p style={{ padding: 60 }}>Cargando reporte...</p>;
+  if (!data) return <p style={{ padding: 60 }}>{t("loading")}</p>;
 
   return (
     <main style={{ padding: 60, maxWidth: 640, fontFamily: "sans-serif" }}>
-      <h1>Reporte de visibilidad en IA — {data.businessName}</h1>
-      <h2>Score general: {Math.round(data.scoreTotal)}/100</h2>
+      <h1>{t("title", { businessName: data.businessName })}</h1>
+      <h2>{t("overallScore", { score: Math.round(data.scoreTotal) })}</h2>
 
-      <h3>Desglose por pilar</h3>
+      <h3>{t("breakdownTitle")}</h3>
       <ul>
         {Object.entries(data.scoreByPillar).map(([pillar, info]) => (
           <li key={pillar}>
-            {PILLAR_NAMES[pillar] ?? `Pilar ${pillar}`}: {info.measured ? Math.round(info.subscore) : "sin datos suficientes"}
+            {tPillars(PILLAR_KEYS[pillar] ?? "fallback", { n: pillar })}: {info.measured ? Math.round(info.subscore) : t("notMeasured")}
             {info.measured ? "/100" : ""}
           </li>
         ))}
       </ul>
 
-      <h3>Diagnóstico</h3>
+      <h3>{t("diagnosisTitle")}</h3>
       <ul>
         {data.findings.map((f, i) => (
           <li key={i}>{f.finding}</li>
         ))}
       </ul>
 
-      <p style={{ marginTop: 24, color: "#666" }}>
-        Este es el diagnóstico de alto nivel. El detalle accionable completo (qué corregir
-        exactamente) está disponible en los planes pagados.
-      </p>
+      <p style={{ marginTop: 24, color: "#666" }}>{t("detailNote")}</p>
     </main>
   );
 }

@@ -2,8 +2,10 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 function ExitoContent() {
+  const t = useTranslations("CheckoutExito");
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
   const plan = searchParams.get("plan");
@@ -21,23 +23,24 @@ function ExitoContent() {
     })
       .then(async (res) => {
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "No se pudo iniciar la suscripción.");
+        if (!res.ok) throw new Error(data.error ?? t("subscriptionError"));
         window.location.assign(data.url);
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : String(err));
         setRedirecting(false);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, plan]);
 
   if (error) return <p style={{ color: "crimson", padding: 60 }}>{error}</p>;
-  if (redirecting) return <p style={{ padding: 60 }}>Setup pagado — redirigiendo a la suscripción...</p>;
+  if (redirecting) return <p style={{ padding: 60 }}>{t("redirecting")}</p>;
 
   return (
     <main style={{ padding: 60, fontFamily: "sans-serif" }}>
-      <h1>¡Listo!</h1>
-      <p>Tu suscripción quedó activa.</p>
-      <a href="/dashboard">Ir al dashboard</a>
+      <h1>{t("title")}</h1>
+      <p>{t("body")}</p>
+      <a href="/dashboard">{t("goToDashboard")}</a>
     </main>
   );
 }

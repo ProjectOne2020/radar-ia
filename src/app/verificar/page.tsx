@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function VerificarPage() {
+  const t = useTranslations("Verificar");
   const router = useRouter();
   const [sent, setSent] = useState(false);
   const [code, setCode] = useState("");
@@ -19,16 +21,12 @@ export default function VerificarPage() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "No se pudo enviar el código.");
+      setError(data.error ?? t("sendError"));
       return;
     }
 
     setSent(true);
-    setInfo(
-      data.whatsappConfigured
-        ? "Te enviamos un código por WhatsApp."
-        : "WhatsApp no está configurado en este entorno todavía — revisa los logs del servidor para ver el código (solo en desarrollo)."
-    );
+    setInfo(data.whatsappConfigured ? t("whatsappSent") : t("whatsappNotConfigured"));
   }
 
   async function handleVerify(e: React.FormEvent) {
@@ -45,7 +43,7 @@ export default function VerificarPage() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "Código inválido.");
+      setError(data.error ?? t("invalidCode"));
       return;
     }
 
@@ -54,12 +52,12 @@ export default function VerificarPage() {
 
   return (
     <main style={{ padding: 60, maxWidth: 420, fontFamily: "sans-serif" }}>
-      <h1>Verifica tu negocio</h1>
-      <p>Te vamos a enviar un código de 6 dígitos por WhatsApp al número que registraste.</p>
+      <h1>{t("title")}</h1>
+      <p>{t("subtitle")}</p>
 
       {!sent && (
         <button onClick={handleSend} disabled={loading}>
-          {loading ? "Enviando..." : "Enviar código"}
+          {loading ? t("sending") : t("sendCode")}
         </button>
       )}
 
@@ -68,15 +66,15 @@ export default function VerificarPage() {
       {sent && (
         <form onSubmit={handleVerify} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
           <label>
-            Código
+            {t("code")}
             <input required value={code} onChange={(e) => setCode(e.target.value)} maxLength={6} />
           </label>
           {error && <p style={{ color: "crimson" }}>{error}</p>}
           <button type="submit" disabled={loading}>
-            {loading ? "Verificando..." : "Verificar"}
+            {loading ? t("verifying") : t("verify")}
           </button>
           <button type="button" onClick={handleSend} disabled={loading}>
-            Reenviar código
+            {t("resend")}
           </button>
         </form>
       )}

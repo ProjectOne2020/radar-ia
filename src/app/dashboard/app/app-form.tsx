@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface AppListing {
   id: string;
@@ -12,6 +13,7 @@ interface AppListing {
 }
 
 export default function AppForm({ appListing }: { appListing: AppListing | null }) {
+  const t = useTranslations("DashboardApp");
   const router = useRouter();
   const [appName, setAppName] = useState(appListing?.app_name ?? "");
   const [iosAppId, setIosAppId] = useState(appListing?.ios_app_id ?? "");
@@ -39,7 +41,7 @@ export default function AppForm({ appListing }: { appListing: AppListing | null 
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "Error");
+      setError(data.error ?? t("genericError"));
       return;
     }
 
@@ -49,43 +51,43 @@ export default function AppForm({ appListing }: { appListing: AppListing | null 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 400 }}>
       <label>
-        Nombre de la app
+        {t("appName")}
         <br />
         <input value={appName} onChange={(e) => setAppName(e.target.value)} required style={{ width: "100%" }} />
       </label>
       <label>
-        iOS App ID (Apple App Store)
+        {t("iosAppId")}
         <br />
         <input
           value={iosAppId}
           onChange={(e) => setIosAppId(e.target.value)}
-          placeholder="ej. 123456789"
+          placeholder={t("iosAppIdPlaceholder")}
           style={{ width: "100%" }}
         />
       </label>
       <label>
-        Android Package ID (Google Play)
+        {t("androidPackageId")}
         <br />
         <input
           value={androidPackageId}
           onChange={(e) => setAndroidPackageId(e.target.value)}
-          placeholder="ej. com.tuempresa.tuapp"
+          placeholder={t("androidPackageIdPlaceholder")}
           style={{ width: "100%" }}
         />
       </label>
       <label>
-        URL de landing/marketing de la app
+        {t("landingUrl")}
         <br />
         <input
           type="url"
           value={landingUrl}
           onChange={(e) => setLandingUrl(e.target.value)}
-          placeholder="opcional — https://tuapp.com"
+          placeholder={t("landingUrlPlaceholder")}
           style={{ width: "100%" }}
         />
       </label>
       <button type="submit" disabled={loading}>
-        {loading ? "Guardando..." : appListing ? "Actualizar app" : "Crear app"}
+        {loading ? t("saving") : appListing ? t("update") : t("create")}
       </button>
       {error && <span style={{ color: "red" }}>{error}</span>}
     </form>

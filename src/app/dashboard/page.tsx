@@ -1,30 +1,33 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
 // M16 — nombres de pilar por eje (local/e-commerce/apps): los pilares 2, 4 y 7 miden
 // cosas distintas segun el eje (02-METODOLOGIA-SCORING.md) — mostrar "Google Business
 // Profile" para un cliente de app o e-commerce es incorrecto, no solo generico.
-const PILLAR_NAMES_BASE: Record<string, string> = {
-  "1": "Identidad/consistencia (NAP)",
-  "3": "Crawlability + schema técnico",
-  "5": "Cobertura de preguntas",
-  "6": "Citas y autoridad externa",
-  "8": "Medición directa en motores de IA",
+const PILLAR_KEYS_BASE: Record<string, string> = {
+  "1": "1",
+  "3": "3",
+  "5": "5",
+  "6": "6",
+  "8": "8",
 };
 
-function pillarNamesForAxis(axis: "local" | "ecommerce" | "app"): Record<string, string> {
-  const byAxis: Record<typeof axis, Record<string, string>> = {
-    local: { "2": "Google Business Profile", "4": "Estructura semántica", "7": "Reputación (reseñas)" },
-    ecommerce: { "2": "Feed de Google Merchant Center", "4": "GTIN y consistencia feed-sitio", "7": "Reputación (reseñas de producto)" },
-    app: { "2": "Ficha en App Store / Google Play", "4": "Schema SoftwareApplication", "7": "Rating de tienda" },
+function pillarKeysForAxis(axis: "local" | "ecommerce" | "app"): Record<string, string> {
+  return {
+    ...PILLAR_KEYS_BASE,
+    "2": `2_${axis}`,
+    "4": `4_${axis}`,
+    "7": `7_${axis}`,
   };
-  return { ...PILLAR_NAMES_BASE, ...byAxis[axis] };
 }
 
 // M7 — todo lo que se lee aqui usa el cliente server (RLS), no admin: si esta pagina
 // muestra datos, es la prueba viva de que la sesion quedo enlazada a client_id (M1 + M5).
 export default async function DashboardPage() {
+  const t = await getTranslations("Dashboard");
+  const tPillars = await getTranslations("Pillars");
   const supabase = await createClient();
   const {
     data: { user },
@@ -44,42 +47,46 @@ export default async function DashboardPage() {
 
   const latest = scoreHistory?.[0];
   const axis = appListing ? "app" : skuCatalog ? "ecommerce" : "local";
-  const pillarNames = pillarNamesForAxis(axis);
+  const pillarKeys = pillarKeysForAxis(axis);
 
   return (
     <main style={{ padding: 60, maxWidth: 720, fontFamily: "sans-serif" }}>
-      <h1>{client?.business_name ?? "Tu negocio"}</h1>
+      <h1>{client?.business_name ?? t("yourBusiness")}</h1>
       <p>
-        Plan: {client?.plan} · Rubro: {client?.niche} · Verificación: {client?.verification_status}
+        {t("planLabel", {
+          plan: client?.plan ?? "",
+          niche: client?.niche ?? "",
+          status: client?.verification_status ?? "",
+        })}
       </p>
 
       <nav style={{ display: "flex", gap: 16, margin: "16px 0" }}>
-        <Link href="/dashboard/hallazgos">Hallazgos completos</Link>
-        <Link href="/dashboard/citas">Citas</Link>
-        <Link href="/dashboard/competidores">Competidores</Link>
-        <Link href="/dashboard/catalogo">Catálogo (e-commerce)</Link>
-        <Link href="/dashboard/app">Tu app</Link>
+        <Link href="/dashboard/hallazgos">{t("navFindings")}</Link>
+        <Link href="/dashboard/citas">{t("navCitations")}</Link>
+        <Link href="/dashboard/competidores">{t("navCompetitors")}</Link>
+        <Link href="/dashboard/catalogo">{t("navCatalog")}</Link>
+        <Link href="/dashboard/app">{t("navApp")}</Link>
       </nav>
 
       {!scoreHistory || scoreHistory.length === 0 ? (
-        <p>Todavía no hay un score calculado para este negocio.</p>
+        <p>{t("noScoreYet")}</p>
       ) : (
         <>
-          <h2>Score actual: {Math.round(latest!.score_total)}/100</h2>
+          <h2>{t("currentScore", { score: Math.round(latest!.score_total) })}</h2>
 
-          <h3>Desglose por pilar</h3>
+          <h3>{t("breakdownTitle")}</h3>
           <ul>
             {Object.entries((latest!.score_by_pillar as Record<string, { subscore: number; measured: boolean }>) ?? {}).map(
               ([pillar, info]) => (
                 <li key={pillar}>
-                  {pillarNames[pillar] ?? `Pilar ${pillar}`}:{" "}
-                  {info.measured ? `${Math.round(info.subscore)}/100` : "sin datos suficientes"}
+                  {tPillars(pillarKeys[pillar] ?? "fallback", { n: pillar })}:{" "}
+                  {info.measured ? `${Math.round(info.subscore)}/100` : t("notMeasured")}
                 </li>
               )
             )}
           </ul>
 
-          <h3>Histórico ({scoreHistory.length} cálculo{scoreHistory.length === 1 ? "" : "s"})</h3>
+          <h3>{t("historyTitle", { count: scoreHistory.length })}</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {scoreHistory.map((s) => (
               <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>

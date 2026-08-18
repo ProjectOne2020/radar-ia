@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { PLANS } from "@/lib/pricing/plans";
 
 // M9 — dispara los dos cargos SEPARADOS (setup fee -> suscripcion), nunca combinados.
 export default function PlanPage() {
+  const t = useTranslations("DashboardPlan");
+  const tCommon = useTranslations("Common");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +23,7 @@ export default function PlanPage() {
         body: JSON.stringify({ plan: planId }),
       });
       const setupData = await setupRes.json();
-      if (!setupRes.ok) throw new Error(setupData.error ?? "No se pudo iniciar el cobro de setup.");
+      if (!setupRes.ok) throw new Error(setupData.error ?? t("setupError"));
 
       if (setupData.url) {
         // Hay que cobrar el setup primero en Stripe — la suscripcion se dispara despues,
@@ -36,7 +39,7 @@ export default function PlanPage() {
         body: JSON.stringify({ plan: planId }),
       });
       const subData = await subRes.json();
-      if (!subRes.ok) throw new Error(subData.error ?? "No se pudo iniciar la suscripción.");
+      if (!subRes.ok) throw new Error(subData.error ?? t("subscriptionError"));
       window.location.assign(subData.url);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -47,9 +50,9 @@ export default function PlanPage() {
   return (
     <main style={{ padding: 60, maxWidth: 720, fontFamily: "sans-serif" }}>
       <p>
-        <Link href="/dashboard">← Volver</Link>
+        <Link href="/dashboard">{tCommon("back")}</Link>
       </p>
-      <h1>Elige tu plan</h1>
+      <h1>{t("title")}</h1>
       {error && <p style={{ color: "crimson" }}>{error}</p>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 24 }}>
@@ -59,7 +62,7 @@ export default function PlanPage() {
               {plan.name} {plan.flagship && "⭐"}
             </h2>
             <button onClick={() => handleChoose(plan.id)} disabled={loadingPlan !== null}>
-              {loadingPlan === plan.id ? "Redirigiendo a Stripe..." : `Elegir ${plan.name}`}
+              {loadingPlan === plan.id ? t("redirectingToStripe") : t("choosePlan", { plan: plan.name })}
             </button>
           </div>
         ))}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface Competitor {
   linkId: string;
@@ -12,6 +13,8 @@ interface Competitor {
 }
 
 export default function CompetidoresPage() {
+  const t = useTranslations("DashboardCompetidores");
+  const tCommon = useTranslations("Common");
   const [competitors, setCompetitors] = useState<Competitor[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ competitorName: "", city: "", websiteUrl: "" });
@@ -49,7 +52,7 @@ export default function CompetidoresPage() {
     setAdding(false);
 
     if (!res.ok) {
-      setError(data.error ?? "No se pudo agregar el competidor.");
+      setError(data.error ?? t("genericError"));
       return;
     }
 
@@ -60,27 +63,25 @@ export default function CompetidoresPage() {
   return (
     <main style={{ padding: 60, maxWidth: 640, fontFamily: "sans-serif" }}>
       <p>
-        <Link href="/dashboard">← Volver</Link>
+        <Link href="/dashboard">{tCommon("back")}</Link>
       </p>
-      <h1>Competidores</h1>
-      <p>Se comparan usando las mismas preguntas activas de tu negocio, mismo día.</p>
+      <h1>{t("title")}</h1>
+      <p>{t("subtitle")}</p>
 
       <ul>
         {(competitors ?? []).map((c) => (
           <li key={c.linkId}>
-            {c.businessName}: {c.scoreTotal !== null ? `${Math.round(c.scoreTotal)}/100` : "score pendiente"}
+            {c.businessName}: {c.scoreTotal !== null ? `${Math.round(c.scoreTotal)}/100` : t("scorePending")}
           </li>
         ))}
       </ul>
-      {competitors && competitors.length === 0 && <p>Todavía no has agregado competidores.</p>}
+      {competitors && competitors.length === 0 && <p>{t("empty")}</p>}
 
-      <h2>Agregar competidor</h2>
-      <p style={{ color: "#666" }}>
-        Correr esto llama a los motores de IA reales — puede tardar 30-60 segundos.
-      </p>
+      <h2>{t("addTitle")}</h2>
+      <p style={{ color: "#666" }}>{t("addNote")}</p>
       <form onSubmit={handleAdd} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 380 }}>
         <label>
-          Nombre del competidor
+          {t("competitorName")}
           <input
             required
             value={form.competitorName}
@@ -88,11 +89,11 @@ export default function CompetidoresPage() {
           />
         </label>
         <label>
-          Ciudad
+          {t("city")}
           <input required value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
         </label>
         <label>
-          Sitio web
+          {t("websiteUrl")}
           <input
             required
             type="url"
@@ -102,7 +103,7 @@ export default function CompetidoresPage() {
         </label>
         {error && <p style={{ color: "crimson" }}>{error}</p>}
         <button type="submit" disabled={adding}>
-          {adding ? "Auditando competidor..." : "Agregar y comparar"}
+          {adding ? t("auditing") : t("addAndCompare")}
         </button>
       </form>
     </main>
