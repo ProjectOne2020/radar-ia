@@ -31,9 +31,22 @@ const TEMPLATES: Record<string, string[]> = {
     "mejores tiendas online que envían a {city}",
     "¿Qué tienda recomiendan para comprar en {city}?",
   ],
+  // M16 — a diferencia de los demas niches, "app" no es una categoria unica (una app de
+  // delivery y una app de notas no comparten intencion de busqueda), asi que una plantilla
+  // generica tipo "mejor app en {city}" mediria poco. Las preguntas usan el nombre de la
+  // app directamente — es la pregunta que si tiene sentido para cualquier app: "la
+  // mencionan/recomiendan cuando alguien pregunta por ella", que es exactamente lo que
+  // mide el pilar 8.
+  app: [
+    "¿es buena la app {appName}?",
+    "opiniones sobre la app {appName}",
+    "¿vale la pena usar {appName}?",
+    "alternativas a {appName}",
+    "mejores apps similares a {appName} disponibles en {city}",
+  ],
 };
 
-export function buildFreeAuditPrompts(niche: string, city: string): string[] {
+export function buildFreeAuditPrompts(niche: string, city: string, appName?: string): string[] {
   const templates = TEMPLATES[niche] ?? TEMPLATES.dental;
-  return templates.map((t) => t.replace("{city}", city));
+  return templates.map((t) => t.replace("{city}", city).replace("{appName}", appName ?? ""));
 }

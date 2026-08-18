@@ -118,6 +118,57 @@ export function scorePillar4Ecommerce(findings: FindingRow[]): PillarScore {
   return aggregate(values);
 }
 
+// Pilar 2 — variante apps (20%): completitud de la ficha en App Store / Google Play, en
+// vez de GBP o Merchant Center (02-METODOLOGIA-SCORING.md, M16). Aggregate() promedia
+// entre las tiendas configuradas (una o ambas).
+export function scorePillar2AppStore(findings: FindingRow[]): PillarScore {
+  const values: Array<number | null> = [];
+
+  for (const f of findings) {
+    const appleMatch = f.finding.match(/Ficha de la app en Apple App Store: (\d+)\/(\d+) campos requeridos completos/);
+    if (appleMatch) {
+      const total = Number(appleMatch[2]);
+      values.push(total === 0 ? null : (Number(appleMatch[1]) / total) * 100);
+    }
+
+    const playMatch = f.finding.match(/Ficha de la app en Google Play: (\d+)\/(\d+) campos requeridos completos/);
+    if (playMatch) {
+      const total = Number(playMatch[2]);
+      values.push(total === 0 ? null : (Number(playMatch[1]) / total) * 100);
+    }
+  }
+
+  return aggregate(values);
+}
+
+// Pilar 4 — variante apps (8%): schema.org SoftwareApplication en la landing page, en vez
+// de Organization->LocalBusiness o Product->Offer (02-METODOLOGIA-SCORING.md, M16).
+export function scorePillar4App(findings: FindingRow[]): PillarScore {
+  const values = findings.map((f) => {
+    if (f.finding.includes("declara SoftwareApplication con operatingSystem y applicationCategory")) return 100;
+    if (f.finding.includes("declara SoftwareApplication pero le falta")) return 50;
+    if (f.finding.includes("no declara schema SoftwareApplication ni MobileApplication")) return 0;
+    return null;
+  });
+  return aggregate(values);
+}
+
+// Pilar 7 — variante apps (8%): rating y numero de resenas de la tienda — a diferencia de
+// e-commerce (measured:false por falta de fuente), aqui SI hay un dato publico real
+// (02-METODOLOGIA-SCORING.md, M16).
+export function scorePillar7AppRating(findings: FindingRow[]): PillarScore {
+  const values: Array<number | null> = [];
+
+  for (const f of findings) {
+    const match = f.finding.match(/La app tiene rating ([\d.]+) en (?:Apple App Store|Google Play) con/);
+    if (match) {
+      values.push(Math.min(100, (Number(match[1]) / 5) * 100));
+    }
+  }
+
+  return aggregate(values);
+}
+
 // Pilar 5 — Cobertura de preguntas (12%). Parsea el formato "N/M respondidas" que
 // src/lib/audit/question-coverage.ts escribe deliberadamente para esto.
 export function scorePillar5QuestionCoverage(findings: FindingRow[]): PillarScore {

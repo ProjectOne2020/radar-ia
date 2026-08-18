@@ -46,6 +46,44 @@ export type Database = {
           },
         ]
       }
+      app_listings: {
+        Row: {
+          android_package_id: string | null
+          app_name: string
+          client_id: string | null
+          created_at: string | null
+          id: string
+          ios_app_id: string | null
+          landing_url: string | null
+        }
+        Insert: {
+          android_package_id?: string | null
+          app_name: string
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          ios_app_id?: string | null
+          landing_url?: string | null
+        }
+        Update: {
+          android_package_id?: string | null
+          app_name?: string
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          ios_app_id?: string | null
+          landing_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_listings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_findings: {
         Row: {
           audited_at: string | null

@@ -28,4 +28,5 @@ export const NICHES = [
   { value: "estetica", label: "Clínica de estética" },
   { value: "inmobiliaria", label: "Inmobiliaria" },
   { value: "ecommerce", label: "Tienda online (e-commerce)" },
+  { value: "app", label: "App móvil o digital" },
 ] as const;

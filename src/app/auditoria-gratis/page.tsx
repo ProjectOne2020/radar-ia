@@ -13,7 +13,10 @@ export default function AuditoriaGratisPage() {
     country: "MX",
     websiteUrl: "",
     phoneWhatsapp: "",
+    iosAppId: "",
+    androidPackageId: "",
   });
+  const isApp = form.niche === "app";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -88,10 +91,31 @@ export default function AuditoriaGratisPage() {
           </select>
         </label>
 
+        {isApp && (
+          <>
+            <label>
+              ID de App Store (Apple)
+              <input
+                placeholder="ej. 123456789"
+                value={form.iosAppId}
+                onChange={(e) => setForm({ ...form, iosAppId: e.target.value })}
+              />
+            </label>
+            <label>
+              Package de Google Play
+              <input
+                placeholder="ej. com.tuempresa.tuapp"
+                value={form.androidPackageId}
+                onChange={(e) => setForm({ ...form, androidPackageId: e.target.value })}
+              />
+            </label>
+          </>
+        )}
+
         <label>
-          Sitio web
+          {isApp ? "Sitio web de la app (opcional)" : "Sitio web"}
           <input
-            required
+            required={!isApp}
             type="url"
             placeholder="https://tunegocio.com"
             value={form.websiteUrl}

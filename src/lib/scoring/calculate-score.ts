@@ -5,11 +5,14 @@ import {
   scorePillar1Nap,
   scorePillar2Gbp,
   scorePillar2Merchant,
+  scorePillar2AppStore,
   scorePillar3Crawlability,
   scorePillar4Semantic,
   scorePillar4Ecommerce,
+  scorePillar4App,
   scorePillar5QuestionCoverage,
   scorePillar7Reputation,
+  scorePillar7AppRating,
   type PillarScore,
 } from "./pillar-scorers";
 
@@ -18,6 +21,10 @@ export interface CalculateScoreOptions {
   // senal que ya usa run-audit.ts para decidir si corre el flujo GBP o Merchant Center).
   // El parametro sigue existiendo como override explicito para pruebas.
   isEcommerce?: boolean;
+  // M16 — igual que isEcommerce, autodetectado via app_listings. Si un cliente tuviera
+  // ambas filas (sku_catalogs y app_listings), el eje app tiene precedencia — ver
+  // run-audit.ts para la misma regla aplicada a que auditoria corre.
+  isApp?: boolean;
 }
 
 interface PillarEntry extends PillarScore {
@@ -51,10 +58,12 @@ export async function calculateScoreForClient(
     { data: findings, error: findingsError },
     { data: trackingRuns, error: trackingError },
     { data: skuCatalog, error: skuCatalogError },
+    { data: appListing, error: appListingError },
   ] = await Promise.all([
     admin.from("audit_findings").select("pillar, finding, severity").eq("client_id", clientId),
     admin.from("tracking_runs").select("id, mentioned, citations(is_directory)").eq("client_id", clientId),
     admin.from("sku_catalogs").select("id").eq("client_id", clientId).maybeSingle(),
+    admin.from("app_listings").select("id").eq("client_id", clientId).maybeSingle(),
   ]);
 
   if (findingsError) {
@@ -66,21 +75,25 @@ export async function calculateScoreForClient(
   if (skuCatalogError) {
     throw new Error(`No se pudo leer sku_catalogs de ${clientId}: ${skuCatalogError.message}`);
   }
+  if (appListingError) {
+    throw new Error(`No se pudo leer app_listings de ${clientId}: ${appListingError.message}`);
+  }
 
-  const isEcommerce = options.isEcommerce ?? !!skuCatalog;
+  const isApp = options.isApp ?? !!appListing;
+  const isEcommerce = !isApp && (options.isEcommerce ?? !!skuCatalog);
 
   const byPillar = (pillar: number) => (findings ?? []).filter((f) => f.pillar === pillar);
 
-  // Pilares 2 y 4 son los unicos que 02-METODOLOGIA-SCORING.md sustituye para el eje
-  // e-commerce — los pesos (PILLAR_WEIGHTS) son identicos en ambos ejes.
+  // Pilares 2, 4 y 7 son los que 02-METODOLOGIA-SCORING.md sustituye segun el eje del
+  // cliente (local/e-commerce/apps) — los pesos (PILLAR_WEIGHTS) son identicos en los 3.
   const pillarScores: Record<number, PillarScore> = {
     1: scorePillar1Nap(byPillar(1)),
-    2: isEcommerce ? scorePillar2Merchant(byPillar(2)) : scorePillar2Gbp(byPillar(2)),
+    2: isApp ? scorePillar2AppStore(byPillar(2)) : isEcommerce ? scorePillar2Merchant(byPillar(2)) : scorePillar2Gbp(byPillar(2)),
     3: scorePillar3Crawlability(byPillar(3)),
-    4: isEcommerce ? scorePillar4Ecommerce(byPillar(4)) : scorePillar4Semantic(byPillar(4)),
+    4: isApp ? scorePillar4App(byPillar(4)) : isEcommerce ? scorePillar4Ecommerce(byPillar(4)) : scorePillar4Semantic(byPillar(4)),
     5: scorePillar5QuestionCoverage(byPillar(5)),
     6: scorePillar6ExternalCitations(trackingRuns ?? []),
-    7: scorePillar7Reputation(byPillar(7)),
+    7: isApp ? scorePillar7AppRating(byPillar(7)) : scorePillar7Reputation(byPillar(7)),
     8: scorePillar8DirectMeasurement(trackingRuns ?? []),
   };
 

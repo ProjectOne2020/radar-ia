@@ -11,28 +11,44 @@ export interface FreeAuditInput {
   niche: string;
   city: string;
   country: string;
-  websiteUrl: string;
+  // M16 — opcional cuando niche === "app" y el negocio solo tiene ficha de tienda, sin
+  // landing propia (ver validacion en /api/free-audit/request).
+  websiteUrl?: string;
   phoneWhatsapp: string;
   // M13 — cuando la auditoria viene del endpoint de partners, se atribuye aqui
   // (columna clients.partner_id, agregada en M13 al schema literal de M6).
   partnerId?: string;
+  // M16 — solo para niche === "app".
+  iosAppId?: string;
+  androidPackageId?: string;
 }
 
 export interface FreeAuditRunResult {
   clientId: string;
-  domain: string;
+  // M16 — null cuando es una app sin landing propia (solo fichas de tienda).
+  domain: string | null;
   scoreTotal: number;
 }
 
 // M6 — version ligera de M2+M3+M4 para la auditoria gratis publica. Crea un `clients` +
-// `locations` + un prompt_set corto (5 preguntas) internos para poder correr los mismos
-// motores reales que usa un cliente pagado — no se inventa una version "falsa" del score,
-// es el mismo calculo con menos preguntas (04-MODULOS-CONSTRUCCION.md lo pide asi
-// explicitamente: "una version ligera de M2+M3+M4", no una simulacion).
+// un registro de "donde vive el negocio" (segun el eje: `locations`, `sku_catalogs` o
+// `app_listings` — M16 agrega la bifurcacion por niche, antes SIEMPRE se creaba
+// `locations` incluso para niche "ecommerce", lo cual dejaba la auditoria gratis sin
+// activar nunca la variante e-commerce del score; se corrige aqui de paso) + un
+// prompt_set corto (5 preguntas) internos para poder correr los mismos motores reales que
+// usa un cliente pagado — no se inventa una version "falsa" del score, es el mismo
+// calculo con menos preguntas (04-MODULOS-CONSTRUCCION.md lo pide asi explicitamente:
+// "una version ligera de M2+M3+M4", no una simulacion).
 export async function runFreeAudit(input: FreeAuditInput): Promise<FreeAuditRunResult> {
   const admin = createAdminClient();
-  const domain = extractDomain(input.websiteUrl);
-  if (!domain) throw new Error("URL de sitio inválida.");
+  const isApp = input.niche === "app";
+  const isEcommerce = input.niche === "ecommerce";
+
+  // websiteUrl es obligatorio para local/e-commerce (domain debe resolver), pero opcional
+  // para "app" (una app puede no tener landing propia, solo fichas de tienda) — si se
+  // provee, igual debe ser una URL valida.
+  const domain = input.websiteUrl ? extractDomain(input.websiteUrl) : null;
+  if (!domain && (!isApp || input.websiteUrl)) throw new Error("URL de sitio inválida.");
 
   const { data: client, error: clientError } = await admin
     .from("clients")
@@ -54,17 +70,37 @@ export async function runFreeAudit(input: FreeAuditInput): Promise<FreeAuditRunR
     throw new Error(`No se pudo crear el registro interno de auditoría: ${clientError?.message}`);
   }
 
-  const { error: locationError } = await admin.from("locations").insert({
-    client_id: client.id,
-    name: input.businessName,
-    city: input.city,
-    phone: input.phoneWhatsapp,
-    website_url: input.websiteUrl,
-    has_own_site: true,
-  });
-  if (locationError) throw new Error(`No se pudo registrar la sede: ${locationError.message}`);
+  if (isApp) {
+    const { error: appError } = await admin.from("app_listings").insert({
+      client_id: client.id,
+      app_name: input.businessName,
+      ios_app_id: input.iosAppId ?? null,
+      android_package_id: input.androidPackageId ?? null,
+      landing_url: input.websiteUrl ?? null,
+    });
+    if (appError) throw new Error(`No se pudo registrar la app: ${appError.message}`);
+  } else if (isEcommerce) {
+    const { error: skuError } = await admin.from("sku_catalogs").insert({
+      client_id: client.id,
+      platform: "custom",
+      store_url: input.websiteUrl,
+      sku_count: null,
+      merchant_center_id: null,
+    });
+    if (skuError) throw new Error(`No se pudo registrar la tienda: ${skuError.message}`);
+  } else {
+    const { error: locationError } = await admin.from("locations").insert({
+      client_id: client.id,
+      name: input.businessName,
+      city: input.city,
+      phone: input.phoneWhatsapp,
+      website_url: input.websiteUrl,
+      has_own_site: true,
+    });
+    if (locationError) throw new Error(`No se pudo registrar la sede: ${locationError.message}`);
+  }
 
-  const promptTexts = buildFreeAuditPrompts(input.niche, input.city);
+  const promptTexts = buildFreeAuditPrompts(input.niche, input.city, input.businessName);
   const { data: prompts, error: promptError } = await admin
     .from("prompt_sets")
     .insert(promptTexts.map((prompt_text) => ({ client_id: client.id, prompt_text, category: "general" })))

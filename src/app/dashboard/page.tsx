@@ -2,16 +2,25 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-const PILLAR_NAMES: Record<string, string> = {
+// M16 — nombres de pilar por eje (local/e-commerce/apps): los pilares 2, 4 y 7 miden
+// cosas distintas segun el eje (02-METODOLOGIA-SCORING.md) — mostrar "Google Business
+// Profile" para un cliente de app o e-commerce es incorrecto, no solo generico.
+const PILLAR_NAMES_BASE: Record<string, string> = {
   "1": "Identidad/consistencia (NAP)",
-  "2": "Google Business Profile",
   "3": "Crawlability + schema técnico",
-  "4": "Estructura semántica",
   "5": "Cobertura de preguntas",
   "6": "Citas y autoridad externa",
-  "7": "Reputación (reseñas)",
   "8": "Medición directa en motores de IA",
 };
+
+function pillarNamesForAxis(axis: "local" | "ecommerce" | "app"): Record<string, string> {
+  const byAxis: Record<typeof axis, Record<string, string>> = {
+    local: { "2": "Google Business Profile", "4": "Estructura semántica", "7": "Reputación (reseñas)" },
+    ecommerce: { "2": "Feed de Google Merchant Center", "4": "GTIN y consistencia feed-sitio", "7": "Reputación (reseñas de producto)" },
+    app: { "2": "Ficha en App Store / Google Play", "4": "Schema SoftwareApplication", "7": "Rating de tienda" },
+  };
+  return { ...PILLAR_NAMES_BASE, ...byAxis[axis] };
+}
 
 // M7 — todo lo que se lee aqui usa el cliente server (RLS), no admin: si esta pagina
 // muestra datos, es la prueba viva de que la sesion quedo enlazada a client_id (M1 + M5).
@@ -23,15 +32,19 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
-  const [{ data: client }, { data: scoreHistory }] = await Promise.all([
+  const [{ data: client }, { data: scoreHistory }, { data: appListing }, { data: skuCatalog }] = await Promise.all([
     supabase.from("clients").select("business_name, niche, plan, verification_status").single(),
     supabase
       .from("ai_visibility_scores")
       .select("id, score_total, score_by_pillar, calculated_at")
       .order("calculated_at", { ascending: false }),
+    supabase.from("app_listings").select("id").maybeSingle(),
+    supabase.from("sku_catalogs").select("id").maybeSingle(),
   ]);
 
   const latest = scoreHistory?.[0];
+  const axis = appListing ? "app" : skuCatalog ? "ecommerce" : "local";
+  const pillarNames = pillarNamesForAxis(axis);
 
   return (
     <main style={{ padding: 60, maxWidth: 720, fontFamily: "sans-serif" }}>
@@ -45,6 +58,7 @@ export default async function DashboardPage() {
         <Link href="/dashboard/citas">Citas</Link>
         <Link href="/dashboard/competidores">Competidores</Link>
         <Link href="/dashboard/catalogo">Catálogo (e-commerce)</Link>
+        <Link href="/dashboard/app">Tu app</Link>
       </nav>
 
       {!scoreHistory || scoreHistory.length === 0 ? (
@@ -58,7 +72,7 @@ export default async function DashboardPage() {
             {Object.entries((latest!.score_by_pillar as Record<string, { subscore: number; measured: boolean }>) ?? {}).map(
               ([pillar, info]) => (
                 <li key={pillar}>
-                  {PILLAR_NAMES[pillar] ?? `Pilar ${pillar}`}:{" "}
+                  {pillarNames[pillar] ?? `Pilar ${pillar}`}:{" "}
                   {info.measured ? `${Math.round(info.subscore)}/100` : "sin datos suficientes"}
                 </li>
               )
