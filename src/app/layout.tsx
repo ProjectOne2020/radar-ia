@@ -1,27 +1,23 @@
 import type { Metadata } from "next";
-import { Fraunces, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import { Analytics } from "@vercel/analytics/next";
 import { PresenceTracker } from "@/components/presence-tracker";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-display-src",
+// M21 — Geist (identidad Vercel/Linear-aligned, un solo sans variable para
+// display+cuerpo, jerarquia via peso/tamano) reemplaza Fraunces/IBM Plex Sans
+// de M19. Geist Mono se mantiene para datos (scores, timestamps, badges) —
+// ver 03-ARQUITECTURA-TECNICA.md "Sistema de diseno".
+const geist = Geist({
+  variable: "--font-geist-src",
   subsets: ["latin", "latin-ext"],
-  axes: ["opsz", "SOFT", "WONK"],
 });
 
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-body-src",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const plexMono = IBM_Plex_Mono({
+const geistMono = Geist_Mono({
   variable: "--font-data-src",
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -38,10 +34,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
 
   return (
-    <html
-      lang={locale}
-      className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable}`}
-    >
+    <html lang={locale} className={`${geist.variable} ${geistMono.variable}`}>
       <body>
         <NextIntlClientProvider>
           {children}

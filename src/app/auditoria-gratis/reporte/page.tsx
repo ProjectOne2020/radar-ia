@@ -8,7 +8,7 @@ import { Container } from "@/components/ui/container";
 import { Panel, Alert } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { ScoreInstrument } from "@/components/radar/score-instrument";
+import { ScoreRing } from "@/components/radar/score-ring";
 import { PillarSignal, type PillarStatus } from "@/components/radar/pillar-signal";
 
 interface Finding {
@@ -99,7 +99,7 @@ function ReporteContent() {
       <h1 className="text-2xl sm:text-3xl">{t("title", { businessName: data.businessName })}</h1>
 
       <Panel raised className="mt-6">
-        <ScoreInstrument
+        <ScoreRing
           score={data.scoreTotal}
           noiseLabel={tCommon("noise")}
           signalLabel={tCommon("signal")}

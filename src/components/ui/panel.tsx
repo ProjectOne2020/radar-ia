@@ -28,7 +28,7 @@ export function Alert({
     neutral: "border-border bg-surface text-text-secondary",
     signal: "border-signal bg-signal-soft text-signal-ink",
     warning: "border-warning bg-warning-soft text-warning",
-    critical: "border-critical bg-critical-soft text-critical",
+    critical: "border-critical bg-critical-soft text-critical-ink",
     good: "border-good bg-good-soft text-good",
   }[tone];
 

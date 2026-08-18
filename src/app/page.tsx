@@ -5,8 +5,9 @@ import { Container } from "@/components/ui/container";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
-import { ScoreInstrument } from "@/components/radar/score-instrument";
+import { ScoreRing } from "@/components/radar/score-ring";
 import { PillarSignal, type PillarStatus } from "@/components/radar/pillar-signal";
+import { RadarNetwork } from "@/components/radar/radar-network";
 
 // Landing publica de "/". Estructura: pregunta -> deteccion -> evidencia -> accion
 // (constitucion de diseno, ahora nativa en 03-ARQUITECTURA-TECNICA.md). El panel de
@@ -76,13 +77,17 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="rounded-lg border border-border bg-paper-raised p-6 shadow-md sm:p-7">
-              <span className="font-mono text-[0.7rem] uppercase tracking-wider text-text-muted">
+            <div className="rounded-lg border border-border bg-paper-raised p-6 shadow-md sm:p-7 rd-grid-bg">
+              <div className="flex justify-center">
+                <RadarNetwork className="h-44 w-44 sm:h-52 sm:w-52" />
+              </div>
+
+              <span className="mt-2 block text-center font-mono text-[0.7rem] uppercase tracking-wider text-text-muted">
                 {t("exampleLabel")}
               </span>
 
-              <div className="mt-4">
-                <ScoreInstrument
+              <div className="mt-4 border-t border-border pt-6">
+                <ScoreRing
                   score={EXAMPLE_SCORE}
                   noiseLabel={c("noise")}
                   signalLabel={c("signal")}

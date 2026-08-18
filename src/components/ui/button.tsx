@@ -7,17 +7,18 @@ const button = cva(
   {
     variants: {
       variant: {
-        primary: "bg-ink text-text-inverse hover:bg-ink-soft",
+        primary:
+          "bg-primary text-white hover:bg-primary-strong hover:rd-glow-primary",
         secondary:
-          "bg-transparent text-text border border-border-strong hover:bg-surface",
+          "bg-transparent text-text border border-border-strong hover:border-primary hover:bg-surface",
         ghost: "bg-transparent text-text hover:bg-surface",
         signal:
           "bg-transparent text-signal-strong border border-signal hover:bg-signal-soft",
       },
       size: {
-        sm: "text-sm px-3.5 py-2 rounded-xs",
-        md: "text-[0.95rem] px-5 py-2.5 rounded-sm",
-        lg: "text-base px-7 py-3.5 rounded-sm",
+        sm: "text-sm px-3.5 py-2.5 rounded-xs min-h-[38px]",
+        md: "text-[0.95rem] px-5 py-3 rounded-sm min-h-[44px]",
+        lg: "text-base px-7 py-4 rounded-sm min-h-[48px]",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },

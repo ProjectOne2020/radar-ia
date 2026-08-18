@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
+import { EngineBadge } from "@/components/radar/engine-badge";
 import { cn } from "@/lib/cn";
 
 // M7 — lista de citations con distincion dominio propio vs. directorio. La policy
@@ -38,9 +39,7 @@ export default async function CitasPage() {
               )}
             >
               <div className="flex items-center gap-2.5">
-                <span className="font-mono text-sm font-semibold uppercase tracking-wide text-ink">
-                  {run.engine}
-                </span>
+                <EngineBadge engine={run.engine} detected={run.mentioned} />
                 <Badge tone={run.mentioned ? "good" : "critical"}>
                   {run.mentioned ? t("mentioned") : t("notMentioned")}
                 </Badge>

@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { Panel } from "@/components/ui/panel";
-import { ScoreInstrument } from "@/components/radar/score-instrument";
+import { ScoreRing } from "@/components/radar/score-ring";
 import { PillarSignal, type PillarStatus } from "@/components/radar/pillar-signal";
 import { ScoreTrend } from "@/components/radar/score-trend";
 
@@ -83,7 +83,7 @@ export default async function DashboardPage() {
       ) : (
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
           <Panel raised>
-            <ScoreInstrument
+            <ScoreRing
               score={latest!.score_total}
               noiseLabel={tCommon("noise")}
               signalLabel={tCommon("signal")}

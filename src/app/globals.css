@@ -1,82 +1,106 @@
 @import "tailwindcss";
 
 /*
-  Radar IA — design tokens.
-  Concept: SEÑAL vs RUIDO. Editorial + instrument, not "AI startup."
-  No purple gradients, no glassmorphism, no neon glow.
+  Radar IA — design tokens, v2 (M21, agosto 2026).
+  Direccion de arte: AI intelligence / observability platform. Dark navy +
+  violeta + cian. Reemplaza la paleta calida papel/tinta de M19 — ver
+  03-ARQUITECTURA-TECNICA.md "Sistema de diseno" para el racional completo.
+
+  Nota para quien mantenga esto despues: los NOMBRES de varios tokens son
+  herencia de la v1 clara (--color-paper, --color-ink) pero ahora tienen
+  valores oscuros — el rol semantico de cada uno no cambio (paper = fondo
+  base, ink = primer plano fuerte, paper-raised = superficie elevada), solo
+  la polaridad clara/oscura. Se dejaron los nombres para no tocar ~20
+  archivos que ya los referencian correctamente via estas variables.
 */
 @theme {
-  /* ---- color: ground ---- */
-  --color-ink: #17140f;
-  --color-ink-soft: #2c2820;
-  --color-paper: #faf8f3;
-  --color-paper-raised: #ffffff;
-  --color-surface: #f4f1e9;
-  --color-surface-sunken: #ece7da;
-  --color-border: #e2dccb;
-  --color-border-strong: #cfc7ae;
+  /* ---- color: ground (dark) — escala monotonica verificada por luminancia:
+     surface-sunken < paper < paper-raised < surface < border < border-strong ---- */
+  --color-ink: #f3f5fb;
+  --color-ink-soft: #dfe3f0;
+  --color-paper: #080c17;
+  --color-paper-raised: #0d1426;
+  --color-surface: #121b36;
+  --color-surface-sunken: #05080f;
+  --color-border: #1c2b54;
+  --color-border-strong: #263b73;
 
   /* ---- color: text ---- */
-  --color-text: #17140f;
-  --color-text-secondary: #5c574a;
-  --color-text-muted: #6f6852;
-  --color-text-inverse: #faf8f3;
+  --color-text: #f3f5fb;
+  --color-text-secondary: #9ba3c4;
+  --color-text-muted: #7c86ac;
+  --color-text-inverse: #080c17;
 
-  /* ---- color: signal (predictive pillars 1-7, "found") ---- */
-  --color-signal: #b6650b;
-  --color-signal-strong: #8f4e07;
-  --color-signal-soft: #f3e2c8;
-  --color-signal-ink: #3c2404;
+  /* ---- color: brand ---- */
+  --color-primary: #635bff;
+  --color-primary-strong: #4f47e0;
+  --color-primary-soft: #635bff26;
+  --color-secondary: #00d4ff;
+  --color-secondary-soft: #00d4ff1f;
+  --color-accent: #8b5cf6;
+  --color-accent-soft: #8b5cf624;
 
-  /* ---- color: observed (pillar 8, direct engine measurement) ---- */
-  --color-observed: #0e6b64;
-  --color-observed-strong: #0a4f4a;
-  --color-observed-soft: #d9ece9;
-  --color-observed-ink: #06302c;
+  /* ---- color: signal (predictive pillars 1-7, "found") — cian ---- */
+  --color-signal: #00d4ff;
+  --color-signal-strong: #34e0ff;
+  --color-signal-soft: #00d4ff1f;
+  --color-signal-ink: #bdf4ff;
 
-  /* ---- color: status (never naive traffic-light) ---- */
-  --color-good: #3f6b34;
-  --color-good-soft: #e4ecdd;
-  --color-warning: #a24a1f;
-  --color-warning-soft: #f3e0d1;
-  --color-critical: #96262a;
-  --color-critical-soft: #f2dcdc;
-  --color-unmeasured: #948d78;
-  --color-unmeasured-soft: #efeade;
+  /* ---- color: observed (pillar 8, direct engine measurement) — violeta ---- */
+  --color-observed: #8b5cf6;
+  --color-observed-strong: #a689ff;
+  --color-observed-soft: #8b5cf624;
+  --color-observed-ink: #e3d9ff;
 
-  /* ---- typography ---- */
-  --font-display: var(--font-display-src), "Fraunces", Georgia, serif;
-  --font-sans: var(--font-body-src), "IBM Plex Sans", system-ui, sans-serif;
-  --font-mono: var(--font-data-src), "IBM Plex Mono", ui-monospace, monospace;
+  /* ---- color: status (never naive traffic-light for "sin medir") ---- */
+  --color-good: #22c55e;
+  --color-good-soft: #22c55e22;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #f59e0b24;
+  --color-critical: #ef4444;
+  --color-critical-soft: #ef444424;
+  --color-critical-ink: #ff8f8f;
+  --color-unmeasured: #7c86ac;
+  --color-unmeasured-soft: #7c86ac1f;
+  --color-unmeasured-ink: #a4addc;
 
-  /* ---- radius: deliberately non-uniform ---- */
-  --radius-instrument: 3px;
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
+  /* ---- typography — Geist (identidad Vercel/Linear-aligned, tech-premium) ----
+     Una sola familia sans para display+cuerpo — jerarquia via peso/tamano,
+     no via cambio de tipografia (patron Linear/Vercel/Stripe). ---- */
+  --font-display: var(--font-geist-src), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist-src), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-data-src), ui-monospace, monospace;
+
+  /* ---- radius: instrumento de precision, no burbujas ---- */
+  --radius-instrument: 4px;
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
   --radius-lg: 20px;
   --radius-pill: 999px;
 
-  /* ---- elevation: warm-tinted, used sparingly ---- */
-  --shadow-xs: 0 1px 2px rgba(23, 20, 15, 0.06);
-  --shadow-sm: 0 2px 8px rgba(23, 20, 15, 0.08);
-  --shadow-md: 0 8px 24px rgba(23, 20, 15, 0.1);
-  --shadow-lg: 0 16px 48px rgba(23, 20, 15, 0.14);
+  /* ---- elevation: bordes + pasos de superficie, glow SOLO en foco/hover primario ---- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --glow-primary: 0 0 0 1px rgba(99, 91, 255, 0.4), 0 0 24px rgba(99, 91, 255, 0.18);
+  --glow-signal: 0 0 0 1px rgba(0, 212, 255, 0.35), 0 0 20px rgba(0, 212, 255, 0.14);
 
   /* ---- motion ---- */
   --ease-signal: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-micro: 120ms;
   --duration-reveal: 280ms;
   --duration-scan: 900ms;
+  --duration-pulse: 2400ms;
+  --duration-sweep: 3600ms;
 
   /* ---- breakpoints (Tailwind defaults cover 640/768/1024/1280/1536; add narrow phones) ---- */
   --breakpoint-xs: 375px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-  }
+:root {
+  color-scheme: dark;
 }
 
 /*
@@ -120,7 +144,7 @@
     font-family: var(--font-display);
     font-weight: 600;
     line-height: 1.12;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
     margin: 0;
   }
 
@@ -146,11 +170,26 @@
   .rd-hatch {
     background-image: repeating-linear-gradient(
       135deg,
-      var(--color-border-strong) 0px,
-      var(--color-border-strong) 1px,
+      var(--color-unmeasured-ink) 0px,
+      var(--color-unmeasured-ink) 1px,
       transparent 1px,
       transparent 7px
     );
+  }
+
+  .rd-glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+
+  .rd-glow-signal {
+    box-shadow: var(--glow-signal);
+  }
+
+  .rd-grid-bg {
+    background-image:
+      linear-gradient(rgba(155, 163, 196, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(155, 163, 196, 0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 }
 
@@ -168,4 +207,30 @@
 :focus-visible {
   outline: 2px solid var(--color-signal);
   outline-offset: 2px;
+}
+
+/* scrollbar oscuro — un scrollbar claro por defecto del SO rompe la
+   percepcion premium contra un fondo casi negro */
+* {
+  scrollbar-color: var(--color-border-strong) var(--color-paper);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+  border: 2px solid var(--color-paper);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
 }
