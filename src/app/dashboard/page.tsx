@@ -44,6 +44,7 @@ export default async function DashboardPage() {
         <Link href="/dashboard/hallazgos">Hallazgos completos</Link>
         <Link href="/dashboard/citas">Citas</Link>
         <Link href="/dashboard/competidores">Competidores</Link>
+        <Link href="/dashboard/catalogo">Catálogo (e-commerce)</Link>
       </nav>
 
       {!scoreHistory || scoreHistory.length === 0 ? (

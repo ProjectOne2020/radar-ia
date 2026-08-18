@@ -81,6 +81,43 @@ export function scorePillar4Semantic(findings: FindingRow[]): PillarScore {
   return aggregate(values);
 }
 
+// Pilar 2 — variante e-commerce (20%): completitud del feed de Google Merchant Center,
+// en vez de Google Business Profile (02-METODOLOGIA-SCORING.md, M14).
+export function scorePillar2Merchant(findings: FindingRow[]): PillarScore {
+  for (const f of findings) {
+    const match = f.finding.match(/Feed de Merchant Center: (\d+)\/(\d+) productos con campos requeridos completos/);
+    if (match) {
+      const complete = Number(match[1]);
+      const total = Number(match[2]);
+      if (total === 0) return { subscore: 0, measured: false };
+      return { subscore: (complete / total) * 100, measured: true };
+    }
+  }
+  return { subscore: 0, measured: false };
+}
+
+// Pilar 4 — variante e-commerce (8%): GTIN + consistencia feed-vs-sitio, en vez de
+// jerarquia Organization->LocalBusiness->Servicios (02-METODOLOGIA-SCORING.md, M14).
+export function scorePillar4Ecommerce(findings: FindingRow[]): PillarScore {
+  const values: Array<number | null> = [];
+
+  for (const f of findings) {
+    const crossCheckMatch = f.finding.match(/Cross-check feed vs sitio: (\d+)\/(\d+) productos revisados coinciden/);
+    if (crossCheckMatch) {
+      const total = Number(crossCheckMatch[2]);
+      values.push(total === 0 ? null : (Number(crossCheckMatch[1]) / total) * 100);
+    }
+
+    const gtinMatch = f.finding.match(/(\d+)\/(\d+) productos del feed declaran GTIN/);
+    if (gtinMatch) {
+      const total = Number(gtinMatch[2]);
+      values.push(total === 0 ? null : (Number(gtinMatch[1]) / total) * 100);
+    }
+  }
+
+  return aggregate(values);
+}
+
 // Pilar 5 — Cobertura de preguntas (12%). Parsea el formato "N/M respondidas" que
 // src/lib/audit/question-coverage.ts escribe deliberadamente para esto.
 export function scorePillar5QuestionCoverage(findings: FindingRow[]): PillarScore {

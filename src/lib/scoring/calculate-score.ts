@@ -4,20 +4,19 @@ import { PILLAR_WEIGHTS } from "./weights";
 import {
   scorePillar1Nap,
   scorePillar2Gbp,
+  scorePillar2Merchant,
   scorePillar3Crawlability,
   scorePillar4Semantic,
+  scorePillar4Ecommerce,
   scorePillar5QuestionCoverage,
   scorePillar7Reputation,
   type PillarScore,
 } from "./pillar-scorers";
 
 export interface CalculateScoreOptions {
-  // Threaded desde ahora (pedido explicito de 04-MODULOS-CONSTRUCCION.md M4) para no
-  // refactorizar en M14. Hoy no cambia la logica: pillar 6 y 8 ya leen de
-  // tracking_runs/citations (que ya distinguen dominio propio via locations.website_url
-  // o sku_catalogs.store_url segun corresponda), y pillares 1-5/7 vienen de
-  // audit_findings sin importar el niche. M14 es quien tendra que sustituir que se mide
-  // dentro de cada pilar para la variante e-commerce (ver 02-METODOLOGIA-SCORING.md).
+  // M14 — por defecto se autodetecta via presencia de una fila en sku_catalogs (misma
+  // senal que ya usa run-audit.ts para decidir si corre el flujo GBP o Merchant Center).
+  // El parametro sigue existiendo como override explicito para pruebas.
   isEcommerce?: boolean;
 }
 
@@ -46,19 +45,17 @@ export async function calculateScoreForClient(
   clientId: string,
   options: CalculateScoreOptions = {}
 ): Promise<ScoreResult> {
-  // isEcommerce no cambia la logica todavia — ver comentario en CalculateScoreOptions.
-  void options.isEcommerce;
-
   const admin = createAdminClient();
 
-  const [{ data: findings, error: findingsError }, { data: trackingRuns, error: trackingError }] =
-    await Promise.all([
-      admin.from("audit_findings").select("pillar, finding, severity").eq("client_id", clientId),
-      admin
-        .from("tracking_runs")
-        .select("id, mentioned, citations(is_directory)")
-        .eq("client_id", clientId),
-    ]);
+  const [
+    { data: findings, error: findingsError },
+    { data: trackingRuns, error: trackingError },
+    { data: skuCatalog, error: skuCatalogError },
+  ] = await Promise.all([
+    admin.from("audit_findings").select("pillar, finding, severity").eq("client_id", clientId),
+    admin.from("tracking_runs").select("id, mentioned, citations(is_directory)").eq("client_id", clientId),
+    admin.from("sku_catalogs").select("id").eq("client_id", clientId).maybeSingle(),
+  ]);
 
   if (findingsError) {
     throw new Error(`No se pudieron leer audit_findings de ${clientId}: ${findingsError.message}`);
@@ -66,14 +63,21 @@ export async function calculateScoreForClient(
   if (trackingError) {
     throw new Error(`No se pudieron leer tracking_runs de ${clientId}: ${trackingError.message}`);
   }
+  if (skuCatalogError) {
+    throw new Error(`No se pudo leer sku_catalogs de ${clientId}: ${skuCatalogError.message}`);
+  }
+
+  const isEcommerce = options.isEcommerce ?? !!skuCatalog;
 
   const byPillar = (pillar: number) => (findings ?? []).filter((f) => f.pillar === pillar);
 
+  // Pilares 2 y 4 son los unicos que 02-METODOLOGIA-SCORING.md sustituye para el eje
+  // e-commerce — los pesos (PILLAR_WEIGHTS) son identicos en ambos ejes.
   const pillarScores: Record<number, PillarScore> = {
     1: scorePillar1Nap(byPillar(1)),
-    2: scorePillar2Gbp(byPillar(2)),
+    2: isEcommerce ? scorePillar2Merchant(byPillar(2)) : scorePillar2Gbp(byPillar(2)),
     3: scorePillar3Crawlability(byPillar(3)),
-    4: scorePillar4Semantic(byPillar(4)),
+    4: isEcommerce ? scorePillar4Ecommerce(byPillar(4)) : scorePillar4Semantic(byPillar(4)),
     5: scorePillar5QuestionCoverage(byPillar(5)),
     6: scorePillar6ExternalCitations(trackingRuns ?? []),
     7: scorePillar7Reputation(byPillar(7)),
