@@ -3,6 +3,9 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Container } from "@/components/ui/container";
+import { Panel, Alert } from "@/components/ui/panel";
+import { ButtonLink } from "@/components/ui/button";
 
 function ExitoContent() {
   const t = useTranslations("CheckoutExito");
@@ -33,22 +36,41 @@ function ExitoContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, plan]);
 
-  if (error) return <p style={{ color: "crimson", padding: 60 }}>{error}</p>;
-  if (redirecting) return <p style={{ padding: 60 }}>{t("redirecting")}</p>;
+  if (error) {
+    return (
+      <Container narrow className="py-16">
+        <Alert tone="critical">{error}</Alert>
+      </Container>
+    );
+  }
+
+  if (redirecting) {
+    return (
+      <Container narrow className="py-16">
+        <p className="text-text-secondary">{t("redirecting")}</p>
+      </Container>
+    );
+  }
 
   return (
-    <main style={{ padding: 60, fontFamily: "sans-serif" }}>
-      <h1>{t("title")}</h1>
-      <p>{t("body")}</p>
-      <a href="/dashboard">{t("goToDashboard")}</a>
-    </main>
+    <Container narrow className="py-16">
+      <Panel raised>
+        <h1 className="text-2xl">{t("title")}</h1>
+        <p className="mt-2 text-text-secondary">{t("body")}</p>
+        <ButtonLink href="/dashboard" className="mt-5 inline-flex">
+          {t("goToDashboard")}
+        </ButtonLink>
+      </Panel>
+    </Container>
   );
 }
 
 export default function ExitoPage() {
   return (
-    <Suspense>
-      <ExitoContent />
-    </Suspense>
+    <main>
+      <Suspense>
+        <ExitoContent />
+      </Suspense>
+    </main>
   );
 }

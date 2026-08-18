@@ -1,7 +1,9 @@
-import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { Panel } from "@/components/ui/panel";
+import { ScoreInstrument } from "@/components/radar/score-instrument";
+import { PillarSignal, type PillarStatus } from "@/components/radar/pillar-signal";
+import { ScoreTrend } from "@/components/radar/score-trend";
 
 // M16 — nombres de pilar por eje (local/e-commerce/apps): los pilares 2, 4 y 7 miden
 // cosas distintas segun el eje (02-METODOLOGIA-SCORING.md) — mostrar "Google Business
@@ -23,17 +25,20 @@ function pillarKeysForAxis(axis: "local" | "ecommerce" | "app"): Record<string, 
   };
 }
 
+function pillarStatus(measured: boolean, subscore: number): PillarStatus {
+  if (!measured) return "unmeasured";
+  if (subscore >= 70) return "good";
+  if (subscore >= 40) return "warning";
+  return "critical";
+}
+
 // M7 — todo lo que se lee aqui usa el cliente server (RLS), no admin: si esta pagina
 // muestra datos, es la prueba viva de que la sesion quedo enlazada a client_id (M1 + M5).
 export default async function DashboardPage() {
   const t = await getTranslations("Dashboard");
   const tPillars = await getTranslations("Pillars");
+  const tCommon = await getTranslations("Common");
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
 
   const [{ data: client }, { data: scoreHistory }, { data: appListing }, { data: skuCatalog }] = await Promise.all([
     supabase.from("clients").select("business_name, niche, plan, verification_status").single(),
@@ -48,11 +53,22 @@ export default async function DashboardPage() {
   const latest = scoreHistory?.[0];
   const axis = appListing ? "app" : skuCatalog ? "ecommerce" : "local";
   const pillarKeys = pillarKeysForAxis(axis);
+  const businessName = client?.business_name ?? t("yourBusiness");
+
+  const trendPoints =
+    scoreHistory
+      ?.slice()
+      .reverse()
+      .map((s) => ({
+        id: s.id,
+        score: s.score_total,
+        date: s.calculated_at ? new Date(s.calculated_at).toLocaleDateString() : "—",
+      })) ?? [];
 
   return (
-    <main style={{ padding: 60, maxWidth: 720, fontFamily: "sans-serif" }}>
-      <h1>{client?.business_name ?? t("yourBusiness")}</h1>
-      <p>
+    <>
+      <h1 className="text-2xl sm:text-3xl">{businessName}</h1>
+      <p className="mt-1 text-sm text-text-secondary">
         {t("planLabel", {
           plan: client?.plan ?? "",
           niche: client?.niche ?? "",
@@ -60,48 +76,48 @@ export default async function DashboardPage() {
         })}
       </p>
 
-      <nav style={{ display: "flex", gap: 16, margin: "16px 0" }}>
-        <Link href="/dashboard/hallazgos">{t("navFindings")}</Link>
-        <Link href="/dashboard/citas">{t("navCitations")}</Link>
-        <Link href="/dashboard/competidores">{t("navCompetitors")}</Link>
-        <Link href="/dashboard/catalogo">{t("navCatalog")}</Link>
-        <Link href="/dashboard/app">{t("navApp")}</Link>
-      </nav>
-
       {!scoreHistory || scoreHistory.length === 0 ? (
-        <p>{t("noScoreYet")}</p>
+        <Panel raised className="mt-8">
+          <p className="text-text-secondary">{t("noScoreYet")}</p>
+        </Panel>
       ) : (
-        <>
-          <h2>{t("currentScore", { score: Math.round(latest!.score_total) })}</h2>
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+          <Panel raised>
+            <ScoreInstrument
+              score={latest!.score_total}
+              noiseLabel={tCommon("noise")}
+              signalLabel={tCommon("signal")}
+            />
 
-          <h3>{t("breakdownTitle")}</h3>
-          <ul>
-            {Object.entries((latest!.score_by_pillar as Record<string, { subscore: number; measured: boolean }>) ?? {}).map(
-              ([pillar, info]) => (
-                <li key={pillar}>
-                  {tPillars(pillarKeys[pillar] ?? "fallback", { n: pillar })}:{" "}
-                  {info.measured ? `${Math.round(info.subscore)}/100` : t("notMeasured")}
-                </li>
-              )
-            )}
-          </ul>
-
-          <h3>{t("historyTitle", { count: scoreHistory.length })}</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {scoreHistory.map((s) => (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ width: 160, fontSize: 12, color: "#666" }}>
-                  {s.calculated_at ? new Date(s.calculated_at).toLocaleString() : "—"}
+            {trendPoints.length > 1 && (
+              <div className="mt-8">
+                <span className="font-mono text-xs uppercase tracking-wider text-text-muted">
+                  {t("historyTitle", { count: scoreHistory.length })}
                 </span>
-                <div style={{ background: "#eee", width: 200, height: 12 }}>
-                  <div style={{ background: "#3c78d8", width: `${s.score_total}%`, height: 12 }} />
-                </div>
-                <span>{Math.round(s.score_total)}</span>
+                <ScoreTrend points={trendPoints} className="mt-3" />
               </div>
-            ))}
-          </div>
-        </>
+            )}
+          </Panel>
+
+          <Panel raised>
+            <h2 className="text-lg font-semibold text-ink">{t("breakdownTitle")}</h2>
+            <div className="mt-2 divide-y divide-border border-t border-border">
+              {Object.entries(
+                (latest!.score_by_pillar as Record<string, { subscore: number; measured: boolean; weight_pct?: number }>) ?? {},
+              ).map(([pillar, info]) => (
+                <PillarSignal
+                  key={pillar}
+                  name={tPillars(pillarKeys[pillar] ?? "fallback", { n: pillar })}
+                  weight={info.weight_pct ?? 0}
+                  status={pillarStatus(info.measured, info.subscore)}
+                  value={info.measured ? info.subscore : undefined}
+                  notMeasuredLabel={t("notMeasured")}
+                />
+              ))}
+            </div>
+          </Panel>
+        </div>
       )}
-    </main>
+    </>
   );
 }

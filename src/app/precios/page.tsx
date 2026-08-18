@@ -1,6 +1,12 @@
 import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { PLANS, getSetupFee, getRecurringFee, isManualCurrency } from "@/lib/pricing/plans";
+import { SiteHeader } from "@/components/site-header";
+import { Container } from "@/components/ui/container";
+import { Panel } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 
 const CURRENCY_LOCALE: Record<string, string> = {
   MXN: "es-MX",
@@ -25,58 +31,79 @@ function formatMoney(amount: number, currency: string): string {
 // resuelve la conversion real en el Checkout (M9) — aqui solo se muestra el precio.
 export default async function PreciosPage() {
   const t = await getTranslations("Precios");
+  const tPlan = await getTranslations("DashboardPlan");
   const headerList = await headers();
   const detectedCurrency = headerList.get("x-radar-currency") ?? "USD";
   const currency = isManualCurrency(detectedCurrency) ? detectedCurrency : "USD";
 
   return (
-    <main style={{ padding: 60, maxWidth: 900, fontFamily: "sans-serif" }}>
-      <h1>{t("title")}</h1>
-      <p style={{ color: "#666" }}>{t("shownIn", { currency })}</p>
+    <>
+      <SiteHeader />
+      <main>
+        <Container className="py-10 sm:py-16">
+          <h1 className="text-2xl sm:text-3xl">{t("title")}</h1>
+          <p className="mt-2 text-text-secondary">{t("shownIn", { currency })}</p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 24 }}>
-        {PLANS.map((plan) => {
-          const recurring = isManualCurrency(currency) ? getRecurringFee(plan.id, currency) : null;
-          const setup = isManualCurrency(currency) ? getSetupFee(plan.id, currency, "self_serve") : null;
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {PLANS.map((plan) => {
+              const recurring = isManualCurrency(currency) ? getRecurringFee(plan.id, currency) : null;
+              const setup = isManualCurrency(currency) ? getSetupFee(plan.id, currency, "self_serve") : null;
 
-          return (
-            <div
-              key={plan.id}
-              style={{
-                border: plan.flagship ? "2px solid #3c78d8" : "1px solid #ddd",
-                borderRadius: 8,
-                padding: 16,
-              }}
-            >
-              <h2>
-                {plan.name} {plan.flagship && "⭐"}
-              </h2>
+              return (
+                <Panel
+                  key={plan.id}
+                  raised
+                  className={cn("flex flex-col", plan.flagship && "border-signal ring-1 ring-signal")}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <h2 className="text-lg font-semibold text-ink">{plan.name}</h2>
+                    {plan.flagship && <Badge tone="signal">{tPlan("flagshipLabel")}</Badge>}
+                  </div>
 
-              {!plan.hasStripeCheckout ? (
-                <>
-                  <p>{t("customQuote")}</p>
-                  <button>{t("contactQuote")}</button>
-                </>
-              ) : recurring !== null ? (
-                <>
-                  <p style={{ fontSize: 24, fontWeight: 600 }}>
-                    {formatMoney(recurring, currency)}
-                    <span style={{ fontSize: 14, fontWeight: 400 }}>{t("perMonth")}</span>
-                  </p>
-                  <p style={{ color: "#666" }}>
-                    {t("setupLabel", {
-                      amount: setup === 0 ? t("setupFree") : setup !== null ? formatMoney(setup, currency) : t("setupUnknown"),
-                    })}
-                  </p>
-                  <button>{t("choosePlan", { plan: plan.name })}</button>
-                </>
-              ) : (
-                <p>{t("priceAtCheckout")}</p>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </main>
+                  <div className="mt-4 flex-1">
+                    {!plan.hasStripeCheckout ? (
+                      <p className="text-text-secondary">{t("customQuote")}</p>
+                    ) : recurring !== null ? (
+                      <>
+                        <p className="font-mono text-2xl font-semibold text-ink">
+                          {formatMoney(recurring, currency)}
+                          <span className="text-sm font-normal text-text-muted">{t("perMonth")}</span>
+                        </p>
+                        <p className="mt-1.5 text-sm text-text-secondary">
+                          {t("setupLabel", {
+                            amount:
+                              setup === 0
+                                ? t("setupFree")
+                                : setup !== null
+                                  ? formatMoney(setup, currency)
+                                  : t("setupUnknown"),
+                          })}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-text-secondary">{t("priceAtCheckout")}</p>
+                    )}
+                  </div>
+
+                  {plan.hasStripeCheckout ? (
+                    <ButtonLink
+                      href="/registro"
+                      variant={plan.flagship ? "primary" : "secondary"}
+                      className="mt-5 w-full"
+                    >
+                      {t("choosePlan", { plan: plan.name })}
+                    </ButtonLink>
+                  ) : (
+                    <Button variant="secondary" className="mt-5 w-full">
+                      {t("contactQuote")}
+                    </Button>
+                  )}
+                </Panel>
+              );
+            })}
+          </div>
+        </Container>
+      </main>
+    </>
   );
 }

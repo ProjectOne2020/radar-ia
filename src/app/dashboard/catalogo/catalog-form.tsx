@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Input, Select, Label } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 interface Catalog {
   id: string;
@@ -49,53 +51,49 @@ export default function CatalogForm({ catalog }: { catalog: Catalog | null }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 400 }}>
-      <label>
-        {t("platform")}
-        <br />
-        <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div>
+        <Label htmlFor="platform">{t("platform")}</Label>
+        <Select id="platform" value={platform} onChange={(e) => setPlatform(e.target.value)}>
           <option value="shopify">Shopify</option>
           <option value="woocommerce">WooCommerce</option>
           <option value="custom">Custom</option>
-        </select>
-      </label>
-      <label>
-        {t("storeUrl")}
-        <br />
-        <input
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="storeUrl">{t("storeUrl")}</Label>
+        <Input
+          id="storeUrl"
           type="url"
           value={storeUrl}
           onChange={(e) => setStoreUrl(e.target.value)}
           placeholder={t("storeUrlPlaceholder")}
           required
-          style={{ width: "100%" }}
         />
-      </label>
-      <label>
-        {t("skuCount")}
-        <br />
-        <input
+      </div>
+      <div>
+        <Label htmlFor="skuCount">{t("skuCount")}</Label>
+        <Input
+          id="skuCount"
           type="number"
           min={0}
           value={skuCount}
           onChange={(e) => setSkuCount(e.target.value)}
-          style={{ width: "100%" }}
         />
-      </label>
-      <label>
-        {t("merchantCenterId")}
-        <br />
-        <input
+      </div>
+      <div>
+        <Label htmlFor="merchantCenterId">{t("merchantCenterId")}</Label>
+        <Input
+          id="merchantCenterId"
           value={merchantCenterId}
           onChange={(e) => setMerchantCenterId(e.target.value)}
           placeholder={t("merchantCenterIdPlaceholder")}
-          style={{ width: "100%" }}
         />
-      </label>
-      <button type="submit" disabled={loading}>
+      </div>
+      <Button type="submit" disabled={loading}>
         {loading ? t("saving") : catalog ? t("update") : t("create")}
-      </button>
-      {error && <span style={{ color: "red" }}>{error}</span>}
+      </Button>
+      {error && <span className="text-sm text-critical">{error}</span>}
     </form>
   );
 }

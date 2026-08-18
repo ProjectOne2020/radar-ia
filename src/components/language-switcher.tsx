@@ -2,13 +2,15 @@
 
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { locales, LOCALE_LABELS, LOCALE_COOKIE_NAME, type Locale } from "@/i18n/locales";
+import { locales, LOCALE_COOKIE_NAME, type Locale } from "@/i18n/locales";
+import { cn } from "@/lib/cn";
+
+const SHORT_LABEL: Record<Locale, string> = { es: "ES", en: "EN", pt: "PT" };
 
 // Sin prefijo de idioma en la URL (ver src/i18n/request.ts) — cambiar de idioma no navega
 // a otra ruta, solo actualiza la cookie que Server Components leen en el siguiente render
-// y pide un refresh. router.refresh() vuelve a ejecutar los Server Components (incluido
-// el layout raiz) con la cookie nueva, sin perder el estado de navegacion del cliente.
-export function LanguageSwitcher() {
+// y pide un refresh.
+export function LanguageSwitcher({ className }: { className?: string }) {
   const locale = useLocale();
   const router = useRouter();
 
@@ -18,17 +20,30 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <select
-      value={locale}
-      onChange={(e) => handleChange(e.target.value as Locale)}
+    <div
+      role="group"
       aria-label="Idioma / Language / Idioma"
-      style={{ fontSize: 14, padding: "4px 8px", borderRadius: 4 }}
+      className={cn(
+        "inline-flex items-center gap-0.5 rounded-xs border border-border p-0.5 font-mono text-xs",
+        className,
+      )}
     >
       {locales.map((l) => (
-        <option key={l} value={l}>
-          {LOCALE_LABELS[l]}
-        </option>
+        <button
+          key={l}
+          type="button"
+          onClick={() => handleChange(l)}
+          aria-pressed={locale === l}
+          className={cn(
+            "rounded-[4px] px-2 py-1 transition-colors duration-[var(--duration-micro)]",
+            locale === l
+              ? "bg-ink text-text-inverse"
+              : "text-text-secondary hover:bg-surface",
+          )}
+        >
+          {SHORT_LABEL[l]}
+        </button>
       ))}
-    </select>
+    </div>
   );
 }

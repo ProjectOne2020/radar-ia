@@ -1,55 +1,79 @@
-import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { Panel } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/cn";
 
 // M7 — lista de citations con distincion dominio propio vs. directorio. La policy
 // citations_select_own de M1 ya filtra por tracking_runs.client_id, no hace falta filtro
-// adicional aqui.
+// adicional aqui. Cada corrida se presenta como un resultado de motor verificable
+// (engine + timestamp + evidencia), no como una tabla plana.
 export default async function CitasPage() {
   const t = await getTranslations("DashboardCitas");
-  const tCommon = await getTranslations("Common");
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
   const { data: runs } = await supabase
     .from("tracking_runs")
-    .select("id, engine, mentioned, run_at, citations(cited_url, cited_domain, is_client_domain, is_directory)")
+    .select(
+      "id, engine, mentioned, run_at, prompt_sets(prompt_text), citations(cited_url, cited_domain, is_client_domain, is_directory)",
+    )
     .order("run_at", { ascending: false });
 
   return (
-    <main style={{ padding: 60, maxWidth: 720, fontFamily: "sans-serif" }}>
-      <p>
-        <Link href="/dashboard">{tCommon("back")}</Link>
-      </p>
-      <h1>{t("title")}</h1>
+    <>
+      <h1 className="text-2xl sm:text-3xl">{t("title")}</h1>
 
-      {(runs ?? []).map((run) => (
-        <section key={run.id} style={{ marginTop: 16, borderTop: "1px solid #ddd", paddingTop: 8 }}>
-          <p>
-            <strong>{run.engine}</strong> · {run.mentioned ? t("mentioned") : t("notMentioned")} ·{" "}
-            {run.run_at ? new Date(run.run_at).toLocaleString() : ""}
-          </p>
-          {run.citations && run.citations.length > 0 ? (
-            <ul>
-              {run.citations.map((c, i) => (
-                <li key={i}>
-                  {c.cited_domain}{" "}
-                  {c.is_client_domain && <span style={{ color: "green" }}>{t("yourSite")}</span>}
-                  {c.is_directory && <span style={{ color: "#3c78d8" }}>{t("directory")}</span>}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p style={{ color: "#666" }}>{t("noCitationsInRun")}</p>
-          )}
-        </section>
-      ))}
+      <div className="mt-8 flex flex-col gap-4">
+        {(runs ?? []).map((run) => (
+          <Panel key={run.id} raised>
+            {run.prompt_sets?.prompt_text && (
+              <p className="font-display text-[1.05rem] italic leading-snug text-ink">
+                “{run.prompt_sets.prompt_text}”
+              </p>
+            )}
+            <div
+              className={cn(
+                "flex flex-wrap items-center justify-between gap-2",
+                run.prompt_sets?.prompt_text && "mt-3",
+              )}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-sm font-semibold uppercase tracking-wide text-ink">
+                  {run.engine}
+                </span>
+                <Badge tone={run.mentioned ? "good" : "critical"}>
+                  {run.mentioned ? t("mentioned") : t("notMentioned")}
+                </Badge>
+              </div>
+              <span className="font-mono text-xs text-text-muted">
+                {run.run_at ? new Date(run.run_at).toLocaleString() : ""}
+              </span>
+            </div>
 
-      {(!runs || runs.length === 0) && <p>{t("empty")}</p>}
-    </main>
+            {run.citations && run.citations.length > 0 ? (
+              <ul className="mt-4 flex flex-col gap-2 border-t border-border pt-4">
+                {run.citations.map((c, i) => (
+                  <li key={i} className="flex flex-wrap items-center gap-2 text-sm text-text">
+                    <span>{c.cited_domain}</span>
+                    {c.is_client_domain && <Badge tone="signal">{t("yourSite")}</Badge>}
+                    {c.is_directory && <Badge tone="observed">{t("directory")}</Badge>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-4 border-t border-border pt-4 text-sm text-text-muted">
+                {t("noCitationsInRun")}
+              </p>
+            )}
+          </Panel>
+        ))}
+      </div>
+
+      {(!runs || runs.length === 0) && (
+        <Panel raised className="mt-8">
+          <p className="text-text-secondary">{t("empty")}</p>
+        </Panel>
+      )}
+    </>
   );
 }

@@ -1,6 +1,18 @@
 {
   "Common": {
-    "back": "← Back"
+    "back": "← Back",
+    "noise": "Noise",
+    "signal": "Signal",
+    "severityCritical": "Critical",
+    "severityWarning": "Attention",
+    "severityInfo": "Info"
+  },
+  "Nav": {
+    "brand": "Radar IA",
+    "pricing": "Pricing",
+    "audit": "Free audit",
+    "login": "Log in",
+    "menu": "Menu"
   },
   "Pillars": {
     "1": "Identity/consistency (NAP)",
@@ -43,6 +55,15 @@
     "ctaPricing": "See pricing",
     "whatWeDoTitle": "What we do",
     "whatWeDoBody": "Initial audit → technical and content fixes → ongoing monitoring with reports, so your business shows up more and better in AI engine answers when someone asks something related to your industry and city.",
+    "processTitle": "How it works",
+    "step1Title": "1. We detect",
+    "step1Body": "We run the real questions your customers ask ChatGPT, Claude, Gemini, and Perplexity about your industry and city.",
+    "step2Title": "2. We show the evidence",
+    "step2Body": "Whether you were mentioned, from which source, and why — the engine's actual answer, not a guess.",
+    "step3Title": "3. We fix it and track it",
+    "step3Body": "A prioritized plan of what to fix first, with monthly tracking to see your score move.",
+    "exampleLabel": "Illustrative report example",
+    "exampleNote": "Sample data to show what the report looks like — not a real business.",
     "guaranteeTitle": "What we guarantee, and what we don't",
     "guaranteeBody": "We can't control which business an AI recommends — neither OpenAI nor Google offer that guarantee in their own systems, so neither do we. What we can control is how complete, consistent, structured, and verifiable the information an AI finds about your business is — and measure it month over month.",
     "forWhomTitle": "Who it's for",
@@ -63,6 +84,13 @@
     "priceAtCheckout": "Price available at checkout (USD, automatic conversion)."
   },
   "AuditoriaGratis": {
+    "stepOf": "Step {current} of {total}",
+    "stepBusiness": "Your business",
+    "stepLocation": "Location",
+    "stepPresence": "Where we'll look for you",
+    "stepContact": "How we'll notify you",
+    "next": "Next",
+    "back": "← Back",
     "title": "Free AI visibility audit",
     "hook": "Do you know if ChatGPT, Claude, or Gemini recommend your business when someone asks about your city? We'll show you in a couple of minutes.",
     "businessName": "Business name",
@@ -79,6 +107,7 @@
     "whatsapp": "WhatsApp (format +1...)",
     "whatsappPlaceholder": "+528100000000",
     "submitting": "Auditing your business... (this may take a moment)",
+    "scanningBody": "Querying ChatGPT, Claude, Gemini, and Perplexity in real time about your business — this can take up to a minute.",
     "submit": "Audit my business for free",
     "genericError": "Couldn't process the audit."
   },
@@ -104,7 +133,8 @@
     "breakdownTitle": "Breakdown by pillar",
     "notMeasured": "not enough data",
     "diagnosisTitle": "Diagnosis",
-    "detailNote": "This is the high-level diagnosis. The full actionable detail (exactly what to fix) is available on paid plans."
+    "detailNote": "This is the high-level diagnosis. The full actionable detail (exactly what to fix) is available on paid plans.",
+    "ctaSeePlans": "See plans"
   },
   "Login": {
     "title": "Log in",
@@ -157,11 +187,13 @@
   "Dashboard": {
     "yourBusiness": "Your business",
     "planLabel": "Plan: {plan} · Industry: {niche} · Verification: {status}",
-    "navFindings": "Full findings",
+    "navHome": "Overview",
+    "navFindings": "Findings",
     "navCitations": "Citations",
     "navCompetitors": "Competitors",
-    "navCatalog": "Catalog (e-commerce)",
+    "navCatalog": "Catalog",
     "navApp": "Your app",
+    "navPlan": "Plan",
     "noScoreYet": "There's no score calculated for this business yet.",
     "currentScore": "Current score: {score}/100",
     "breakdownTitle": "Breakdown by pillar",
@@ -175,8 +207,8 @@
   },
   "DashboardCitas": {
     "title": "Citations by engine",
-    "mentioned": "✅ mentioned",
-    "notMentioned": "❌ not mentioned",
+    "mentioned": "Mentioned",
+    "notMentioned": "Not mentioned",
     "yourSite": "(your site)",
     "directory": "(directory)",
     "noCitationsInRun": "No citations in this run.",
@@ -230,6 +262,7 @@
   },
   "DashboardPlan": {
     "title": "Choose your plan",
+    "flagshipLabel": "Recommended",
     "redirectingToStripe": "Redirecting to Stripe...",
     "choosePlan": "Choose {plan}",
     "setupError": "Couldn't start the setup charge.",

@@ -52,12 +52,18 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "No hay sesión activa." }, { status: 401 });
 
-  const { data: links, error: linksError } = await supabase
-    .from("client_competitors")
-    .select("id, competitor_client_id, created_at");
+  const [{ data: links, error: linksError }, { data: myScores }] = await Promise.all([
+    supabase.from("client_competitors").select("id, competitor_client_id, created_at"),
+    supabase
+      .from("ai_visibility_scores")
+      .select("score_total")
+      .order("calculated_at", { ascending: false })
+      .limit(1),
+  ]);
+  const myScore = myScores?.[0]?.score_total ?? null;
 
   if (linksError) return NextResponse.json({ error: linksError.message }, { status: 500 });
-  if (!links || links.length === 0) return NextResponse.json({ competitors: [] });
+  if (!links || links.length === 0) return NextResponse.json({ competitors: [], myScore });
 
   const admin = createAdminClient();
   const competitorIds = links.map((l) => l.competitor_client_id).filter((id): id is string => Boolean(id));
@@ -89,5 +95,5 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json({ competitors });
+  return NextResponse.json({ competitors, myScore });
 }

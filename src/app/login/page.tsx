@@ -4,6 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { SiteHeader } from "@/components/site-header";
+import { Container } from "@/components/ui/container";
+import { Panel, Alert } from "@/components/ui/panel";
+import { Input, Label } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const t = useTranslations("Login");
@@ -31,22 +36,42 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ padding: 60, maxWidth: 420, fontFamily: "sans-serif" }}>
-      <h1>{t("title")}</h1>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 24 }}>
-        <label>
-          {t("email")}
-          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </label>
-        <label>
-          {t("password")}
-          <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </label>
-        {error && <p style={{ color: "crimson" }}>{error}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? t("submitting") : t("submit")}
-        </button>
-      </form>
-    </main>
+    <>
+      <SiteHeader />
+      <main>
+        <Container narrow className="py-10 sm:py-16">
+          <h1 className="text-2xl sm:text-3xl">{t("title")}</h1>
+          <Panel raised className="mt-8 max-w-[420px]">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div>
+                <Label htmlFor="email">{t("email")}</Label>
+                <Input
+                  id="email"
+                  required
+                  type="email"
+                  autoFocus
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">{t("password")}</Label>
+                <Input
+                  id="password"
+                  required
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              {error && <Alert tone="critical">{error}</Alert>}
+              <Button type="submit" disabled={loading}>
+                {loading ? t("submitting") : t("submit")}
+              </Button>
+            </form>
+          </Panel>
+        </Container>
+      </main>
+    </>
   );
 }

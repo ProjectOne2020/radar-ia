@@ -3,6 +3,11 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { SiteHeader } from "@/components/site-header";
+import { Container } from "@/components/ui/container";
+import { Panel, Alert } from "@/components/ui/panel";
+import { Input, Label } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 function VerificarContent() {
   const t = useTranslations("AuditoriaGratisVerificar");
@@ -59,42 +64,66 @@ function VerificarContent() {
   }
 
   if (!freeAuditId || !clientId) {
-    return <p>{t("missingInfo")}</p>;
+    return (
+      <Container narrow className="py-16">
+        <Alert tone="critical">{t("missingInfo")}</Alert>
+      </Container>
+    );
   }
 
   return (
-    <main style={{ padding: 60, maxWidth: 420, fontFamily: "sans-serif" }}>
-      <h1>{t("title")}</h1>
-      <p>{t("subtitle")}</p>
+    <Container narrow className="py-10 sm:py-16">
+      <h1 className="text-2xl sm:text-3xl">{t("title")}</h1>
+      <p className="mt-2 text-text-secondary">{t("subtitle")}</p>
 
-      {!sent && (
-        <button onClick={handleSend} disabled={loading}>
-          {loading ? t("sending") : t("sendCode")}
-        </button>
-      )}
+      <Panel raised className="mt-8">
+        {!sent && (
+          <Button onClick={handleSend} disabled={loading}>
+            {loading ? t("sending") : t("sendCode")}
+          </Button>
+        )}
 
-      {info && <p>{info}</p>}
+        {info && (
+          <Alert tone="signal" className="mt-4">
+            {info}
+          </Alert>
+        )}
 
-      {sent && (
-        <form onSubmit={handleVerify} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
-          <label>
-            {t("code")}
-            <input required value={code} onChange={(e) => setCode(e.target.value)} maxLength={6} />
-          </label>
-          {error && <p style={{ color: "crimson" }}>{error}</p>}
-          <button type="submit" disabled={loading}>
-            {loading ? t("verifying") : t("viewReport")}
-          </button>
-        </form>
-      )}
-    </main>
+        {sent && (
+          <form onSubmit={handleVerify} className="mt-5 flex flex-col gap-4">
+            <div>
+              <Label htmlFor="code">{t("code")}</Label>
+              <Input
+                id="code"
+                required
+                autoFocus
+                inputMode="numeric"
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="text-center font-mono text-lg tracking-[0.4em]"
+              />
+            </div>
+            {error && <Alert tone="critical">{error}</Alert>}
+            <Button type="submit" disabled={loading}>
+              {loading ? t("verifying") : t("viewReport")}
+            </Button>
+          </form>
+        )}
+      </Panel>
+    </Container>
   );
 }
 
 export default function VerificarFreeAuditPage() {
   return (
-    <Suspense>
-      <VerificarContent />
-    </Suspense>
+    <>
+      <SiteHeader />
+      <main>
+        <Suspense>
+          <VerificarContent />
+        </Suspense>
+      </main>
+    </>
   );
 }

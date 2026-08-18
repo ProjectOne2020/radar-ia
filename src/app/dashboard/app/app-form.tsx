@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Input, Label } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 interface AppListing {
   id: string;
@@ -49,47 +51,43 @@ export default function AppForm({ appListing }: { appListing: AppListing | null 
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 400 }}>
-      <label>
-        {t("appName")}
-        <br />
-        <input value={appName} onChange={(e) => setAppName(e.target.value)} required style={{ width: "100%" }} />
-      </label>
-      <label>
-        {t("iosAppId")}
-        <br />
-        <input
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div>
+        <Label htmlFor="appName">{t("appName")}</Label>
+        <Input id="appName" value={appName} onChange={(e) => setAppName(e.target.value)} required />
+      </div>
+      <div>
+        <Label htmlFor="iosAppId">{t("iosAppId")}</Label>
+        <Input
+          id="iosAppId"
           value={iosAppId}
           onChange={(e) => setIosAppId(e.target.value)}
           placeholder={t("iosAppIdPlaceholder")}
-          style={{ width: "100%" }}
         />
-      </label>
-      <label>
-        {t("androidPackageId")}
-        <br />
-        <input
+      </div>
+      <div>
+        <Label htmlFor="androidPackageId">{t("androidPackageId")}</Label>
+        <Input
+          id="androidPackageId"
           value={androidPackageId}
           onChange={(e) => setAndroidPackageId(e.target.value)}
           placeholder={t("androidPackageIdPlaceholder")}
-          style={{ width: "100%" }}
         />
-      </label>
-      <label>
-        {t("landingUrl")}
-        <br />
-        <input
+      </div>
+      <div>
+        <Label htmlFor="landingUrl">{t("landingUrl")}</Label>
+        <Input
+          id="landingUrl"
           type="url"
           value={landingUrl}
           onChange={(e) => setLandingUrl(e.target.value)}
           placeholder={t("landingUrlPlaceholder")}
-          style={{ width: "100%" }}
         />
-      </label>
-      <button type="submit" disabled={loading}>
+      </div>
+      <Button type="submit" disabled={loading}>
         {loading ? t("saving") : appListing ? t("update") : t("create")}
-      </button>
-      {error && <span style={{ color: "red" }}>{error}</span>}
+      </Button>
+      {error && <span className="text-sm text-critical">{error}</span>}
     </form>
   );
 }

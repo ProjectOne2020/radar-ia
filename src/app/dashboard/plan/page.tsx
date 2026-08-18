@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { PLANS } from "@/lib/pricing/plans";
+import { Panel, Alert } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 
 // M9 — dispara los dos cargos SEPARADOS (setup fee -> suscripcion), nunca combinados.
 export default function PlanPage() {
   const t = useTranslations("DashboardPlan");
-  const tCommon = useTranslations("Common");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,25 +50,36 @@ export default function PlanPage() {
   }
 
   return (
-    <main style={{ padding: 60, maxWidth: 720, fontFamily: "sans-serif" }}>
-      <p>
-        <Link href="/dashboard">{tCommon("back")}</Link>
-      </p>
-      <h1>{t("title")}</h1>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
+    <>
+      <h1 className="text-2xl sm:text-3xl">{t("title")}</h1>
+      {error && (
+        <Alert tone="critical" className="mt-4 max-w-[420px]">
+          {error}
+        </Alert>
+      )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 24 }}>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {PLANS.filter((p) => p.hasStripeCheckout).map((plan) => (
-          <div key={plan.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16 }}>
-            <h2>
-              {plan.name} {plan.flagship && "⭐"}
-            </h2>
-            <button onClick={() => handleChoose(plan.id)} disabled={loadingPlan !== null}>
+          <Panel
+            key={plan.id}
+            raised
+            className={cn(plan.flagship && "border-signal ring-1 ring-signal")}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-ink">{plan.name}</h2>
+              {plan.flagship && <Badge tone="signal">{t("flagshipLabel")}</Badge>}
+            </div>
+            <Button
+              onClick={() => handleChoose(plan.id)}
+              disabled={loadingPlan !== null}
+              variant={plan.flagship ? "primary" : "secondary"}
+              className="mt-5 w-full"
+            >
               {loadingPlan === plan.id ? t("redirectingToStripe") : t("choosePlan", { plan: plan.name })}
-            </button>
-          </div>
+            </Button>
+          </Panel>
         ))}
       </div>
-    </main>
+    </>
   );
 }
