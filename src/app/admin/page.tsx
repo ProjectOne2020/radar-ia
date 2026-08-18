@@ -53,6 +53,7 @@ export default async function AdminHomePage() {
         <Link href="/admin/clientes">Todos los clientes</Link>
         <Link href="/admin/flagged">Cuentas marcadas ({flaggedCount})</Link>
         <Link href="/admin/partners">Partners</Link>
+        <Link href="/admin/importar-contenido">Importar contenido</Link>
       </nav>
 
       <h2>Métricas del negocio</h2>
