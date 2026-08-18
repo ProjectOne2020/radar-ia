@@ -67,7 +67,8 @@
     "guaranteeTitle": "What we guarantee, and what we don't",
     "guaranteeBody": "We can't control which business an AI recommends — neither OpenAI nor Google offer that guarantee in their own systems, so neither do we. What we can control is how complete, consistent, structured, and verifiable the information an AI finds about your business is — and measure it month over month.",
     "forWhomTitle": "Who it's for",
-    "forWhomBody": "Dental and aesthetic clinics, real estate agencies, online stores, and mobile or digital apps.",
+    "forWhomBody": "Any physical or digital business — professionals, local shops, online stores, or apps — that wants to know if an AI recommends them when someone asks about their industry and city.",
+    "forWhomExamplesLabel": "A few examples:",
     "hasAccount": "Already have an account?",
     "login": "Log in"
   },
@@ -81,7 +82,14 @@
     "setupFree": "$0 (self-guided)",
     "setupUnknown": "—",
     "choosePlan": "Choose {plan}",
-    "priceAtCheckout": "Price available at checkout (USD, automatic conversion)."
+    "priceAtCheckout": "Price available at checkout (USD, automatic conversion).",
+    "featuresLite": "Monthly measurement (5-10 questions) · 1 location or up to 20 SKUs",
+    "featuresPlus": "Bi-weekly measurement (15-30 questions) · 1 established location or 20-300 SKUs",
+    "featuresPro": "Weekly measurement · 3-15 locations or 300-3,000 SKUs",
+    "featuresEnterprise": "Daily measurement + alerts · 15+ locations or 3,000+ SKUs",
+    "agencyTitle": "Are you an agency, or do you manage several businesses?",
+    "agencyBody": "If you manage several businesses and want to use Radar IA at scale, there's a partner/reseller model with API or white-label access in exchange for a fee or revenue share. Reach out to talk through the details.",
+    "agencyCta": "Get in touch"
   },
   "AuditoriaGratis": {
     "stepOf": "Step {current} of {total}",

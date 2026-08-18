@@ -143,7 +143,10 @@ export default async function Home() {
           <Container className="py-14 sm:py-20">
             <h2 className="text-2xl sm:text-[1.75rem]">{t("forWhomTitle")}</h2>
             <p className="mt-3 max-w-[64ch] text-text-secondary">{t("forWhomBody")}</p>
-            <div className="mt-6 flex flex-wrap gap-2">
+            <p className="mt-6 font-mono text-xs uppercase tracking-wider text-text-muted">
+              {t("forWhomExamplesLabel")}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
               {niches.map((key) => (
                 <Badge key={key} tone="neutral">
                   {n(key)}

@@ -12,13 +12,14 @@ export interface PlanInfo {
   name: string;
   flagship?: boolean;
   hasStripeCheckout: boolean; // false = Enterprise, "Contactar para cotizacion"
+  featuresKey: string; // clave en el namespace Precios de messages/*.json (ver seccion 4 de 01-CONTEXTO-NEGOCIO.md)
 }
 
 export const PLANS: PlanInfo[] = [
-  { id: "lite", name: "Lite", hasStripeCheckout: true },
-  { id: "plus", name: "Plus", flagship: true, hasStripeCheckout: true },
-  { id: "pro", name: "Pro", hasStripeCheckout: true },
-  { id: "enterprise", name: "Enterprise", hasStripeCheckout: false },
+  { id: "lite", name: "Lite", hasStripeCheckout: true, featuresKey: "featuresLite" },
+  { id: "plus", name: "Plus", flagship: true, hasStripeCheckout: true, featuresKey: "featuresPlus" },
+  { id: "pro", name: "Pro", hasStripeCheckout: true, featuresKey: "featuresPro" },
+  { id: "enterprise", name: "Enterprise", hasStripeCheckout: false, featuresKey: "featuresEnterprise" },
 ];
 
 // Setup fee (pago unico). Lite: este valor aplica SOLO a onboarding asistido — el

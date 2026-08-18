@@ -67,7 +67,8 @@
     "guaranteeTitle": "O que garantimos e o que não garantimos",
     "guaranteeBody": "Não podemos controlar qual negócio uma IA recomenda — nem a OpenAI nem o Google oferecem essa garantia em seus próprios sistemas, então nós também não. O que podemos controlar é o quão completa, consistente, estruturada e verificável é a informação que essa IA encontra sobre o seu negócio — e medir isso mês a mês.",
     "forWhomTitle": "Para quem é",
-    "forWhomBody": "Clínicas odontológicas e de estética, imobiliárias, lojas online e apps móveis ou digitais.",
+    "forWhomBody": "Qualquer negócio físico ou digital — profissionais, comércios locais, lojas online ou apps — que queira saber se uma IA o recomenda quando alguém pergunta sobre o seu ramo e cidade.",
+    "forWhomExamplesLabel": "Alguns exemplos:",
     "hasAccount": "Já tem uma conta?",
     "login": "Entrar"
   },
@@ -81,7 +82,14 @@
     "setupFree": "R$0 (autoguiado)",
     "setupUnknown": "—",
     "choosePlan": "Escolher {plan}",
-    "priceAtCheckout": "Preço disponível no checkout (USD, conversão automática)."
+    "priceAtCheckout": "Preço disponível no checkout (USD, conversão automática).",
+    "featuresLite": "Medição mensal (5-10 perguntas) · 1 unidade ou até 20 SKUs",
+    "featuresPlus": "Medição quinzenal (15-30 perguntas) · 1 unidade estabelecida ou 20-300 SKUs",
+    "featuresPro": "Medição semanal · 3-15 unidades ou 300-3.000 SKUs",
+    "featuresEnterprise": "Medição diária + alertas · 15+ unidades ou 3.000+ SKUs",
+    "agencyTitle": "Você é uma agência ou administra vários negócios?",
+    "agencyBody": "Se você administra vários negócios e quer usar o Radar IA em escala, existe um modelo de parceria/revenda com acesso via API ou white-label em troca de uma tarifa ou revenue-share. Fale com a gente para conversar sobre os detalhes.",
+    "agencyCta": "Falar conosco"
   },
   "AuditoriaGratis": {
     "stepOf": "Passo {current} de {total}",
