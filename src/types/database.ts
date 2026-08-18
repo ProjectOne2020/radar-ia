@@ -165,6 +165,7 @@ export type Database = {
           id: string
           niche: string
           onboarding_type: string
+          partner_id: string | null
           phone_whatsapp: string
           plan: string
           tax_id: string | null
@@ -179,6 +180,7 @@ export type Database = {
           id?: string
           niche: string
           onboarding_type: string
+          partner_id?: string | null
           phone_whatsapp: string
           plan: string
           tax_id?: string | null
@@ -193,12 +195,21 @@ export type Database = {
           id?: string
           niche?: string
           onboarding_type?: string
+          partner_id?: string | null
           phone_whatsapp?: string
           plan?: string
           tax_id?: string | null
           verification_status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       directory_sources: {
         Row: {

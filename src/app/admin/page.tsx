@@ -52,6 +52,7 @@ export default async function AdminHomePage() {
       <nav style={{ display: "flex", gap: 16, margin: "16px 0" }}>
         <Link href="/admin/clientes">Todos los clientes</Link>
         <Link href="/admin/flagged">Cuentas marcadas ({flaggedCount})</Link>
+        <Link href="/admin/partners">Partners</Link>
       </nav>
 
       <h2>Métricas del negocio</h2>

@@ -13,6 +13,9 @@ export interface FreeAuditInput {
   country: string;
   websiteUrl: string;
   phoneWhatsapp: string;
+  // M13 — cuando la auditoria viene del endpoint de partners, se atribuye aqui
+  // (columna clients.partner_id, agregada en M13 al schema literal de M6).
+  partnerId?: string;
 }
 
 export interface FreeAuditRunResult {
@@ -41,7 +44,8 @@ export async function runFreeAudit(input: FreeAuditInput): Promise<FreeAuditRunR
       currency: currencyForCountry(input.country),
       phone_whatsapp: input.phoneWhatsapp,
       verification_status: "pending",
-      onboarding_type: "self_serve",
+      onboarding_type: input.partnerId ? "partner" : "self_serve",
+      partner_id: input.partnerId ?? null,
     })
     .select("id")
     .single();
