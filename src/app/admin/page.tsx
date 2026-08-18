@@ -10,10 +10,29 @@ export default async function AdminHomePage() {
   await requireAdmin();
   const admin = createAdminClient();
 
-  const [{ data: clients }, { data: activeSubs }] = await Promise.all([
+  const [
+    { data: clients },
+    { data: activeSubs },
+    { count: freeAuditsCount },
+    { data: subscribedClientIds },
+  ] = await Promise.all([
     admin.from("clients").select("id, plan, country, niche, verification_status, onboarding_type"),
     admin.from("subscriptions").select("client_id, plan, status, clients(currency)").eq("status", "active"),
+    admin.from("free_audits").select("id", { count: "exact", head: true }),
+    admin.from("subscriptions").select("client_id"),
   ]);
+
+  // Auditorias "de plan pagado": toda medicion (ai_visibility_scores) de un cliente que
+  // tiene o tuvo alguna suscripcion — incluye el checkout inicial y cada re-medicion
+  // periodica de M11, no solo la primera.
+  const paidClientIds = Array.from(new Set((subscribedClientIds ?? []).map((s) => s.client_id).filter(Boolean)));
+  const { count: paidAuditsCount } =
+    paidClientIds.length > 0
+      ? await admin
+          .from("ai_visibility_scores")
+          .select("id", { count: "exact", head: true })
+          .in("client_id", paidClientIds as string[])
+      : { count: 0 };
 
   // Los clientes internos (auditoria gratis M6, competidores M7) no son negocios reales
   // — se identifican porque nunca pasan por onboarding_type real de M5/M6 con intencion
@@ -54,11 +73,16 @@ export default async function AdminHomePage() {
         <Link href="/admin/flagged">Cuentas marcadas ({flaggedCount})</Link>
         <Link href="/admin/partners">Partners</Link>
         <Link href="/admin/importar-contenido">Importar contenido</Link>
+        <Link href="/admin/trafico">Tráfico</Link>
       </nav>
 
       <h2>Métricas del negocio</h2>
       <p>Clientes con negocio real (con historial de suscripción): {realClients.length}</p>
       <p>Suscripciones activas: {activeCount}</p>
+
+      <h3>Auditorías</h3>
+      <p>Auditorías gratis (histórico, `free_audits`): {freeAuditsCount ?? 0}</p>
+      <p>Auditorías en planes pagados (checkout inicial + re-mediciones de M11): {paidAuditsCount ?? 0}</p>
 
       <h3>MRR por moneda</h3>
       {Object.keys(mrrByCurrency).length === 0 ? (
