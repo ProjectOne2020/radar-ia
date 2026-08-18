@@ -380,6 +380,59 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_applications: {
+        Row: {
+          agency_name: string
+          client_count: string | null
+          contact_name: string
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          partner_account_id: string | null
+          phone_whatsapp: string
+          reviewed_at: string | null
+          status: string
+          website_url: string | null
+        }
+        Insert: {
+          agency_name: string
+          client_count?: string | null
+          contact_name: string
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          partner_account_id?: string | null
+          phone_whatsapp: string
+          reviewed_at?: string | null
+          status?: string
+          website_url?: string | null
+        }
+        Update: {
+          agency_name?: string
+          client_count?: string | null
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          partner_account_id?: string | null
+          phone_whatsapp?: string
+          reviewed_at?: string | null
+          status?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_applications_partner_account_id_fkey"
+            columns: ["partner_account_id"]
+            isOneToOne: false
+            referencedRelation: "partner_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prompt_sets: {
         Row: {
           active: boolean | null

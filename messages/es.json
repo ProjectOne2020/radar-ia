@@ -91,6 +91,25 @@
     "agencyBody": "Si administras varios negocios y quieres usar Radar IA a escala, hay un modelo de partner/reseller con acceso de API o white-label a cambio de tarifa o revenue-share. Escríbenos para conversar los detalles.",
     "agencyCta": "Contactar"
   },
+  "Agencias": {
+    "title": "Programa de partners y agencias",
+    "hook": "Si administras varios negocios y quieres usar Radar IA a escala, cuéntanos sobre tu operación.",
+    "agencyName": "Nombre de tu agencia o empresa",
+    "contactName": "Nombre de contacto",
+    "email": "Correo",
+    "whatsapp": "WhatsApp (formato +52...)",
+    "whatsappPlaceholder": "+528100000000",
+    "websiteUrl": "Sitio web (opcional)",
+    "websiteUrlPlaceholder": "https://tuagencia.com",
+    "clientCount": "¿Cuántos negocios manejas actualmente? (aproximado)",
+    "clientCountPlaceholder": "ej. 5-10",
+    "message": "Cuéntanos sobre tu operación (opcional)",
+    "submit": "Enviar solicitud",
+    "submitting": "Enviando...",
+    "genericError": "No se pudo enviar la solicitud.",
+    "successTitle": "Solicitud enviada",
+    "successBody": "La revisamos y te contactamos por WhatsApp o correo."
+  },
   "AuditoriaGratis": {
     "title": "Auditoría gratis de visibilidad en IA",
     "hook": "¿Sabes si ChatGPT, Claude o Gemini recomiendan tu negocio cuando alguien pregunta en tu ciudad? Te lo mostramos en un par de minutos.",

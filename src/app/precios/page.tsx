@@ -112,9 +112,9 @@ export default async function PreciosPage() {
               <h2 className="text-lg font-semibold text-ink">{t("agencyTitle")}</h2>
               <p className="mt-1.5 max-w-[56ch] text-sm text-text-secondary">{t("agencyBody")}</p>
             </div>
-            <Button variant="secondary" className="shrink-0">
+            <ButtonLink href="/agencias" variant="secondary" className="shrink-0">
               {t("agencyCta")}
-            </Button>
+            </ButtonLink>
           </Panel>
         </Container>
       </main>

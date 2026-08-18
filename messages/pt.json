@@ -91,6 +91,25 @@
     "agencyBody": "Se você administra vários negócios e quer usar o Radar IA em escala, existe um modelo de parceria/revenda com acesso via API ou white-label em troca de uma tarifa ou revenue-share. Fale com a gente para conversar sobre os detalhes.",
     "agencyCta": "Falar conosco"
   },
+  "Agencias": {
+    "title": "Programa de parceiros e agências",
+    "hook": "Se você administra vários negócios e quer usar o Radar IA em escala, conte-nos sobre a sua operação.",
+    "agencyName": "Nome da sua agência ou empresa",
+    "contactName": "Nome de contato",
+    "email": "E-mail",
+    "whatsapp": "WhatsApp (formato +55...)",
+    "whatsappPlaceholder": "+528100000000",
+    "websiteUrl": "Site (opcional)",
+    "websiteUrlPlaceholder": "https://suaagencia.com",
+    "clientCount": "Quantos negócios você administra atualmente? (aproximado)",
+    "clientCountPlaceholder": "ex. 5-10",
+    "message": "Conte-nos sobre a sua operação (opcional)",
+    "submit": "Enviar solicitação",
+    "submitting": "Enviando...",
+    "genericError": "Não foi possível enviar a solicitação.",
+    "successTitle": "Solicitação enviada",
+    "successBody": "Vamos revisar e entrar em contato por WhatsApp ou e-mail."
+  },
   "AuditoriaGratis": {
     "stepOf": "Passo {current} de {total}",
     "stepBusiness": "Seu negócio",
