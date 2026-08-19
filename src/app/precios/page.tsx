@@ -92,7 +92,7 @@ export default async function PreciosPage() {
 
                   {plan.hasStripeCheckout ? (
                     <ButtonLink
-                      href="/registro"
+                      href="/auditoria-gratis"
                       variant={plan.flagship ? "primary" : "secondary"}
                       className="mt-5 w-full"
                     >

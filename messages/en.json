@@ -262,7 +262,10 @@
   "AuditoriaGratisVerificar": {
     "missingInfo": "Missing request information — please try the free audit again.",
     "title": "Your audit is ready",
-    "subtitle": "Verify your email to see the report.",
+    "subtitle": "Create your account to see the report and check back anytime.",
+    "createAccountHint": "Choose a password — with your email and this password you'll be able to log in later to see your progress.",
+    "password": "Password",
+    "passwordTooShort": "Password must be at least 8 characters.",
     "sending": "Sending...",
     "sendCode": "Send code",
     "code": "Code",
@@ -292,21 +295,6 @@
     "submit": "Log in",
     "noAccount": "Don't have an account?",
     "createAccount": "Create one for free"
-  },
-  "Registro": {
-    "title": "Create your Radar IA account",
-    "businessName": "Business name",
-    "niche": "Industry",
-    "country": "Country",
-    "whatsapp": "WhatsApp (format +1...)",
-    "whatsappPlaceholder": "+528100000000",
-    "taxId": "Tax ID (RFC / NIT / RUT / RUC / CUIT)",
-    "email": "Email",
-    "password": "Password",
-    "submitting": "Creating account...",
-    "submit": "Create account",
-    "genericError": "Couldn't register.",
-    "loginFailedAfterSignup": "Account created but couldn't log in: {message}"
   },
   "Verificar": {
     "title": "Verify your business",

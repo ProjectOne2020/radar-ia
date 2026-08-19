@@ -73,7 +73,7 @@ export default function LoginPage() {
             </form>
             <p className="mt-5 text-sm text-text-secondary">
               {t("noAccount")}{" "}
-              <Link href="/registro" className="text-ink underline underline-offset-2">
+              <Link href="/auditoria-gratis" className="text-ink underline underline-offset-2">
                 {t("createAccount")}
               </Link>
             </p>

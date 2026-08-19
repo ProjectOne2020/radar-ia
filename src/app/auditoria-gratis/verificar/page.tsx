@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { Container } from "@/components/ui/container";
 import { Panel, Alert } from "@/components/ui/panel";
@@ -18,12 +19,17 @@ function VerificarContent() {
 
   const [sent, setSent] = useState(false);
   const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSend() {
     setError(null);
+    if (password.length < 8) {
+      setError(t("passwordTooShort"));
+      return;
+    }
     setLoading(true);
     const res = await fetch("/api/free-audit/otp/send", {
       method: "POST",
@@ -50,16 +56,25 @@ function VerificarContent() {
     const res = await fetch("/api/free-audit/otp/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ freeAuditId, code }),
+      body: JSON.stringify({ freeAuditId, code, password }),
     });
     const data = await res.json();
-    setLoading(false);
 
     if (!res.ok) {
+      setLoading(false);
       setError(data.error ?? t("invalidCode"));
       return;
     }
 
+    // La cuenta solo se crea si el correo no tenia ya una registrada antes (una cuenta =
+    // un negocio). Si se creo, se abre sesion real de una vez para que el usuario quede
+    // logueado al llegar al reporte, sin tener que volver a /login.
+    if (data.accountCreated && data.email) {
+      const supabase = createClient();
+      await supabase.auth.signInWithPassword({ email: data.email, password });
+    }
+
+    setLoading(false);
     router.push(`/auditoria-gratis/reporte?freeAuditId=${freeAuditId}&clientId=${clientId}`);
   }
 
@@ -78,9 +93,25 @@ function VerificarContent() {
 
       <Panel raised className="mt-8">
         {!sent && (
-          <Button onClick={handleSend} disabled={loading}>
-            {loading ? t("sending") : t("sendCode")}
-          </Button>
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-text-secondary">{t("createAccountHint")}</p>
+            <div>
+              <Label htmlFor="password">{t("password")}</Label>
+              <Input
+                id="password"
+                required
+                type="password"
+                minLength={8}
+                autoFocus
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            {error && <Alert tone="critical">{error}</Alert>}
+            <Button onClick={handleSend} disabled={loading}>
+              {loading ? t("sending") : t("sendCode")}
+            </Button>
+          </div>
         )}
 
         {info && (

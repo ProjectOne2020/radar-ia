@@ -15,7 +15,6 @@ const PUBLIC_PATHS = [
   "/terminos",
   "/privacidad",
   "/login",
-  "/registro",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

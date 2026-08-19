@@ -11,15 +11,25 @@ import { consumeRateLimit, tooManyRequests } from "@/lib/security/rate-limit";
 // con el reporte ajeno. Ahora hay tope por solicitud y por IP.
 const MAX_ATTEMPTS_PER_AUDIT = 5;
 
+// Pedido explicito del fundador: quien completa una auditoria gratis debe quedar
+// registrado con una cuenta real (correo+contraseña) que pueda usar despues en /login —
+// una sola cuenta por persona, no un registro separado. La cuenta de Supabase Auth se
+// crea AQUI, solo cuando el codigo ya se verifico — a proposito, para que crear la cuenta
+// (y poder iniciar sesion despues) dependa de haber probado ser dueño del correo. Si la
+// cuenta se creara antes (por ejemplo en /api/free-audit/request), cualquiera podria
+// saltarse la verificacion entrando directo a /login con la contraseña que puso.
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const { freeAuditId, code } = body ?? {};
+  const { freeAuditId, code, password } = body ?? {};
 
   if (!freeAuditId || typeof freeAuditId !== "string") {
     return NextResponse.json({ error: "freeAuditId requerido." }, { status: 400 });
   }
   if (!code || typeof code !== "string") {
     return NextResponse.json({ error: "Código requerido." }, { status: 400 });
+  }
+  if (!password || typeof password !== "string" || password.length < 8) {
+    return NextResponse.json({ error: "La contraseña debe tener al menos 8 caracteres." }, { status: 400 });
   }
 
   const ip = getClientIp(request);
@@ -36,7 +46,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
   const { data: freeAudit } = await admin
     .from("free_audits")
-    .select("otp_attempts")
+    .select("otp_attempts, client_id")
     .eq("id", freeAuditId)
     .single();
 
@@ -73,7 +83,40 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const response = NextResponse.json({ verified: true });
+  let accountCreated = false;
+  let email: string | null = null;
+  if (freeAudit.client_id) {
+    const { data: client } = await admin.from("clients").select("email").eq("id", freeAudit.client_id).single();
+    email = client?.email ?? null;
+
+    if (email) {
+      const { data: authUser, error: authError } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true, // la verificacion real ya se hizo con el OTP que se acaba de validar
+      });
+
+      if (!authError && authUser.user) {
+        const { error: metadataError } = await admin.auth.admin.updateUserById(authUser.user.id, {
+          app_metadata: { client_id: freeAudit.client_id },
+        });
+        // Si falla el enlace, no dejar un auth.users huerfano sin client_id (quedaria
+        // logueable pero sin negocio asociado, RLS lo bloquearia todo).
+        if (metadataError) {
+          await admin.auth.admin.deleteUser(authUser.user.id);
+        } else {
+          accountCreated = true;
+        }
+      }
+      // Si authError es "ya existe una cuenta con este correo" (persona que ya se habia
+      // registrado antes, con otra contraseña), no se crea una cuenta nueva ni se
+      // reasigna su client_id — cada cuenta de Supabase Auth mapea a un solo negocio.
+      // Sigue viendo el reporte igual (ya probo ser dueño del correo con el OTP), solo
+      // no se le abre sesion nueva.
+    }
+  }
+
+  const response = NextResponse.json({ verified: true, accountCreated, email });
   response.cookies.delete(OTP_COOKIE_NAME);
   return response;
 }

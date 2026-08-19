@@ -262,7 +262,10 @@
   "AuditoriaGratisVerificar": {
     "missingInfo": "Faltam informações da solicitação — tente a auditoria gratuita novamente.",
     "title": "Sua auditoria já está pronta",
-    "subtitle": "Verifique seu e-mail para ver o relatório.",
+    "subtitle": "Crie sua conta para ver o relatório e consultá-lo quando quiser.",
+    "createAccountHint": "Escolha uma senha — com seu e-mail e essa senha você vai poder entrar depois para ver seu progresso.",
+    "password": "Senha",
+    "passwordTooShort": "A senha deve ter pelo menos 8 caracteres.",
     "sending": "Enviando...",
     "sendCode": "Enviar código",
     "code": "Código",
@@ -292,21 +295,6 @@
     "submit": "Entrar",
     "noAccount": "Ainda não tem conta?",
     "createAccount": "Crie uma grátis"
-  },
-  "Registro": {
-    "title": "Crie sua conta na Radar IA",
-    "businessName": "Nome do negócio",
-    "niche": "Ramo",
-    "country": "País",
-    "whatsapp": "WhatsApp (formato +55...)",
-    "whatsappPlaceholder": "+528100000000",
-    "taxId": "CNPJ/CPF (RFC / NIT / RUT / RUC / CUIT)",
-    "email": "E-mail",
-    "password": "Senha",
-    "submitting": "Criando conta...",
-    "submit": "Criar conta",
-    "genericError": "Não foi possível registrar.",
-    "loginFailedAfterSignup": "Conta criada, mas não foi possível entrar: {message}"
   },
   "Verificar": {
     "title": "Verifique seu negócio",
