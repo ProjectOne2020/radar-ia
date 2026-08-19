@@ -19,7 +19,14 @@ export async function upsertSubscription(
   const { data: existing } = await admin.from("subscriptions").select("id").eq("client_id", clientId).maybeSingle();
 
   if (existing) {
-    await admin.from("subscriptions").update(fields).eq("id", existing.id);
+    // `plan` se actualiza tambien: antes solo se aplicaban `fields` y el plan de una
+    // fila existente quedaba congelado en el primero que se hubiera creado. Eso dejaba
+    // la DB desincronizada de lo que el cliente realmente pago en Stripe (y el cron de
+    // re-medicion usa subscriptions.plan para decidir la frecuencia).
+    await admin
+      .from("subscriptions")
+      .update({ ...fields, plan })
+      .eq("id", existing.id);
   } else {
     await admin.from("subscriptions").insert({
       client_id: clientId,

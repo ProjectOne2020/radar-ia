@@ -275,30 +275,50 @@ export type Database = {
       }
       free_audits: {
         Row: {
+          client_id: string | null
           domain: string | null
           id: string
           ip_address: string | null
+          otp_attempts: number
+          otp_last_sent_at: string | null
+          otp_sends: number
           phone_whatsapp: string | null
           requested_at: string | null
           whatsapp_verified: boolean | null
         }
         Insert: {
+          client_id?: string | null
           domain?: string | null
           id?: string
           ip_address?: string | null
+          otp_attempts?: number
+          otp_last_sent_at?: string | null
+          otp_sends?: number
           phone_whatsapp?: string | null
           requested_at?: string | null
           whatsapp_verified?: boolean | null
         }
         Update: {
+          client_id?: string | null
           domain?: string | null
           id?: string
           ip_address?: string | null
+          otp_attempts?: number
+          otp_last_sent_at?: string | null
+          otp_sends?: number
           phone_whatsapp?: string | null
           requested_at?: string | null
           whatsapp_verified?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "free_audits_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       locations: {
         Row: {
@@ -467,6 +487,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rate_limit_events: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: string
+          identifier: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: string
+          identifier: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
       }
       sku_catalogs: {
         Row: {

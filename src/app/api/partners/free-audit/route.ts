@@ -94,6 +94,10 @@ export async function POST(request: Request) {
       androidPackageId: androidPackageId || undefined,
     });
 
+    // Mismo enlace que el endpoint publico — sin esto, /api/free-audit/report
+    // no puede validar que el reporte pedido corresponde a esta solicitud.
+    await admin.from("free_audits").update({ client_id: result.clientId }).eq("id", freeAudit.id);
+
     return NextResponse.json({
       freeAuditId: freeAudit.id,
       clientId: result.clientId,

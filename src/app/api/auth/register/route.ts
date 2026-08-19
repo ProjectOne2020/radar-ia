@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateTaxId } from "@/lib/auth/tax-id";
 import { currencyForCountry, COUNTRY_CURRENCY, NICHES } from "@/lib/auth/country";
+import { getClientIp } from "@/lib/security/client-ip";
+import { consumeRateLimit, tooManyRequests } from "@/lib/security/rate-limit";
 
 const VALID_NICHES = new Set(NICHES.map((n) => n.value));
 const VALID_COUNTRIES = new Set(Object.keys(COUNTRY_CURRENCY));
@@ -11,6 +13,19 @@ const VALID_COUNTRIES = new Set(Object.keys(COUNTRY_CURRENCY));
 // existe el JWT con el custom claim client_id que exige la RLS de M1). El navegador hace
 // login por separado despues (signInWithPassword) para establecer la sesion con cookies.
 export async function POST(request: Request) {
+  // Sin limite, este endpoint permitia crear cuentas de Supabase Auth y filas de
+  // `clients` de forma ilimitada desde una sola maquina (spam de DB + de auth).
+  const ip = getClientIp(request);
+  const ipLimit = await consumeRateLimit({
+    bucket: "auth_register_ip",
+    identifier: ip,
+    limit: 5,
+    windowSeconds: 60 * 60,
+  });
+  if (!ipLimit.allowed) {
+    return tooManyRequests("Demasiados registros desde esta conexión. Intenta más tarde.", ipLimit.retryAfterSeconds);
+  }
+
   const body = await request.json().catch(() => null);
   const { businessName, niche, country, phoneWhatsapp, taxId, email, password } = body ?? {};
 

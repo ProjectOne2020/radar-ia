@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { runMeasurementForPromptSet } from "@/lib/ai-engines/run-measurement";
+import { requireInternalSecret } from "@/lib/security/internal-secret";
 
 // Disparo manual de M2 para pruebas (y, en M11, el cron de re-medicion lo llamara
 // internamente en vez de por HTTP). Pega directo a APIs de pago — protegido por secreto.
 export async function POST(request: Request) {
-  const secret = request.headers.get("x-internal-secret");
-  if (!secret || secret !== process.env.INTERNAL_MEASURE_SECRET) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const denied = requireInternalSecret(request);
+  if (denied) return denied;
 
   const body = await request.json().catch(() => null);
   const promptSetId = body?.promptSetId;

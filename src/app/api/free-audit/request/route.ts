@@ -91,6 +91,10 @@ export async function POST(request: Request) {
       androidPackageId: androidPackageId || undefined,
     });
 
+    // Enlaza la solicitud con el cliente que genero — es lo que impide que
+    // /api/free-audit/report entregue el reporte de otro cliente (IDOR).
+    await admin.from("free_audits").update({ client_id: result.clientId }).eq("id", freeAudit.id);
+
     return NextResponse.json({ freeAuditId: freeAudit.id, clientId: result.clientId });
   } catch (err) {
     return NextResponse.json(

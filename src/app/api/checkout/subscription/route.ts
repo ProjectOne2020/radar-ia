@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripeClient } from "@/lib/stripe/client";
 import { getRecurringPriceId } from "@/lib/stripe/price-ids";
 import type { PlanId } from "@/lib/pricing/plans";
@@ -21,6 +22,31 @@ export async function POST(request: Request) {
   const plan = body?.plan as PlanId;
   if (!VALID_PLANS.includes(plan)) {
     return NextResponse.json({ error: "Plan inválido para checkout automático." }, { status: 400 });
+  }
+
+  // Bypass de plan corregido: antes este endpoint no verificaba nada sobre el setup
+  // fee. Un usuario podia llamar /api/checkout/setup con plan "lite" (setup $0
+  // self-serve, se marca pagado sin pasar por Stripe) y despues llamar aqui con
+  // plan "pro", quedando suscrito a Pro sin haber pagado nunca el setup de Pro
+  // ($5,999 MXN). Ahora el setup debe estar pagado PARA ESE MISMO plan.
+  const admin = createAdminClient();
+  const { data: subscription } = await admin
+    .from("subscriptions")
+    .select("plan, setup_fee_paid")
+    .eq("client_id", clientId)
+    .maybeSingle();
+
+  if (!subscription?.setup_fee_paid) {
+    return NextResponse.json(
+      { error: "Falta completar el pago de configuración inicial antes de la suscripción." },
+      { status: 400 },
+    );
+  }
+  if (subscription.plan !== plan) {
+    return NextResponse.json(
+      { error: "El plan no coincide con el de la configuración inicial pagada." },
+      { status: 400 },
+    );
   }
 
   const priceId = getRecurringPriceId(plan);

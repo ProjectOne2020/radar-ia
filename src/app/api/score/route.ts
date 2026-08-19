@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { calculateScoreForClient } from "@/lib/scoring/calculate-score";
+import { requireInternalSecret } from "@/lib/security/internal-secret";
 
 // Disparo manual de M4 para pruebas. Mismo secreto que /api/measure y /api/audit.
 export async function POST(request: Request) {
-  const secret = request.headers.get("x-internal-secret");
-  if (!secret || secret !== process.env.INTERNAL_MEASURE_SECRET) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const denied = requireInternalSecret(request);
+  if (denied) return denied;
 
   const body = await request.json().catch(() => null);
   const clientId = body?.clientId;

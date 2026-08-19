@@ -5,6 +5,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // el orden de las pantallas del frontend — cualquiera que llame este endpoint directo debe
 // chocar con el mismo chequeo. Solo expone audit_findings con detail_locked=false y el score
 // general (01-CONTEXTO-NEGOCIO.md seccion 8: "nunca el detalle accionable exacto").
+//
+// IDOR corregido: antes se validaba que el freeAuditId estuviera verificado, pero NO que
+// ese freeAuditId correspondiera al clientId pedido — los dos venian sueltos en la query
+// string. Cualquiera con una auditoria gratis propia verificada podia iterar clientIds
+// ajenos y leer el nombre, rubro, score y hallazgos de cualquier cliente, incluidos los
+// de pago. Ahora free_audits.client_id es la fuente de verdad y el clientId del query
+// string debe coincidir.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const freeAuditId = searchParams.get("freeAuditId");
@@ -18,7 +25,7 @@ export async function GET(request: Request) {
 
   const { data: freeAudit, error: freeAuditError } = await admin
     .from("free_audits")
-    .select("whatsapp_verified")
+    .select("whatsapp_verified, client_id")
     .eq("id", freeAuditId)
     .single();
 
@@ -27,6 +34,10 @@ export async function GET(request: Request) {
   }
   if (!freeAudit.whatsapp_verified) {
     return NextResponse.json({ error: "Verifica tu WhatsApp antes de ver el reporte." }, { status: 403 });
+  }
+  // El reporte solo se entrega para el cliente que esta auditoria genero.
+  if (!freeAudit.client_id || freeAudit.client_id !== clientId) {
+    return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
   }
 
   const [{ data: client }, { data: score }, { data: findings }] = await Promise.all([

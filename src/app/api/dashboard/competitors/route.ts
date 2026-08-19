@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addCompetitor } from "@/lib/dashboard/add-competitor";
+import { consumeRateLimit, tooManyRequests } from "@/lib/security/rate-limit";
 
 async function getSessionClientId() {
   const supabase = await createClient();
@@ -28,6 +29,39 @@ export async function POST(request: Request) {
   }
   if (!websiteUrl || typeof websiteUrl !== "string") {
     return NextResponse.json({ error: "Sitio web requerido." }, { status: 400 });
+  }
+  if (competitorName.length > 120 || city.length > 120 || websiteUrl.length > 500) {
+    return NextResponse.json({ error: "Alguno de los campos excede el largo permitido." }, { status: 400 });
+  }
+
+  // Este es el endpoint mas caro del producto: cada alta corre las preguntas activas
+  // del dueño contra los 4 motores de IA reales + auditoria tecnica + score. Antes
+  // bastaba con estar logueado — sin suscripcion activa y sin tope de frecuencia.
+  const admin = createAdminClient();
+  const { data: subscription } = await admin
+    .from("subscriptions")
+    .select("status")
+    .eq("client_id", clientId)
+    .maybeSingle();
+
+  if (subscription?.status !== "active") {
+    return NextResponse.json(
+      { error: "Necesitas una suscripción activa para comparar competidores." },
+      { status: 403 },
+    );
+  }
+
+  const addLimit = await consumeRateLimit({
+    bucket: "competitor_add_client",
+    identifier: clientId,
+    limit: 10,
+    windowSeconds: 24 * 60 * 60,
+  });
+  if (!addLimit.allowed) {
+    return tooManyRequests(
+      "Alcanzaste el límite de competidores nuevos por hoy. Intenta mañana.",
+      addLimit.retryAfterSeconds,
+    );
   }
 
   try {
