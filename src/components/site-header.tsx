@@ -24,6 +24,12 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-6 md:flex">
           <Link
+            href="/como-funciona"
+            className="text-sm text-text-secondary transition-colors hover:text-ink"
+          >
+            {t("howItWorks")}
+          </Link>
+          <Link
             href="/precios"
             className="text-sm text-text-secondary transition-colors hover:text-ink"
           >
@@ -65,6 +71,9 @@ export function SiteHeader() {
 
       {open && (
         <nav className="flex flex-col gap-4 border-t border-border px-5 py-5 md:hidden">
+          <Link href="/como-funciona" className="text-[0.95rem] text-text" onClick={() => setOpen(false)}>
+            {t("howItWorks")}
+          </Link>
           <Link href="/precios" className="text-[0.95rem] text-text" onClick={() => setOpen(false)}>
             {t("pricing")}
           </Link>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/ui/container";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert } from "@/components/ui/panel";
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScoreRing } from "@/components/radar/score-ring";
 import { PillarSignal, type PillarStatus } from "@/components/radar/pillar-signal";
 import { RadarNetwork } from "@/components/radar/radar-network";
+import { JsonLd } from "@/components/seo/json-ld";
 
 // Landing publica de "/". Estructura: pregunta -> deteccion -> evidencia -> accion
 // (constitucion de diseno, ahora nativa en 03-ARQUITECTURA-TECNICA.md). El panel de
@@ -46,8 +48,30 @@ export default async function Home() {
 
   const niches = ["dental", "estetica", "inmobiliaria", "ecommerce", "app"] as const;
 
+  // Dogfooding (05-MARKETING-DISTRIBUCION.md 2.4): mismo contenido de respuesta directa
+  // que el pilar 5 audita en los clientes, aplicado al propio sitio — preguntas reales
+  // que alguien le haria a una IA sobre el producto, con respuestas que reusan el texto
+  // ya validado del resto de la pagina (nada nuevo inventado para el schema).
+  const faqs = [
+    { q: t("faq1Q"), a: t("whatWeDoBody") },
+    { q: t("faq2Q"), a: t("faq2A") },
+    { q: t("faq3Q"), a: t("guaranteeBody") },
+    { q: t("faq4Q"), a: t("faq4A") },
+  ];
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <>
+      <JsonLd data={faqSchema} />
       <SiteHeader />
       <main>
         {/* HERO — pregunta + evidencia real del producto (no ilustracion) */}
@@ -130,6 +154,13 @@ export default async function Home() {
                 </li>
               ))}
             </ol>
+
+            <Link
+              href="/como-funciona"
+              className="mt-8 inline-block text-sm font-medium text-text underline underline-offset-2"
+            >
+              {t("howItWorksCta")}
+            </Link>
           </Container>
         </section>
 
@@ -158,16 +189,34 @@ export default async function Home() {
                 </Badge>
               ))}
             </div>
+
+            <Link
+              href="/listado"
+              className="mt-8 inline-block text-sm font-medium text-text underline underline-offset-2"
+            >
+              {t("listadoCta")}
+            </Link>
           </Container>
         </section>
 
-        <footer className="border-t border-border">
-          <Container className="flex flex-col items-start justify-between gap-3 py-8 text-sm text-text-muted sm:flex-row sm:items-center">
-            <span>{t("brand")}</span>
-            <span>{t("tagline")}</span>
+        {/* PREGUNTAS FRECUENTES — dogfooding del pilar 5 (contenido de respuesta
+            directa) sobre la marca misma, con JSON-LD FAQPage a juego */}
+        <section className="border-t border-border bg-surface">
+          <Container narrow className="py-14 sm:py-20">
+            <h2 className="text-2xl sm:text-[1.75rem]">{t("faqTitle")}</h2>
+            <div className="mt-8 flex flex-col gap-8">
+              {faqs.map((faq) => (
+                <div key={faq.q}>
+                  <h3 className="text-base font-semibold text-ink">{faq.q}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-text-secondary">{faq.a}</p>
+                </div>
+              ))}
+            </div>
           </Container>
-        </footer>
+        </section>
+
       </main>
+      <SiteFooter />
     </>
   );
 }

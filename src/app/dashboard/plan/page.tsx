@@ -6,6 +6,7 @@ import { PLANS } from "@/lib/pricing/plans";
 import { Panel, Alert } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PublicListingToggle } from "@/components/dashboard/public-listing-toggle";
 import { cn } from "@/lib/cn";
 
 // M9 — dispara los dos cargos SEPARADOS (setup fee -> suscripcion), nunca combinados.
@@ -80,6 +81,8 @@ export default function PlanPage() {
           </Panel>
         ))}
       </div>
+
+      <PublicListingToggle />
     </>
   );
 }

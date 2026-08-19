@@ -46,6 +46,18 @@ export async function POST(request: Request) {
           status: mapStripeStatus(stripeSub.status),
           current_period_end: getCurrentPeriodEnd(stripeSub),
         });
+      } else if (type === "enterprise" && typeof session.subscription === "string") {
+        // M24 — el checkout de Enterprise cobra el setup fee y arranca la suscripcion
+        // en UNA sola sesion (line items one-time + recurring mezclados), a diferencia
+        // de lite/plus/pro donde son dos checkouts separados — asi que aqui se marca
+        // setup_fee_paid Y se registra la suscripcion en el mismo evento.
+        const stripeSub = await stripe.subscriptions.retrieve(session.subscription);
+        await upsertSubscription(admin, clientId, plan, {
+          setup_fee_paid: true,
+          stripe_subscription_id: stripeSub.id,
+          status: mapStripeStatus(stripeSub.status),
+          current_period_end: getCurrentPeriodEnd(stripeSub),
+        });
       }
       break;
     }

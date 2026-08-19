@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/ui/container";
 import { Panel, Alert } from "@/components/ui/panel";
 import { Input, Label } from "@/components/ui/field";
@@ -72,6 +73,7 @@ export default function LoginPage() {
           </Panel>
         </Container>
       </main>
+      <SiteFooter />
     </>
   );
 }

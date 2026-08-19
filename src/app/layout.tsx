@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Analytics } from "@vercel/analytics/next";
 import { PresenceTracker } from "@/components/presence-tracker";
+import { JsonLd } from "@/components/seo/json-ld";
 import "./globals.css";
 
 // M21 — Geist (identidad Vercel/Linear-aligned, un solo sans variable para
@@ -30,13 +31,38 @@ export const metadata: Metadata = {
   },
 };
 
+// M27 — dogfooding: Organization + Service en JSON-LD sitewide (mismo Organization ->
+// Servicios que el pilar 4 audita en los clientes, aplicado a la marca misma —
+// 05-MARKETING-DISTRIBUCION.md seccion 2.4).
+async function organizationSchema(appUrl: string) {
+  const t = await getTranslations("Home");
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Radar IA",
+    url: appUrl,
+    description: t("whatWeDoBody"),
+    areaServed: ["MX", "CO", "CL", "PE", "AR", "BR"],
+    makesOffer: {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Auditoría y monitoreo de visibilidad en motores de IA",
+        description: t("whatWeDoBody"),
+      },
+    },
+  };
+}
+
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://radar.omniflowcreator.com";
 
   return (
     <html lang={locale} className={`${geist.variable} ${geistMono.variable}`}>
       <body>
         <NextIntlClientProvider>
+          <JsonLd data={await organizationSchema(appUrl)} />
           {children}
           <Analytics />
           <PresenceTracker />

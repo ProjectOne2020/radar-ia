@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { NICHES, SUPPORTED_COUNTRIES } from "@/lib/auth/country";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/ui/container";
 import { Panel, Alert } from "@/components/ui/panel";
 import { Input, Select, Label } from "@/components/ui/field";
@@ -13,12 +14,23 @@ import { ProgressSteps } from "@/components/ui/progress-steps";
 import { ScanningIndicator } from "@/components/radar/scanning-indicator";
 
 const TOTAL_STEPS = 4;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const AXES = ["local", "ecommerce", "app"] as const;
+// Sugerencias de rubro (M23 — ya no es un enum cerrado, solo sugerencias en un
+// <datalist>; "app" se quito de aqui porque ahora es un eje, no un rubro).
+const NICHE_SUGGESTIONS = NICHES.filter((n) => n.value !== "app");
 
 // Auditoria gratis reestructurada en 4 pasos cortos (negocio -> ubicacion -> donde te
 // buscamos -> contacto) en vez de un formulario plano de 6-8 campos, siguiendo la
 // arquitectura de onboarding progresivo mobile-first documentada en
 // 03-ARQUITECTURA-TECNICA.md. La validacion por paso preserva exactamente los mismos
 // campos requeridos que el formulario plano original (regla de no romper funcionalidad).
+//
+// M23 — el rubro es texto libre (ya no un <select> de 5 opciones), el eje de scoring
+// (local/ecommerce/app) es un campo explicito separado, y dentro del eje "app" se
+// distingue app nativa (pide ficha de tienda) de app web (solo pide URL, como cualquier
+// sitio) — antes cualquier "app" exigia IDs de App Store/Google Play aunque el usuario
+// quisiera auditar una app web sin presencia en tiendas.
 export default function AuditoriaGratisPage() {
   const t = useTranslations("AuditoriaGratis");
   const tNiches = useTranslations("Niches");
@@ -27,23 +39,28 @@ export default function AuditoriaGratisPage() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     businessName: "",
-    niche: "dental",
+    niche: "",
+    axis: "local" as (typeof AXES)[number],
+    appType: "web" as "web" | "native",
     city: "",
     country: "MX",
     websiteUrl: "",
     phoneWhatsapp: "",
+    email: "",
+    publicListingOptIn: false,
     iosAppId: "",
     androidPackageId: "",
   });
-  const isApp = form.niche === "app";
+  const isApp = form.axis === "app";
+  const isNativeApp = isApp && form.appType === "native";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const stepValid = [
-    form.businessName.trim().length > 0,
+    form.businessName.trim().length > 0 && form.niche.trim().length > 0,
     form.city.trim().length > 0 && form.country.trim().length > 0,
-    isApp || form.websiteUrl.trim().length > 0,
-    form.phoneWhatsapp.trim().length > 0,
+    isNativeApp || form.websiteUrl.trim().length > 0,
+    form.phoneWhatsapp.trim().length > 0 && EMAIL_RE.test(form.email.trim()),
   ];
 
   const stepTitles = [t("stepBusiness"), t("stepLocation"), t("stepPresence"), t("stepContact")];
@@ -117,18 +134,36 @@ export default function AuditoriaGratisPage() {
                     />
                   </div>
                   <div>
+                    <Label>{t("axisLabel")}</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {AXES.map((axis) => (
+                        <Button
+                          key={axis}
+                          type="button"
+                          size="sm"
+                          variant={form.axis === axis ? "primary" : "secondary"}
+                          onClick={() => setForm({ ...form, axis })}
+                        >
+                          {t(`axis_${axis}`)}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
                     <Label htmlFor="niche">{t("niche")}</Label>
-                    <Select
+                    <Input
                       id="niche"
+                      required
+                      list="niche-suggestions"
+                      placeholder={t("nichePlaceholder")}
                       value={form.niche}
                       onChange={(e) => setForm({ ...form, niche: e.target.value })}
-                    >
-                      {NICHES.map((n) => (
-                        <option key={n.value} value={n.value}>
-                          {tNiches(n.value)}
-                        </option>
+                    />
+                    <datalist id="niche-suggestions">
+                      {NICHE_SUGGESTIONS.map((n) => (
+                        <option key={n.value} value={tNiches(n.value)} />
                       ))}
-                    </Select>
+                    </datalist>
                   </div>
                 </>
               )}
@@ -165,12 +200,34 @@ export default function AuditoriaGratisPage() {
               {step === 2 && (
                 <>
                   {isApp && (
+                    <div>
+                      <Label>{t("appTypeLabel")}</Label>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={!isNativeApp ? "primary" : "secondary"}
+                          onClick={() => setForm({ ...form, appType: "web" })}
+                        >
+                          {t("appTypeWeb")}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={isNativeApp ? "primary" : "secondary"}
+                          onClick={() => setForm({ ...form, appType: "native" })}
+                        >
+                          {t("appTypeNative")}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {isNativeApp && (
                     <>
                       <div>
                         <Label htmlFor="iosAppId">{t("iosAppId")}</Label>
                         <Input
                           id="iosAppId"
-                          autoFocus
                           placeholder={t("iosAppIdPlaceholder")}
                           value={form.iosAppId}
                           onChange={(e) => setForm({ ...form, iosAppId: e.target.value })}
@@ -191,7 +248,7 @@ export default function AuditoriaGratisPage() {
                     <Label htmlFor="websiteUrl">{isApp ? t("websiteUrlApp") : t("websiteUrl")}</Label>
                     <Input
                       id="websiteUrl"
-                      required={!isApp}
+                      required={!isNativeApp}
                       autoFocus={!isApp}
                       type="url"
                       placeholder={t("websiteUrlPlaceholder")}
@@ -203,17 +260,39 @@ export default function AuditoriaGratisPage() {
               )}
 
               {step === 3 && (
-                <div>
-                  <Label htmlFor="whatsapp">{t("whatsapp")}</Label>
-                  <Input
-                    id="whatsapp"
-                    required
-                    autoFocus
-                    placeholder={t("whatsappPlaceholder")}
-                    value={form.phoneWhatsapp}
-                    onChange={(e) => setForm({ ...form, phoneWhatsapp: e.target.value })}
-                  />
-                </div>
+                <>
+                  <div>
+                    <Label htmlFor="whatsapp">{t("whatsapp")}</Label>
+                    <Input
+                      id="whatsapp"
+                      required
+                      autoFocus
+                      placeholder={t("whatsappPlaceholder")}
+                      value={form.phoneWhatsapp}
+                      onChange={(e) => setForm({ ...form, phoneWhatsapp: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">{t("email")}</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      required
+                      placeholder={t("emailPlaceholder")}
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    />
+                  </div>
+                  <label className="flex items-start gap-2.5 text-sm text-text-secondary">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded-[3px] border-border-strong accent-signal"
+                      checked={form.publicListingOptIn}
+                      onChange={(e) => setForm({ ...form, publicListingOptIn: e.target.checked })}
+                    />
+                    {t("publicListingOptIn")}
+                  </label>
+                </>
               )}
 
               {error && <Alert tone="critical">{error}</Alert>}
@@ -248,6 +327,7 @@ export default function AuditoriaGratisPage() {
           </Panel>
         </Container>
       </main>
+      <SiteFooter />
     </>
   );
 }

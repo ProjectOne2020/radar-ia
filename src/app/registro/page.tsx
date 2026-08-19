@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { NICHES, SUPPORTED_COUNTRIES } from "@/lib/auth/country";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/ui/container";
 import { Panel, Alert } from "@/components/ui/panel";
 import { Input, Select, Label } from "@/components/ui/field";
@@ -164,6 +165,7 @@ export default function RegistroPage() {
           </Panel>
         </Container>
       </main>
+      <SiteFooter />
     </>
   );
 }

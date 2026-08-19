@@ -76,6 +76,17 @@ export function DashboardShell({
       </header>
 
       <Container className="py-8 sm:py-10">{children}</Container>
+
+      <footer className="border-t border-border">
+        <Container className="flex flex-wrap gap-x-5 gap-y-2 py-6 text-xs text-text-muted">
+          <Link href="/terminos" className="hover:text-text-secondary">
+            {t("footerTerms")}
+          </Link>
+          <Link href="/privacidad" className="hover:text-text-secondary">
+            {t("footerPrivacy")}
+          </Link>
+        </Container>
+      </footer>
     </div>
   );
 }

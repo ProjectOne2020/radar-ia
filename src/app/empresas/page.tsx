@@ -9,20 +9,21 @@ import { Panel, Alert } from "@/components/ui/panel";
 import { Input, Label, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 
-// Formulario publico del programa de partners/agencias (seccion 8.3 de
-// 01-CONTEXTO-NEGOCIO.md). Llega a partner_applications (RLS sin policies, insert via
-// service role en /api/partners/apply) y se revisa en /admin/partners — aceptar crea el
-// partner_accounts real con su API key, el mismo mecanismo que ya existia para altas
-// manuales.
-export default function AgenciasPage() {
-  const t = useTranslations("Agencias");
+// M24 — formulario publico de cotizacion Enterprise, pedido explicitamente por el
+// fundador "parecido al de las agencias" (mismo patron de /agencias: llega a una tabla
+// con RLS deny-by-default via /api/enterprise/apply, se revisa y cotiza en
+// /admin/empresas). El plan Enterprise no tiene checkout automatico (sin precio fijo:
+// 01-CONTEXTO-NEGOCIO.md), asi que este es el unico camino de entrada.
+export default function EmpresasPage() {
+  const t = useTranslations("Empresas");
   const [form, setForm] = useState({
-    agencyName: "",
+    businessName: "",
     contactName: "",
     email: "",
     phoneWhatsapp: "",
     websiteUrl: "",
-    clientCount: "",
+    city: "",
+    country: "",
     message: "",
   });
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export default function AgenciasPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/partners/apply", {
+      const res = await fetch("/api/enterprise/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -72,13 +73,13 @@ export default function AgenciasPage() {
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
-                  <Label htmlFor="agencyName">{t("agencyName")}</Label>
+                  <Label htmlFor="businessName">{t("businessName")}</Label>
                   <Input
-                    id="agencyName"
+                    id="businessName"
                     required
                     autoFocus
-                    value={form.agencyName}
-                    onChange={(e) => setForm({ ...form, agencyName: e.target.value })}
+                    value={form.businessName}
+                    onChange={(e) => setForm({ ...form, businessName: e.target.value })}
                   />
                 </div>
                 <div>
@@ -121,18 +122,22 @@ export default function AgenciasPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="clientCount">{t("clientCount")}</Label>
+                  <Label htmlFor="city">{t("city")}</Label>
+                  <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="country">{t("country")}</Label>
                   <Input
-                    id="clientCount"
-                    placeholder={t("clientCountPlaceholder")}
-                    value={form.clientCount}
-                    onChange={(e) => setForm({ ...form, clientCount: e.target.value })}
+                    id="country"
+                    value={form.country}
+                    onChange={(e) => setForm({ ...form, country: e.target.value })}
                   />
                 </div>
                 <div>
                   <Label htmlFor="message">{t("message")}</Label>
                   <Textarea
                     id="message"
+                    placeholder={t("messagePlaceholder")}
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                   />

@@ -39,7 +39,7 @@ function VerificarContent() {
     }
 
     setSent(true);
-    setInfo(data.whatsappConfigured ? t("whatsappSent") : t("whatsappNotConfigured"));
+    setInfo(data.emailConfigured ? t("emailSent") : t("emailNotConfigured"));
   }
 
   async function handleVerify(e: React.FormEvent) {

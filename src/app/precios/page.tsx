@@ -2,10 +2,11 @@ import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { PLANS, getSetupFee, getRecurringFee, isManualCurrency } from "@/lib/pricing/plans";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/ui/container";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 const CURRENCY_LOCALE: Record<string, string> = {
@@ -98,9 +99,9 @@ export default async function PreciosPage() {
                       {t("choosePlan", { plan: plan.name })}
                     </ButtonLink>
                   ) : (
-                    <Button variant="secondary" className="mt-5 w-full">
+                    <ButtonLink href="/empresas" variant="secondary" className="mt-5 w-full">
                       {t("contactQuote")}
-                    </Button>
+                    </ButtonLink>
                   )}
                 </Panel>
               );
@@ -118,6 +119,7 @@ export default async function PreciosPage() {
           </Panel>
         </Container>
       </main>
+      <SiteFooter />
     </>
   );
 }

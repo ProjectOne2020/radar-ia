@@ -1,10 +1,52 @@
+import { createAdminClient } from "@/lib/supabase/admin";
+
+// M28 — banco de preguntas nativas por rubro+pais en la tabla `question_bank` (pedido
+// explicito del fundador: "las 150 preguntas son el motor de Radar IA", un banco curado
+// por combinacion rubro+pais, no traducido del ingles, mucho mas grande que las 4-5
+// plantillas a mano de abajo). Cuando existe contenido activo para el rubro+pais exacto
+// de esta auditoria, se usa ese banco (con muestreo aleatorio, para que auditorias
+// distintas del mismo rubro+pais no repitan siempre las mismas 5 preguntas); si no hay
+// banco todavia para esa combinacion, se cae al fallback de CURATED_TEMPLATES/generico
+// de mas abajo — nunca deja al cliente sin preguntas mientras el banco se sigue llenando
+// pais por pais, rubro por rubro.
+export async function buildPromptsFromBank(
+  niche: string,
+  country: string,
+  axis: "local" | "ecommerce" | "app" | undefined,
+  city: string,
+  limit: number,
+): Promise<string[] | null> {
+  const admin = createAdminClient();
+  const normalized = niche.trim().toLowerCase();
+  const categoryType = axis === "app" ? "app" : "vertical";
+
+  const { data } = await admin
+    .from("question_bank")
+    .select("question_text, rubro, rubro_label")
+    .eq("country", country)
+    .eq("category_type", categoryType)
+    .eq("active", true);
+
+  if (!data || data.length === 0) return null;
+
+  const matched = data.filter(
+    (row) => row.rubro.toLowerCase() === normalized || row.rubro_label.toLowerCase() === normalized,
+  );
+  if (matched.length === 0) return null;
+
+  const shuffled = [...matched].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, limit).map((row) => row.question_text.replace(/\{city\}/g, city));
+}
+
 // Preguntas plantilla para la auditoria gratis (04-MODULOS-CONSTRUCCION.md M6: "5-10
 // preguntas, no el set completo de un plan pagado"). No hay ningun modulo dedicado a
 // generar prompt_sets por nicho todavia (M15/Antigravity es para contenido completo del
 // sitio del cliente, no para esto) — son plantillas curadas a mano, en el mismo tono del
 // ejemplo de copy ya validado en 01-CONTEXTO-NEGOCIO.md seccion 7. Ajustables por el
 // fundador; no son un peso de scoring ni un precio, son solo el texto de las preguntas.
-const TEMPLATES: Record<string, string[]> = {
+// A partir de M28, este es el FALLBACK cuando `question_bank` no tiene todavia contenido
+// para el rubro+pais exacto — antes era la unica fuente.
+const CURATED_TEMPLATES: Record<string, string[]> = {
   dental: [
     "¿Cuál es una buena clínica dental en {city}?",
     "¿Dónde puedo encontrar un dentista de confianza en {city}?",
@@ -26,27 +68,53 @@ const TEMPLATES: Record<string, string[]> = {
     "¿Qué inmobiliaria recomiendan en {city} para comprar casa?",
     "¿Cómo rentar un departamento en {city}?",
   ],
-  ecommerce: [
+  "tienda online (e-commerce)": [
     "¿Dónde puedo comprar en línea con envío a {city}?",
     "mejores tiendas online que envían a {city}",
     "¿Qué tienda recomiendan para comprar en {city}?",
   ],
-  // M16 — a diferencia de los demas niches, "app" no es una categoria unica (una app de
-  // delivery y una app de notas no comparten intencion de busqueda), asi que una plantilla
-  // generica tipo "mejor app en {city}" mediria poco. Las preguntas usan el nombre de la
-  // app directamente — es la pregunta que si tiene sentido para cualquier app: "la
-  // mencionan/recomiendan cuando alguien pregunta por ella", que es exactamente lo que
-  // mide el pilar 8.
-  app: [
-    "¿es buena la app {appName}?",
-    "opiniones sobre la app {appName}",
-    "¿vale la pena usar {appName}?",
-    "alternativas a {appName}",
-    "mejores apps similares a {appName} disponibles en {city}",
-  ],
 };
 
-export function buildFreeAuditPrompts(niche: string, city: string, appName?: string): string[] {
-  const templates = TEMPLATES[niche] ?? TEMPLATES.dental;
-  return templates.map((t) => t.replace("{city}", city).replace("{appName}", appName ?? ""));
+// Rubro libre (M23 — el formulario dejo de limitar a 5 opciones fijas, "no debe haber
+// limitantes para que las personas puedan pedir su auditoria gratis"): si el texto que
+// escribio el usuario no coincide con una de las plantillas curadas de arriba, se genera
+// una plantilla generica usando el rubro tal cual lo escribio. Frases sin concordancia de
+// genero a proposito (no se puede saber si "veterinaria"/"veterinario" aplica de antemano).
+function genericTemplates(niche: string, city: string): string[] {
+  return [
+    `¿qué ${niche} recomiendan en ${city}?`,
+    `mejores opciones de ${niche} en ${city}`,
+    `¿dónde puedo encontrar ${niche} de confianza en ${city}?`,
+    `opiniones sobre ${niche} en ${city}`,
+    `¿cuánto cuesta ${niche} en ${city}?`,
+  ];
+}
+
+// M16 — a diferencia de los demas ejes, "app" no es una categoria unica (una app de
+// delivery y una app de notas no comparten intencion de busqueda), asi que una plantilla
+// generica tipo "mejor app en {city}" mediria poco. Las preguntas usan el nombre de la
+// app directamente — es la pregunta que si tiene sentido para cualquier app: "la
+// mencionan/recomiendan cuando alguien pregunta por ella", que es exactamente lo que
+// mide el pilar 8. Aplica igual a apps nativas y apps web (M23).
+const APP_TEMPLATES = [
+  "¿es buena la app {appName}?",
+  "opiniones sobre la app {appName}",
+  "¿vale la pena usar {appName}?",
+  "alternativas a {appName}",
+  "mejores apps similares a {appName} disponibles en {city}",
+];
+
+export function buildFreeAuditPrompts(
+  niche: string,
+  city: string,
+  businessName?: string,
+  axis?: "local" | "ecommerce" | "app",
+): string[] {
+  if (axis === "app") {
+    return APP_TEMPLATES.map((t) => t.replace("{city}", city).replace("{appName}", businessName ?? ""));
+  }
+
+  const normalized = niche.trim().toLowerCase();
+  const templates = CURATED_TEMPLATES[normalized] ?? genericTemplates(niche.trim(), city);
+  return templates.map((t) => t.replace("{city}", city));
 }

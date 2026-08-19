@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateOtpCode, buildOtpCookieValue, OTP_COOKIE_NAME, OTP_TTL_MS } from "@/lib/auth/otp";
-import { sendWhatsAppText } from "@/lib/whatsapp/send-message";
+import { sendOtpEmail } from "@/lib/free-audit/send-otp-email";
 import { getClientIp } from "@/lib/security/client-ip";
 import { consumeRateLimit, tooManyRequests } from "@/lib/security/rate-limit";
 
@@ -36,12 +36,23 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
   const { data: freeAudit, error } = await admin
     .from("free_audits")
-    .select("phone_whatsapp, otp_sends, otp_last_sent_at")
+    .select("phone_whatsapp, otp_sends, otp_last_sent_at, client_id")
     .eq("id", freeAuditId)
     .single();
 
   if (error || !freeAudit || !freeAudit.phone_whatsapp) {
     return NextResponse.json({ error: "Solicitud de auditoría no encontrada." }, { status: 404 });
+  }
+
+  // Canal de verificación: correo (Resend), no WhatsApp — ver send-otp-email.ts. El
+  // correo se guarda en clients.email, no en free_audits, así que se busca por client_id
+  // (ya enlazado por /api/free-audit/request antes de que el usuario llegue a esta pantalla).
+  if (!freeAudit.client_id) {
+    return NextResponse.json({ error: "Solicitud de auditoría todavía no está lista." }, { status: 404 });
+  }
+  const { data: client } = await admin.from("clients").select("email").eq("id", freeAudit.client_id).single();
+  if (!client?.email) {
+    return NextResponse.json({ error: "Esta solicitud no tiene un correo asociado." }, { status: 404 });
   }
 
   if ((freeAudit.otp_sends ?? 0) >= MAX_SENDS_PER_AUDIT) {
@@ -75,14 +86,11 @@ export async function POST(request: Request) {
     })
     .eq("id", freeAuditId);
 
-  const { sent, reason } = await sendWhatsAppText(
-    freeAudit.phone_whatsapp,
-    `Radar IA: tu código para ver tu auditoría gratis es ${code}. Vence en 10 minutos.`
-  );
+  const { sent, reason } = await sendOtpEmail(client.email, code);
 
   const response = NextResponse.json({
     sent,
-    whatsappConfigured: sent || reason !== "WHATSAPP_CLOUD_API_TOKEN/PHONE_NUMBER_ID no configurados",
+    emailConfigured: sent || reason !== "RESEND_API_KEY/RESEND_FROM_EMAIL no configurados",
   });
 
   response.cookies.set(OTP_COOKIE_NAME, cookieValue, {

@@ -206,6 +206,7 @@ export type Database = {
           partner_id: string | null
           phone_whatsapp: string
           plan: string
+          public_listing_opt_in: boolean
           tax_id: string | null
           verification_status: string
         }
@@ -221,6 +222,7 @@ export type Database = {
           partner_id?: string | null
           phone_whatsapp: string
           plan: string
+          public_listing_opt_in?: boolean
           tax_id?: string | null
           verification_status?: string
         }
@@ -236,6 +238,7 @@ export type Database = {
           partner_id?: string | null
           phone_whatsapp?: string
           plan?: string
+          public_listing_opt_in?: boolean
           tax_id?: string | null
           verification_status?: string
         }
@@ -272,6 +275,77 @@ export type Database = {
           weight_hint?: number | null
         }
         Relationships: []
+      }
+      enterprise_leads: {
+        Row: {
+          approved_at: string | null
+          business_name: string
+          checkout_url: string | null
+          city: string | null
+          client_id: string | null
+          contact_name: string
+          country: string | null
+          created_at: string
+          currency: string | null
+          email: string
+          id: string
+          message: string | null
+          phone_whatsapp: string
+          quoted_at: string | null
+          quoted_recurring_fee: number | null
+          quoted_setup_fee: number | null
+          status: string
+          website_url: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          business_name: string
+          checkout_url?: string | null
+          city?: string | null
+          client_id?: string | null
+          contact_name: string
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          email: string
+          id?: string
+          message?: string | null
+          phone_whatsapp: string
+          quoted_at?: string | null
+          quoted_recurring_fee?: number | null
+          quoted_setup_fee?: number | null
+          status?: string
+          website_url?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          business_name?: string
+          checkout_url?: string | null
+          city?: string | null
+          client_id?: string | null
+          contact_name?: string
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          email?: string
+          id?: string
+          message?: string | null
+          phone_whatsapp?: string
+          quoted_at?: string | null
+          quoted_recurring_fee?: number | null
+          quoted_setup_fee?: number | null
+          status?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enterprise_leads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       free_audits: {
         Row: {
@@ -488,6 +562,39 @@ export type Database = {
           },
         ]
       }
+      question_bank: {
+        Row: {
+          active: boolean
+          category_type: string
+          country: string
+          created_at: string
+          id: string
+          question_text: string
+          rubro: string
+          rubro_label: string
+        }
+        Insert: {
+          active?: boolean
+          category_type?: string
+          country: string
+          created_at?: string
+          id?: string
+          question_text: string
+          rubro: string
+          rubro_label: string
+        }
+        Update: {
+          active?: boolean
+          category_type?: string
+          country?: string
+          created_at?: string
+          id?: string
+          question_text?: string
+          rubro?: string
+          rubro_label?: string
+        }
+        Relationships: []
+      }
       rate_limit_events: {
         Row: {
           bucket: string
@@ -655,7 +762,7 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals["public"]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends

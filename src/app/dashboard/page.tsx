@@ -4,6 +4,7 @@ import { Panel } from "@/components/ui/panel";
 import { ScoreRing } from "@/components/radar/score-ring";
 import { PillarSignal, type PillarStatus } from "@/components/radar/pillar-signal";
 import { ScoreTrend } from "@/components/radar/score-trend";
+import { SetupOnboarding } from "@/components/dashboard/setup-onboarding";
 
 // M16 — nombres de pilar por eje (local/e-commerce/apps): los pilares 2, 4 y 7 miden
 // cosas distintas segun el eje (02-METODOLOGIA-SCORING.md) — mostrar "Google Business
@@ -40,15 +41,22 @@ export default async function DashboardPage() {
   const tCommon = await getTranslations("Common");
   const supabase = await createClient();
 
-  const [{ data: client }, { data: scoreHistory }, { data: appListing }, { data: skuCatalog }] = await Promise.all([
-    supabase.from("clients").select("business_name, niche, plan, verification_status").single(),
-    supabase
-      .from("ai_visibility_scores")
-      .select("id, score_total, score_by_pillar, calculated_at")
-      .order("calculated_at", { ascending: false }),
-    supabase.from("app_listings").select("id").maybeSingle(),
-    supabase.from("sku_catalogs").select("id").maybeSingle(),
-  ]);
+  const [{ data: client }, { data: scoreHistory }, { data: appListing }, { data: skuCatalog }, { data: location }] =
+    await Promise.all([
+      supabase.from("clients").select("business_name, niche, plan, verification_status").single(),
+      supabase
+        .from("ai_visibility_scores")
+        .select("id, score_total, score_by_pillar, calculated_at")
+        .order("calculated_at", { ascending: false }),
+      supabase.from("app_listings").select("id").maybeSingle(),
+      supabase.from("sku_catalogs").select("id").maybeSingle(),
+      supabase.from("locations").select("id").maybeSingle(),
+    ]);
+
+  // M28 — un cliente self-serve (/registro) no tiene ninguna fila de eje hasta que
+  // completa este paso; sin esto, el dashboard quedaba vacio para siempre sin forma de
+  // arrancar la primera medicion.
+  const hasAxisSetup = Boolean(appListing || skuCatalog || location);
 
   const latest = scoreHistory?.[0];
   const axis = appListing ? "app" : skuCatalog ? "ecommerce" : "local";
@@ -76,7 +84,9 @@ export default async function DashboardPage() {
         })}
       </p>
 
-      {!scoreHistory || scoreHistory.length === 0 ? (
+      {!hasAxisSetup ? (
+        <SetupOnboarding />
+      ) : !scoreHistory || scoreHistory.length === 0 ? (
         <Panel raised className="mt-8">
           <p className="text-text-secondary">{t("noScoreYet")}</p>
         </Panel>
