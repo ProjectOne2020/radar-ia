@@ -289,7 +289,9 @@
     "email": "Correo",
     "password": "Contraseña",
     "submitting": "Entrando...",
-    "submit": "Entrar"
+    "submit": "Entrar",
+    "noAccount": "¿No tienes cuenta?",
+    "createAccount": "Crea una gratis"
   },
   "Registro": {
     "title": "Crea tu cuenta en Radar IA",

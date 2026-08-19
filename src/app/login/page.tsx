@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
@@ -70,6 +71,12 @@ export default function LoginPage() {
                 {loading ? t("submitting") : t("submit")}
               </Button>
             </form>
+            <p className="mt-5 text-sm text-text-secondary">
+              {t("noAccount")}{" "}
+              <Link href="/registro" className="text-ink underline underline-offset-2">
+                {t("createAccount")}
+              </Link>
+            </p>
           </Panel>
         </Container>
       </main>
