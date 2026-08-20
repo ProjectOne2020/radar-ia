@@ -1,12 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getStripeClient } from "@/lib/stripe/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { upsertSubscription } from "@/lib/stripe/upsert-subscription";
 import { sendEnterpriseInviteEmail } from "@/lib/enterprise/send-invite-email";
+import { upgradeAuditForClient } from "@/lib/audit/upgrade-audit";
 import type Stripe from "stripe";
 
 // M9 — actualiza subscriptions.status y subscriptions.setup_fee_paid tal como pide
 // 03-ARQUITECTURA-TECNICA.md. Verifica la firma (nunca confiar en un webhook sin verificar).
+//
+// maxDuration alto (igual que el cron de M11): upgradeAuditForClient corre despues de
+// responder a Stripe via after(), pero ese trabajo (hasta 40 preguntas x 4 motores de IA
+// reales) sigue contando contra el tiempo de vida de esta invocacion serverless.
+export const maxDuration = 300;
+
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -47,6 +54,12 @@ export async function POST(request: Request) {
           status: mapStripeStatus(stripeSub.status),
           current_period_end: getCurrentPeriodEnd(stripeSub),
         });
+        // Hueco encontrado por el fundador: pagar nunca ampliaba las preguntas de medicion
+        // mas alla de las 5 de la auditoria gratis original. Se corre DESPUES de responder
+        // a Stripe (after()) porque puede tardar varios minutos (hasta 40 preguntas x 4
+        // motores de IA reales) -- bloquear la respuesta del webhook arriesgaria que Stripe
+        // lo de por fallido y reintente el mismo evento.
+        after(() => upgradeAuditForClient(admin, clientId, plan));
       } else if (type === "enterprise" && typeof session.subscription === "string") {
         // M24 — el checkout de Enterprise cobra el setup fee y arranca la suscripcion
         // en UNA sola sesion (line items one-time + recurring mezclados), a diferencia

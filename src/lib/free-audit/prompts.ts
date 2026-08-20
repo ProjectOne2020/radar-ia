@@ -91,17 +91,19 @@ function genericTemplates(niche: string, city: string): string[] {
 }
 
 // M16 — a diferencia de los demas ejes, "app" no es una categoria unica (una app de
-// delivery y una app de notas no comparten intencion de busqueda), asi que una plantilla
-// generica tipo "mejor app en {city}" mediria poco. Las preguntas usan el nombre de la
-// app directamente — es la pregunta que si tiene sentido para cualquier app: "la
-// mencionan/recomiendan cuando alguien pregunta por ella", que es exactamente lo que
-// mide el pilar 8. Aplica igual a apps nativas y apps web (M23).
+// delivery y una app de notas no comparten intencion de busqueda), asi que estas preguntas
+// usan el nombre de la app directamente. Miden reconocimiento directo: "si alguien pregunta
+// por esta app puntual, la IA la conoce y que opina de ella" — util, pero por si solo NUNCA
+// mide si la IA la recomienda organicamente sin que se lo insinuemos (bug de metodologia
+// encontrado por el fundador probando su propia app: las 5 preguntas originales daban
+// nombre en el 100% de los casos). Se combinan con genericTemplates(niche, city) — las
+// mismas plantillas "ciegas" que ya usan local/e-commerce, usando el rubro que el negocio
+// escribio (ej. "herramienta de productividad") en vez del nombre — para medir tambien
+// descubrimiento organico. Aplica igual a apps nativas y apps web (M23).
 const APP_TEMPLATES = [
   "¿es buena la app {appName}?",
   "opiniones sobre la app {appName}",
   "¿vale la pena usar {appName}?",
-  "alternativas a {appName}",
-  "mejores apps similares a {appName} disponibles en {city}",
 ];
 
 export function buildFreeAuditPrompts(
@@ -111,7 +113,11 @@ export function buildFreeAuditPrompts(
   axis?: "local" | "ecommerce" | "app",
 ): string[] {
   if (axis === "app") {
-    return APP_TEMPLATES.map((t) => t.replace("{city}", city).replace("{appName}", businessName ?? ""));
+    const named = APP_TEMPLATES.map((t) => t.replace("{city}", city).replace("{appName}", businessName ?? ""));
+    const blind = genericTemplates(niche.trim(), city).slice(0, 2);
+    // intercalados para que ninguna de las dos categorias quede junta al final si algo
+    // recorta el arreglo (ej. .slice(0, N) de un caller) antes de llegar a un multiplo de 5.
+    return [named[0], blind[0], named[1], blind[1], named[2]];
   }
 
   const normalized = niche.trim().toLowerCase();
