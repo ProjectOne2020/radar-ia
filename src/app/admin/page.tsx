@@ -2,6 +2,22 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getRecurringFee, isManualCurrency, type PlanId } from "@/lib/pricing/plans";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { StatCard } from "@/components/admin/stat-card";
+import { DistBarChart, TrendBarChart } from "@/components/admin/dist-bar-chart";
+import { Panel } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
+
+const QUICK_LINKS = [
+  { href: "/admin/clientes", label: "Todos los clientes" },
+  { href: "/admin/auditorias", label: "Auditorías" },
+  { href: "/admin/flagged", label: "Cuentas marcadas" },
+  { href: "/admin/partners", label: "Partners" },
+  { href: "/admin/empresas", label: "Enterprise" },
+  { href: "/admin/preguntas", label: "Banco de preguntas" },
+  { href: "/admin/importar-contenido", label: "Importar contenido" },
+  { href: "/admin/trafico", label: "Tráfico" },
+];
 
 // M12 — vista agregada del negocio. MRR se muestra POR MONEDA, nunca convertido/sumado
 // a una sola cifra — 01-CONTEXTO-NEGOCIO.md prohibe recalcular por tipo de cambio en
@@ -15,11 +31,17 @@ export default async function AdminHomePage() {
     { data: activeSubs },
     { count: freeAuditsCount },
     { data: subscribedClientIds },
+    { data: recentScores },
   ] = await Promise.all([
     admin.from("clients").select("id, plan, country, niche, verification_status, onboarding_type"),
     admin.from("subscriptions").select("client_id, plan, status, clients(currency)").eq("status", "active"),
     admin.from("free_audits").select("id", { count: "exact", head: true }),
     admin.from("subscriptions").select("client_id"),
+    admin
+      .from("ai_visibility_scores")
+      .select("calculated_at")
+      .order("calculated_at", { ascending: false })
+      .limit(1000),
   ]);
 
   // Auditorias "de plan pagado": toda medicion (ai_visibility_scores) de un cliente que
@@ -65,66 +87,103 @@ export default async function AdminHomePage() {
     byNiche[c.niche] = (byNiche[c.niche] ?? 0) + 1;
   }
 
+  const toSortedEntries = (rec: Record<string, number>) =>
+    Object.entries(rec)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+
+  // Auditorías por día (últimos 14 días) — para ver si el volumen sube o baja.
+  const days: Array<{ key: string; label: string; value: number }> = [];
+  const now = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    days.push({ key, label: d.toLocaleDateString("es", { day: "2-digit", month: "2-digit" }), value: 0 });
+  }
+  const dayIndex = new Map(days.map((d, i) => [d.key, i]));
+  for (const s of recentScores ?? []) {
+    if (!s.calculated_at) continue;
+    const key = s.calculated_at.slice(0, 10);
+    const idx = dayIndex.get(key);
+    if (idx !== undefined) days[idx].value += 1;
+  }
+
   return (
-    <main style={{ padding: 60, maxWidth: 800, fontFamily: "sans-serif" }}>
-      <h1>Panel de administración — Radar IA</h1>
-      <nav style={{ display: "flex", gap: 16, margin: "16px 0" }}>
-        <Link href="/admin/clientes">Todos los clientes</Link>
-        <Link href="/admin/flagged">Cuentas marcadas ({flaggedCount})</Link>
-        <Link href="/admin/partners">Partners</Link>
-        <Link href="/admin/empresas">Enterprise</Link>
-        <Link href="/admin/preguntas">Banco de preguntas</Link>
-        <Link href="/admin/importar-contenido">Importar contenido</Link>
-        <Link href="/admin/trafico">Tráfico</Link>
-      </nav>
-
-      <h2>Métricas del negocio</h2>
-      <p>Clientes con negocio real (con historial de suscripción): {realClients.length}</p>
-      <p>Suscripciones activas: {activeCount}</p>
-
-      <h3>Auditorías</h3>
-      <p>Auditorías gratis (histórico, `free_audits`): {freeAuditsCount ?? 0}</p>
-      <p>Auditorías en planes pagados (checkout inicial + re-mediciones de M11): {paidAuditsCount ?? 0}</p>
-
-      <h3>MRR por moneda</h3>
-      {Object.keys(mrrByCurrency).length === 0 ? (
-        <p>Sin suscripciones activas todavía.</p>
-      ) : (
-        <ul>
-          {Object.entries(mrrByCurrency).map(([currency, amount]) => (
-            <li key={currency}>
-              {currency}: {amount.toLocaleString()}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <h3>Distribución por plan</h3>
-      <ul>
-        {Object.entries(byPlan).map(([plan, count]) => (
-          <li key={plan}>
-            {plan}: {count}
-          </li>
+    <AdminShell title="Panel de administración">
+      <div className="mb-8 flex flex-wrap gap-2">
+        {QUICK_LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="rounded-xs border border-border-strong px-3 py-1.5 text-sm text-text-secondary transition-colors duration-[var(--duration-micro)] hover:border-signal hover:text-ink"
+          >
+            {link.label}
+          </Link>
         ))}
-      </ul>
+      </div>
 
-      <h3>Distribución por país</h3>
-      <ul>
-        {Object.entries(byCountry).map(([country, count]) => (
-          <li key={country}>
-            {country}: {count}
-          </li>
-        ))}
-      </ul>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCard label="Clientes reales" value={realClients.length} hint="Con historial de suscripción" />
+        <StatCard label="Suscripciones activas" value={activeCount} tone="signal" />
+        <StatCard
+          label="Cuentas marcadas"
+          value={flaggedCount}
+          tone={flaggedCount > 0 ? "critical" : "good"}
+          hint={flaggedCount > 0 ? "Revisar en /admin/flagged" : "Ninguna"}
+        />
+        <StatCard label="Auditorías gratis" value={freeAuditsCount ?? 0} hint="Histórico total" />
+      </div>
 
-      <h3>Distribución por nicho</h3>
-      <ul>
-        {Object.entries(byNiche).map(([niche, count]) => (
-          <li key={niche}>
-            {niche}: {count}
-          </li>
-        ))}
-      </ul>
-    </main>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <Panel raised>
+          <h2 className="mb-4 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+            Auditorías por día (últimos 14 días)
+          </h2>
+          <TrendBarChart points={days} />
+        </Panel>
+
+        <Panel raised>
+          <h2 className="mb-4 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+            MRR por moneda
+          </h2>
+          {Object.keys(mrrByCurrency).length === 0 ? (
+            <p className="text-sm text-text-muted">Sin suscripciones activas todavía.</p>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {Object.entries(mrrByCurrency).map(([currency, amount]) => (
+                <Badge key={currency} tone="signal">
+                  {currency} {amount.toLocaleString()}
+                </Badge>
+              ))}
+            </div>
+          )}
+          <p className="mt-3 text-xs text-text-muted">
+            Auditorías en planes pagados (checkout inicial + re-mediciones): {paidAuditsCount ?? 0}
+          </p>
+        </Panel>
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <Panel raised>
+          <h2 className="mb-4 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+            Por plan
+          </h2>
+          <DistBarChart data={toSortedEntries(byPlan)} />
+        </Panel>
+        <Panel raised>
+          <h2 className="mb-4 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+            Por país
+          </h2>
+          <DistBarChart data={toSortedEntries(byCountry)} />
+        </Panel>
+        <Panel raised>
+          <h2 className="mb-4 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+            Por nicho
+          </h2>
+          <DistBarChart data={toSortedEntries(byNiche)} />
+        </Panel>
+      </div>
+    </AdminShell>
   );
 }

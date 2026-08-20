@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/field";
+import { Alert } from "@/components/ui/panel";
 
 export default function ApplicationActions({ applicationId }: { applicationId: string }) {
   const router = useRouter();
@@ -40,25 +43,21 @@ export default function ApplicationActions({ applicationId }: { applicationId: s
 
   if (createdKey) {
     return (
-      <div style={{ border: "2px solid #333", borderRadius: 8, padding: 12, marginTop: 8 }}>
-        <p>
-          Partner creado y solicitud aceptada. Esta es la ÚNICA vez que se muestra la API key — cópiala ahora:
-        </p>
-        <code style={{ display: "block", padding: 8, background: "#f0f0f0", wordBreak: "break-all" }}>
-          {createdKey}
-        </code>
-        <button onClick={() => router.refresh()} style={{ marginTop: 8 }}>
+      <Alert tone="warning" className="mt-3">
+        <p>Partner creado y solicitud aceptada. Esta es la ÚNICA vez que se muestra la API key — cópiala ahora:</p>
+        <code className="mt-2 block rounded-xs bg-surface-sunken p-2 font-mono text-xs break-all">{createdKey}</code>
+        <Button size="sm" variant="secondary" className="mt-3" onClick={() => router.refresh()}>
           Entendido
-        </button>
-      </div>
+        </Button>
+      </Alert>
     );
   }
 
   return (
-    <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-      <label style={{ fontSize: 13 }}>
+    <div className="mt-3 flex flex-wrap items-center gap-3">
+      <label className="text-sm text-text-secondary">
         % revenue share{" "}
-        <input
+        <Input
           type="number"
           min={0}
           max={100}
@@ -66,16 +65,16 @@ export default function ApplicationActions({ applicationId }: { applicationId: s
           value={revenueSharePct}
           onChange={(e) => setRevenueSharePct(e.target.value)}
           placeholder="opcional"
-          style={{ width: 80 }}
+          className="mt-1 w-24"
         />
       </label>
-      <button onClick={() => handle("accept")} disabled={loading !== null}>
+      <Button size="sm" onClick={() => handle("accept")} disabled={loading !== null}>
         {loading === "accept" ? "..." : "Aceptar"}
-      </button>
-      <button onClick={() => handle("reject")} disabled={loading !== null}>
+      </Button>
+      <Button size="sm" variant="secondary" onClick={() => handle("reject")} disabled={loading !== null}>
         {loading === "reject" ? "..." : "Rechazar"}
-      </button>
-      {error && <span style={{ color: "red", fontSize: 13 }}>{error}</span>}
+      </Button>
+      {error && <span className="text-sm text-critical">{error}</span>}
     </div>
   );
 }

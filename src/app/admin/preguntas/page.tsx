@@ -2,6 +2,9 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RUBROS, QUESTION_BANK_COUNTRIES, TOTAL_COMBINATIONS } from "@/lib/question-bank/taxonomy";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { Label, Select } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 import QuestionBankDetail from "./question-bank-detail";
 
 // M28 — panel de admin del banco de preguntas nativas (43 rubros x 18 países = 774
@@ -52,76 +55,83 @@ export default async function AdminPreguntasPage({
   }
 
   return (
-    <main style={{ padding: 60, maxWidth: 1000, fontFamily: "sans-serif" }}>
-      <p>
-        <Link href="/admin">← Volver</Link>
-      </p>
-      <h1>Banco de preguntas</h1>
-      <p>
-        {populatedCombos.length} de {TOTAL_COMBINATIONS} combinaciones rubro+país tienen contenido · {totalQuestions}{" "}
-        preguntas totales
+    <AdminShell title="Banco de preguntas">
+      <p className="mb-6 text-sm text-text-secondary">
+        {populatedCombos.length} de {TOTAL_COMBINATIONS} combinaciones rubro+país tienen contenido ·{" "}
+        {totalQuestions} preguntas totales
       </p>
 
-      <h2>Ver / agregar preguntas</h2>
-      <form method="get" style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
-        <label>
-          Rubro
-          <br />
-          <select name="rubro" defaultValue={selectedRubro}>
+      <h2 className="mb-3 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+        Ver / agregar preguntas
+      </h2>
+      <form method="get" className="flex flex-wrap items-end gap-4">
+        <div>
+          <Label htmlFor="rubro">Rubro</Label>
+          <Select id="rubro" name="rubro" defaultValue={selectedRubro} className="w-64">
             <option value="">— Selecciona —</option>
             {RUBROS.map((r) => (
               <option key={r.slug} value={r.slug}>
                 {r.label} {r.categoryType === "app" ? "(app)" : ""}
               </option>
             ))}
-          </select>
-        </label>
-        <label>
-          País
-          <br />
-          <select name="country" defaultValue={selectedCountry}>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="country">País</Label>
+          <Select id="country" name="country" defaultValue={selectedCountry} className="w-48">
             <option value="">— Selecciona —</option>
             {QUESTION_BANK_COUNTRIES.map((c) => (
               <option key={c.code} value={c.code}>
                 {c.label}
               </option>
             ))}
-          </select>
-        </label>
-        <button type="submit">Ver</button>
+          </Select>
+        </div>
+        <Button type="submit" size="sm">
+          Ver
+        </Button>
       </form>
 
       {selectedRubro && selectedCountry && (
         <QuestionBankDetail rubro={selectedRubro} country={selectedCountry} questions={selectedQuestions} />
       )}
 
-      <h2 style={{ marginTop: 32 }}>Combinaciones con contenido ({populatedCombos.length})</h2>
+      <h2 className="mt-10 mb-3 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+        Combinaciones con contenido ({populatedCombos.length})
+      </h2>
       {populatedCombos.length === 0 ? (
-        <p>Ninguna todavía.</p>
+        <p className="text-sm text-text-muted">Ninguna todavía.</p>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse", maxWidth: 700 }}>
-          <thead>
-            <tr style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>
-              <th>Rubro</th>
-              <th>País</th>
-              <th>Activas</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {populatedCombos.map((c) => (
-              <tr key={`${c.rubro}-${c.country}`} style={{ borderBottom: "1px solid #eee" }}>
-                <td>
-                  <Link href={`/admin/preguntas?rubro=${c.rubro}&country=${c.country}`}>{c.label}</Link>
-                </td>
-                <td>{c.country}</td>
-                <td>{c.active}</td>
-                <td>{c.total}</td>
+        <div className="overflow-x-auto rounded-md border border-border">
+          <table className="w-full min-w-[500px] max-w-[700px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border-strong bg-paper-raised text-left text-xs tracking-wide text-text-secondary uppercase">
+                <th className="px-4 py-3 font-medium">Rubro</th>
+                <th className="px-4 py-3 font-medium">País</th>
+                <th className="px-4 py-3 font-medium">Activas</th>
+                <th className="px-4 py-3 font-medium">Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {populatedCombos.map((c) => (
+                <tr key={`${c.rubro}-${c.country}`} className="border-b border-border last:border-b-0 hover:bg-surface">
+                  <td className="px-4 py-2.5">
+                    <Link
+                      href={`/admin/preguntas?rubro=${c.rubro}&country=${c.country}`}
+                      className="text-ink hover:text-signal-strong"
+                    >
+                      {c.label}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2.5 text-text-secondary">{c.country}</td>
+                  <td className="px-4 py-2.5 font-mono text-ink">{c.active}</td>
+                  <td className="px-4 py-2.5 font-mono text-text-secondary">{c.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-    </main>
+    </AdminShell>
   );
 }

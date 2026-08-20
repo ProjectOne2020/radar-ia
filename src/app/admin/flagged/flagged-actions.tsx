@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export default function FlaggedActions({ clientId }: { clientId: string }) {
   const router = useRouter();
@@ -27,16 +28,16 @@ export default function FlaggedActions({ clientId }: { clientId: string }) {
     if (action === "approve") router.refresh();
   }
 
-  if (result) return <p>{result}</p>;
+  if (result) return <p className="mt-2 text-sm text-text-secondary">{result}</p>;
 
   return (
-    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-      <button onClick={() => handle("approve")} disabled={loading !== null}>
+    <div className="mt-3 flex gap-2">
+      <Button size="sm" onClick={() => handle("approve")} disabled={loading !== null}>
         {loading === "approve" ? "..." : "Aprobar"}
-      </button>
-      <button onClick={() => handle("reject")} disabled={loading !== null}>
+      </Button>
+      <Button size="sm" variant="secondary" onClick={() => handle("reject")} disabled={loading !== null}>
         {loading === "reject" ? "..." : "Rechazar"}
-      </button>
+      </Button>
     </div>
   );
 }

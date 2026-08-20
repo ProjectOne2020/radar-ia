@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import Link from "next/link";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { Panel } from "@/components/ui/panel";
 import FlaggedActions from "./flagged-actions";
 
 export default async function AdminFlaggedPage() {
@@ -14,27 +15,23 @@ export default async function AdminFlaggedPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <main style={{ padding: 60, maxWidth: 800, fontFamily: "sans-serif" }}>
-      <p>
-        <Link href="/admin">← Volver</Link>
-      </p>
-      <h1>Cuentas marcadas por anti-abuso ({flagged?.length ?? 0})</h1>
+    <AdminShell title={`Cuentas marcadas por anti-abuso (${flagged?.length ?? 0})`}>
+      {(flagged ?? []).length === 0 && <p className="text-sm text-text-muted">No hay cuentas marcadas.</p>}
 
-      {(flagged ?? []).length === 0 && <p>No hay cuentas marcadas.</p>}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="flex flex-col gap-3">
         {(flagged ?? []).map((c) => (
-          <div key={c.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-            <p>
-              <strong>{c.business_name}</strong> · {c.country}
+          <Panel key={c.id}>
+            <p className="text-ink">
+              <span className="font-medium">{c.business_name}</span>
+              <span className="text-text-secondary"> · {c.country}</span>
             </p>
-            <p style={{ fontSize: 12, color: "#666" }}>
+            <p className="mt-1 text-xs text-text-muted">
               WhatsApp: {c.phone_whatsapp} · Tax ID: {c.tax_id ?? "—"}
             </p>
             <FlaggedActions clientId={c.id} />
-          </div>
+          </Panel>
         ))}
       </div>
-    </main>
+    </AdminShell>
   );
 }

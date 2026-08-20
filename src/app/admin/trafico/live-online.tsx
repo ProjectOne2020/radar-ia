@@ -21,11 +21,9 @@ export default function LiveOnline() {
   }, []);
 
   return (
-    <p style={{ fontSize: 32, fontWeight: "bold" }}>
-      {count === null ? "..." : count}
-      <span style={{ fontSize: 14, fontWeight: "normal", marginLeft: 8, color: "#666" }}>
-        personas en el sitio ahora mismo
-      </span>
+    <p className="flex items-baseline gap-2">
+      <span className="font-display text-4xl font-semibold text-signal-strong">{count === null ? "…" : count}</span>
+      <span className="text-sm text-text-secondary">personas en el sitio ahora mismo</span>
     </p>
   );
 }

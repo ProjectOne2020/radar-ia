@@ -1,6 +1,8 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { Panel } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
 import NewPartnerForm from "./new-partner-form";
 import ApplicationActions from "./application-actions";
 
@@ -32,82 +34,96 @@ export default async function AdminPartnersPage() {
   const reviewed = (applications ?? []).filter((a) => a.status !== "pending");
 
   return (
-    <main style={{ padding: 60, maxWidth: 800, fontFamily: "sans-serif" }}>
-      <p>
-        <Link href="/admin">← Volver</Link>
-      </p>
-      <h1>Partners / reseller</h1>
-
-      <h2>Solicitudes pendientes ({pending.length})</h2>
-      {pending.length === 0 && <p>Sin solicitudes pendientes.</p>}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
-        {pending.map((a) => (
-          <div key={a.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-            <p>
-              <strong>{a.agency_name}</strong> · {a.created_at ? new Date(a.created_at).toLocaleString() : ""}
-            </p>
-            <p style={{ fontSize: 13 }}>
-              Contacto: {a.contact_name} · {a.email} · {a.phone_whatsapp}
-            </p>
-            <p style={{ fontSize: 13 }}>
-              Sitio: {a.website_url ?? "—"} · Negocios que maneja: {a.client_count ?? "—"}
-            </p>
-            {a.message && (
-              <p style={{ fontSize: 13, color: "#444", marginTop: 4 }}>&quot;{a.message}&quot;</p>
-            )}
-            <ApplicationActions applicationId={a.id} />
-          </div>
-        ))}
-      </div>
+    <AdminShell title="Partners / reseller">
+      <section className="mb-8">
+        <h2 className="mb-3 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+          Solicitudes pendientes ({pending.length})
+        </h2>
+        {pending.length === 0 && <p className="text-sm text-text-muted">Sin solicitudes pendientes.</p>}
+        <div className="flex flex-col gap-3">
+          {pending.map((a) => (
+            <Panel key={a.id}>
+              <p className="text-ink">
+                <span className="font-medium">{a.agency_name}</span>
+                <span className="text-text-secondary"> · {a.created_at ? new Date(a.created_at).toLocaleString("es") : ""}</span>
+              </p>
+              <p className="mt-1 text-sm text-text-secondary">
+                Contacto: {a.contact_name} · {a.email} · {a.phone_whatsapp}
+              </p>
+              <p className="mt-1 text-sm text-text-secondary">
+                Sitio: {a.website_url ?? "—"} · Negocios que maneja: {a.client_count ?? "—"}
+              </p>
+              {a.message && <p className="mt-2 text-sm text-text-muted italic">&quot;{a.message}&quot;</p>}
+              <ApplicationActions applicationId={a.id} />
+            </Panel>
+          ))}
+        </div>
+      </section>
 
       {reviewed.length > 0 && (
-        <>
-          <h2>Solicitudes revisadas ({reviewed.length})</h2>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
+        <section className="mb-8">
+          <h2 className="mb-3 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+            Solicitudes revisadas ({reviewed.length})
+          </h2>
+          <div className="overflow-x-auto rounded-md border border-border">
+            <table className="w-full min-w-[500px] border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border-strong bg-paper-raised text-left text-xs tracking-wide text-text-secondary uppercase">
+                  <th className="px-4 py-3 font-medium">Agencia</th>
+                  <th className="px-4 py-3 font-medium">Contacto</th>
+                  <th className="px-4 py-3 font-medium">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reviewed.map((a) => (
+                  <tr key={a.id} className="border-b border-border last:border-b-0">
+                    <td className="px-4 py-3 text-ink">{a.agency_name}</td>
+                    <td className="px-4 py-3 text-text-secondary">{a.email}</td>
+                    <td className="px-4 py-3">
+                      <Badge tone={a.status === "accepted" ? "good" : "critical"}>
+                        {a.status === "accepted" ? "Aceptada" : "Rechazada"}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2 className="mb-3 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+          Partners activos
+        </h2>
+        <NewPartnerForm />
+
+        <div className="overflow-x-auto rounded-md border border-border">
+          <table className="w-full min-w-[600px] border-collapse text-sm">
             <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>
-                <th>Agencia</th>
-                <th>Contacto</th>
-                <th>Estado</th>
+              <tr className="border-b border-border-strong bg-paper-raised text-left text-xs tracking-wide text-text-secondary uppercase">
+                <th className="px-4 py-3 font-medium">Agencia</th>
+                <th className="px-4 py-3 font-medium">Revenue share</th>
+                <th className="px-4 py-3 font-medium">Estado</th>
+                <th className="px-4 py-3 font-medium">Clientes atribuidos</th>
               </tr>
             </thead>
             <tbody>
-              {reviewed.map((a) => (
-                <tr key={a.id} style={{ borderBottom: "1px solid #eee" }}>
-                  <td>{a.agency_name}</td>
-                  <td>{a.email}</td>
-                  <td>{a.status === "accepted" ? "Aceptada" : "Rechazada"}</td>
+              {(partners ?? []).map((p) => (
+                <tr key={p.id} className="border-b border-border last:border-b-0">
+                  <td className="px-4 py-3 text-ink">{p.agency_name}</td>
+                  <td className="px-4 py-3 text-text-secondary">
+                    {p.revenue_share_pct !== null ? `${p.revenue_share_pct}%` : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-text-secondary">{p.status}</td>
+                  <td className="px-4 py-3 font-mono text-ink">{countsByPartner.get(p.id) ?? 0}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </>
-      )}
-
-      <h2>Partners activos</h2>
-      <NewPartnerForm />
-
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>
-            <th>Agencia</th>
-            <th>Revenue share</th>
-            <th>Estado</th>
-            <th>Clientes atribuidos</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(partners ?? []).map((p) => (
-            <tr key={p.id} style={{ borderBottom: "1px solid #eee" }}>
-              <td>{p.agency_name}</td>
-              <td>{p.revenue_share_pct !== null ? `${p.revenue_share_pct}%` : "—"}</td>
-              <td>{p.status}</td>
-              <td>{countsByPartner.get(p.id) ?? 0}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {(partners ?? []).length === 0 && <p>Sin partners todavía.</p>}
-    </main>
+        </div>
+        {(partners ?? []).length === 0 && <p className="mt-3 text-sm text-text-muted">Sin partners todavía.</p>}
+      </section>
+    </AdminShell>
   );
 }

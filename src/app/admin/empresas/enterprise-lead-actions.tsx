@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MANUAL_CURRENCIES } from "@/lib/pricing/plans";
+import { Button } from "@/components/ui/button";
+import { Input, Label, Select } from "@/components/ui/field";
 
 interface Props {
   leadId: string;
@@ -48,16 +50,19 @@ export default function EnterpriseLeadActions({ leadId, status, currency, quoted
   }
 
   if (status === "rejected") {
-    return <p style={{ fontSize: 13, color: "#888", marginTop: 8 }}>Rechazada.</p>;
+    return <p className="mt-2 text-sm text-text-muted">Rechazada.</p>;
   }
 
   if (status === "approved") {
     return (
-      <div style={{ marginTop: 8 }}>
-        <p style={{ fontSize: 13 }}>Aprobada y cobro generado.</p>
+      <div className="mt-2">
+        <p className="text-sm text-text-secondary">Aprobada y cobro generado.</p>
         {lastCheckoutUrl && (
-          <p style={{ fontSize: 13, wordBreak: "break-all" }}>
-            Link de pago: <a href={lastCheckoutUrl} target="_blank" rel="noreferrer">{lastCheckoutUrl}</a>
+          <p className="mt-1 text-sm break-all">
+            Link de pago:{" "}
+            <a href={lastCheckoutUrl} target="_blank" rel="noreferrer" className="text-signal-strong hover:underline">
+              {lastCheckoutUrl}
+            </a>
           </p>
         )}
       </div>
@@ -65,47 +70,51 @@ export default function EnterpriseLeadActions({ leadId, status, currency, quoted
   }
 
   return (
-    <div style={{ marginTop: 8 }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <label style={{ fontSize: 13 }}>
-          Moneda{" "}
-          <select
+    <div className="mt-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <Label htmlFor={`currency-${leadId}`}>Moneda</Label>
+          <Select
+            id={`currency-${leadId}`}
             value={form.currency}
             onChange={(e) => setForm({ ...form, currency: e.target.value })}
-            style={{ padding: 4 }}
+            className="w-28"
           >
             {MANUAL_CURRENCIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
             ))}
-          </select>
-        </label>
-        <label style={{ fontSize: 13 }}>
-          Setup (único pago){" "}
-          <input
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor={`setup-${leadId}`}>Setup (único pago)</Label>
+          <Input
+            id={`setup-${leadId}`}
             type="number"
             min={0}
             step="0.01"
             value={form.setupFee}
             onChange={(e) => setForm({ ...form, setupFee: e.target.value })}
             placeholder="0"
-            style={{ width: 100 }}
+            className="w-28"
           />
-        </label>
-        <label style={{ fontSize: 13 }}>
-          Mensual{" "}
-          <input
+        </div>
+        <div>
+          <Label htmlFor={`recurring-${leadId}`}>Mensual</Label>
+          <Input
+            id={`recurring-${leadId}`}
             type="number"
             min={0.01}
             step="0.01"
             value={form.recurringFee}
             onChange={(e) => setForm({ ...form, recurringFee: e.target.value })}
             placeholder="0"
-            style={{ width: 100 }}
+            className="w-28"
           />
-        </label>
-        <button
+        </div>
+        <Button
+          size="sm"
           onClick={() =>
             call("quote", {
               currency: form.currency,
@@ -116,17 +125,17 @@ export default function EnterpriseLeadActions({ leadId, status, currency, quoted
           disabled={loading !== null || form.recurringFee === ""}
         >
           {loading === "quote" ? "..." : "Cotizar"}
-        </button>
+        </Button>
         {status === "quoted" && (
-          <button onClick={() => call("charge")} disabled={loading !== null}>
+          <Button size="sm" variant="signal" onClick={() => call("charge")} disabled={loading !== null}>
             {loading === "charge" ? "..." : "Aprobar y generar cobro"}
-          </button>
+          </Button>
         )}
-        <button onClick={() => call("reject")} disabled={loading !== null}>
+        <Button size="sm" variant="secondary" onClick={() => call("reject")} disabled={loading !== null}>
           {loading === "reject" ? "..." : "Rechazar"}
-        </button>
+        </Button>
       </div>
-      {error && <p style={{ color: "red", fontSize: 13, marginTop: 4 }}>{error}</p>}
+      {error && <p className="mt-2 text-sm text-critical">{error}</p>}
     </div>
   );
 }

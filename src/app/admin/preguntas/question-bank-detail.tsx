@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/field";
+import { Badge } from "@/components/ui/badge";
+import { Panel } from "@/components/ui/panel";
+import { cn } from "@/lib/cn";
 
 interface Question {
   id: string;
@@ -52,70 +57,76 @@ export default function QuestionBankDetail({
   }
 
   return (
-    <div style={{ marginTop: 16 }}>
-      <h2>
+    <Panel raised className="mt-4">
+      <h2 className="font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
         Preguntas: {rubro} / {country} ({questions.length})
       </h2>
 
-      <div style={{ marginTop: 12 }}>
-        <textarea
+      <div className="mt-3">
+        <Textarea
           value={bulkText}
           onChange={(e) => setBulkText(e.target.value)}
           placeholder={"Una pregunta por línea, usa {city} donde vaya la ciudad..."}
           rows={6}
-          style={{ width: "100%", maxWidth: 700, fontFamily: "monospace", fontSize: 13 }}
+          className="max-w-[700px] font-mono text-xs"
         />
-        <div>
-          <button onClick={handleAdd} disabled={loading !== null || bulkText.trim().length === 0}>
+        <div className="mt-2">
+          <Button size="sm" onClick={handleAdd} disabled={loading !== null || bulkText.trim().length === 0}>
             {loading === "add" ? "Agregando..." : "Agregar preguntas"}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {error && <p style={{ color: "red", fontSize: 13 }}>{error}</p>}
+      {error && <p className="mt-2 text-sm text-critical">{error}</p>}
 
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 16, maxWidth: 900 }}>
-        <thead>
-          <tr style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>
-            <th>Pregunta</th>
-            <th style={{ width: 90 }}>Estado</th>
-            <th style={{ width: 140 }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {questions.map((q) => (
-            <tr key={q.id} style={{ borderBottom: "1px solid #eee", opacity: q.active ? 1 : 0.5 }}>
-              <td style={{ fontSize: 13, padding: "4px 0" }}>{q.question_text}</td>
-              <td style={{ fontSize: 12 }}>{q.active ? "Activa" : "Inactiva"}</td>
-              <td>
-                <button
-                  onClick={() => call({ action: "toggle", id: q.id, active: !q.active }, `toggle-${q.id}`)}
-                  disabled={loading !== null}
-                  style={{ fontSize: 12, marginRight: 6 }}
-                >
-                  {q.active ? "Desactivar" : "Activar"}
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm("¿Eliminar esta pregunta?")) call({ action: "delete", id: q.id }, `delete-${q.id}`);
-                  }}
-                  disabled={loading !== null}
-                  style={{ fontSize: 12 }}
-                >
-                  Eliminar
-                </button>
-              </td>
+      <div className="mt-4 overflow-x-auto rounded-md border border-border">
+        <table className="w-full min-w-[700px] max-w-[900px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-border-strong bg-paper-raised text-left text-xs tracking-wide text-text-secondary uppercase">
+              <th className="px-4 py-3 font-medium">Pregunta</th>
+              <th className="w-24 px-4 py-3 font-medium">Estado</th>
+              <th className="w-40 px-4 py-3 font-medium"></th>
             </tr>
-          ))}
-          {questions.length === 0 && (
-            <tr>
-              <td colSpan={3} style={{ fontSize: 13, color: "#888", padding: "8px 0" }}>
-                Sin preguntas todavía para esta combinación.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {questions.map((q) => (
+              <tr key={q.id} className={cn("border-b border-border last:border-b-0", !q.active && "opacity-50")}>
+                <td className="px-4 py-2.5 text-text">{q.question_text}</td>
+                <td className="px-4 py-2.5">
+                  <Badge tone={q.active ? "good" : "neutral"}>{q.active ? "Activa" : "Inactiva"}</Badge>
+                </td>
+                <td className="px-4 py-2.5">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => call({ action: "toggle", id: q.id, active: !q.active }, `toggle-${q.id}`)}
+                      disabled={loading !== null}
+                      className="text-xs text-text-secondary hover:text-ink"
+                    >
+                      {q.active ? "Desactivar" : "Activar"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm("¿Eliminar esta pregunta?")) call({ action: "delete", id: q.id }, `delete-${q.id}`);
+                      }}
+                      disabled={loading !== null}
+                      className="text-xs text-critical hover:underline"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {questions.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-3 text-sm text-text-muted">
+                  Sin preguntas todavía para esta combinación.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
   );
 }

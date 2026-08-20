@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/require-admin";
+import { AdminShell } from "@/components/admin/admin-shell";
 import ImportForm from "./import-form";
 
 // M15 — herramienta interna del fundador para acelerar el onboarding tecnico: sube el
@@ -9,12 +9,8 @@ export default async function ImportContentPage() {
   await requireAdmin();
 
   return (
-    <main style={{ padding: 60, maxWidth: 720, fontFamily: "sans-serif" }}>
-      <p>
-        <Link href="/admin">← Volver</Link>
-      </p>
-      <h1>Importar contenido (Antigravity)</h1>
-      <p>
+    <AdminShell title="Importar contenido (Antigravity)">
+      <p className="mb-6 max-w-[600px] text-sm text-text-secondary">
         Sube el JSON generado en Antigravity para un cliente. Las preguntas frecuentes se insertan directo como
         preguntas activas del cliente; los bloques JSON-LD y la landing mínima se validan y se muestran listos para
         copiar al sitio real del cliente (Radar IA no hostea el sitio del cliente, así que esa parte final sigue
@@ -22,6 +18,6 @@ export default async function ImportContentPage() {
       </p>
 
       <ImportForm />
-    </main>
+    </AdminShell>
   );
 }

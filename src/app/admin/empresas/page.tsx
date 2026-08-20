@@ -1,12 +1,12 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { Panel } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
 import EnterpriseLeadActions from "./enterprise-lead-actions";
 
 // M24 — panel "modo dios" del flujo Enterprise: cotizar, aprobar y cobrar solicitudes
-// que llegan desde /empresas. Mismo patron visual utilitario que /admin/partners
-// (estilos inline, no el design system del producto — estas paginas son herramientas
-// internas, no cara al cliente).
+// que llegan desde /empresas.
 export default async function AdminEmpresasPage() {
   await requireAdmin();
   const admin = createAdminClient();
@@ -20,69 +20,81 @@ export default async function AdminEmpresasPage() {
   const done = (leads ?? []).filter((l) => l.status === "approved" || l.status === "rejected");
 
   return (
-    <main style={{ padding: 60, maxWidth: 800, fontFamily: "sans-serif" }}>
-      <p>
-        <Link href="/admin">← Volver</Link>
-      </p>
-      <h1>Solicitudes Enterprise</h1>
-
-      <h2>Pendientes ({pending.length})</h2>
-      {pending.length === 0 && <p>Sin solicitudes pendientes.</p>}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
-        {pending.map((lead) => (
-          <div key={lead.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-            <p>
-              <strong>{lead.business_name}</strong> · {lead.created_at ? new Date(lead.created_at).toLocaleString() : ""} ·{" "}
-              {lead.status === "quoted" ? "Cotizada" : "Pendiente"}
-            </p>
-            <p style={{ fontSize: 13 }}>
-              Contacto: {lead.contact_name} · {lead.email} · {lead.phone_whatsapp}
-            </p>
-            <p style={{ fontSize: 13 }}>
-              Sitio: {lead.website_url ?? "—"} · Ciudad/país: {lead.city ?? "—"}, {lead.country ?? "—"}
-            </p>
-            {lead.message && <p style={{ fontSize: 13, color: "#444", marginTop: 4 }}>&quot;{lead.message}&quot;</p>}
-            <EnterpriseLeadActions
-              leadId={lead.id}
-              status={lead.status}
-              currency={lead.currency}
-              quotedSetupFee={lead.quoted_setup_fee}
-              quotedRecurringFee={lead.quoted_recurring_fee}
-              checkoutUrl={lead.checkout_url}
-            />
-          </div>
-        ))}
-      </div>
+    <AdminShell title="Solicitudes Enterprise">
+      <section className="mb-8">
+        <h2 className="mb-3 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+          Pendientes ({pending.length})
+        </h2>
+        {pending.length === 0 && <p className="text-sm text-text-muted">Sin solicitudes pendientes.</p>}
+        <div className="flex flex-col gap-3">
+          {pending.map((lead) => (
+            <Panel key={lead.id}>
+              <p className="flex flex-wrap items-center gap-2 text-ink">
+                <span className="font-medium">{lead.business_name}</span>
+                <span className="text-text-secondary">
+                  · {lead.created_at ? new Date(lead.created_at).toLocaleString("es") : ""}
+                </span>
+                <Badge tone={lead.status === "quoted" ? "signal" : "neutral"}>
+                  {lead.status === "quoted" ? "Cotizada" : "Pendiente"}
+                </Badge>
+              </p>
+              <p className="mt-1 text-sm text-text-secondary">
+                Contacto: {lead.contact_name} · {lead.email} · {lead.phone_whatsapp}
+              </p>
+              <p className="mt-1 text-sm text-text-secondary">
+                Sitio: {lead.website_url ?? "—"} · Ciudad/país: {lead.city ?? "—"}, {lead.country ?? "—"}
+              </p>
+              {lead.message && <p className="mt-2 text-sm text-text-muted italic">&quot;{lead.message}&quot;</p>}
+              <EnterpriseLeadActions
+                leadId={lead.id}
+                status={lead.status}
+                currency={lead.currency}
+                quotedSetupFee={lead.quoted_setup_fee}
+                quotedRecurringFee={lead.quoted_recurring_fee}
+                checkoutUrl={lead.checkout_url}
+              />
+            </Panel>
+          ))}
+        </div>
+      </section>
 
       {done.length > 0 && (
-        <>
-          <h2>Resueltas ({done.length})</h2>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>
-                <th>Negocio</th>
-                <th>Contacto</th>
-                <th>Estado</th>
-                <th>Cotización</th>
-              </tr>
-            </thead>
-            <tbody>
-              {done.map((lead) => (
-                <tr key={lead.id} style={{ borderBottom: "1px solid #eee" }}>
-                  <td>{lead.business_name}</td>
-                  <td>{lead.email}</td>
-                  <td>{lead.status === "approved" ? "Aprobada" : "Rechazada"}</td>
-                  <td>
-                    {lead.quoted_setup_fee !== null && lead.quoted_recurring_fee !== null
-                      ? `${lead.currency} ${lead.quoted_setup_fee} + ${lead.quoted_recurring_fee}/mes`
-                      : "—"}
-                  </td>
+        <section>
+          <h2 className="mb-3 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+            Resueltas ({done.length})
+          </h2>
+          <div className="overflow-x-auto rounded-md border border-border">
+            <table className="w-full min-w-[600px] border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border-strong bg-paper-raised text-left text-xs tracking-wide text-text-secondary uppercase">
+                  <th className="px-4 py-3 font-medium">Negocio</th>
+                  <th className="px-4 py-3 font-medium">Contacto</th>
+                  <th className="px-4 py-3 font-medium">Estado</th>
+                  <th className="px-4 py-3 font-medium">Cotización</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
+              </thead>
+              <tbody>
+                {done.map((lead) => (
+                  <tr key={lead.id} className="border-b border-border last:border-b-0">
+                    <td className="px-4 py-3 text-ink">{lead.business_name}</td>
+                    <td className="px-4 py-3 text-text-secondary">{lead.email}</td>
+                    <td className="px-4 py-3">
+                      <Badge tone={lead.status === "approved" ? "good" : "critical"}>
+                        {lead.status === "approved" ? "Aprobada" : "Rechazada"}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-text-secondary">
+                      {lead.quoted_setup_fee !== null && lead.quoted_recurring_fee !== null
+                        ? `${lead.currency} ${lead.quoted_setup_fee} + ${lead.quoted_recurring_fee}/mes`
+                        : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
-    </main>
+    </AdminShell>
   );
 }

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { Badge } from "@/components/ui/badge";
 
 export default async function AdminClientesPage() {
   await requireAdmin();
@@ -31,46 +33,56 @@ export default async function AdminClientesPage() {
   }
 
   return (
-    <main style={{ padding: 60, maxWidth: 1000, fontFamily: "sans-serif" }}>
-      <p>
-        <Link href="/admin">← Volver</Link>
-      </p>
-      <h1>Todos los clientes ({clients?.length ?? 0})</h1>
-
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-        <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid #333" }}>
-            <th style={{ padding: 6 }}>Negocio</th>
-            <th style={{ padding: 6 }}>Plan</th>
-            <th style={{ padding: 6 }}>País</th>
-            <th style={{ padding: 6 }}>Nicho</th>
-            <th style={{ padding: 6 }}>Verificación</th>
-            <th style={{ padding: 6 }}>Score</th>
-            <th style={{ padding: 6 }}>Suscripción</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(clients ?? []).map((c) => {
-            const sub = subByClient.get(c.id);
-            const score = latestScoreByClient.get(c.id);
-            return (
-              <tr key={c.id} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: 6 }}>{c.business_name}</td>
-                <td style={{ padding: 6 }}>{c.plan}</td>
-                <td style={{ padding: 6 }}>{c.country}</td>
-                <td style={{ padding: 6 }}>{c.niche}</td>
-                <td style={{ padding: 6, color: c.verification_status === "flagged" ? "crimson" : "inherit" }}>
-                  {c.verification_status}
-                </td>
-                <td style={{ padding: 6 }}>{score !== undefined ? Math.round(score) : "—"}</td>
-                <td style={{ padding: 6 }}>
-                  {sub ? `${sub.status}${sub.setup_fee_paid ? " · setup pagado" : " · setup pendiente"}` : "sin suscripción"}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </main>
+    <AdminShell title={`Todos los clientes (${clients?.length ?? 0})`}>
+      <div className="overflow-x-auto rounded-md border border-border">
+        <table className="w-full min-w-[820px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-border-strong bg-paper-raised text-left text-xs tracking-wide text-text-secondary uppercase">
+              <th className="px-4 py-3 font-medium">Negocio</th>
+              <th className="px-4 py-3 font-medium">Plan</th>
+              <th className="px-4 py-3 font-medium">País</th>
+              <th className="px-4 py-3 font-medium">Nicho</th>
+              <th className="px-4 py-3 font-medium">Verificación</th>
+              <th className="px-4 py-3 font-medium">Score</th>
+              <th className="px-4 py-3 font-medium">Suscripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(clients ?? []).map((c) => {
+              const sub = subByClient.get(c.id);
+              const score = latestScoreByClient.get(c.id);
+              return (
+                <tr key={c.id} className="border-b border-border last:border-b-0 hover:bg-surface">
+                  <td className="px-4 py-3">
+                    <Link href={`/admin/clientes/${c.id}`} className="font-medium text-ink hover:text-signal-strong">
+                      {c.business_name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-text-secondary capitalize">{c.plan}</td>
+                  <td className="px-4 py-3 text-text-secondary">{c.country}</td>
+                  <td className="px-4 py-3 text-text-secondary">{c.niche}</td>
+                  <td className="px-4 py-3">
+                    <Badge tone={c.verification_status === "flagged" ? "critical" : "neutral"}>
+                      {c.verification_status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 font-mono text-ink">{score !== undefined ? Math.round(score) : "—"}</td>
+                  <td className="px-4 py-3 text-text-secondary">
+                    {sub ? (
+                      <span>
+                        {sub.status}
+                        {sub.setup_fee_paid ? " · setup pagado" : " · setup pendiente"}
+                      </span>
+                    ) : (
+                      "sin suscripción"
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </AdminShell>
   );
 }

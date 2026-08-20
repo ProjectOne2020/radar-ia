@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input, Label } from "@/components/ui/field";
+import { Alert } from "@/components/ui/panel";
 
 export default function NewPartnerForm() {
   const router = useRouter();
@@ -40,32 +43,41 @@ export default function NewPartnerForm() {
 
   if (createdKey) {
     return (
-      <div style={{ border: "2px solid #333", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+      <Alert tone="warning" className="mb-5">
         <p>
-          Partner <strong>{createdKey.agencyName}</strong> creado. Esta es la ÚNICA vez que se muestra la API key
-          — cópiala ahora, no se puede recuperar después:
+          Partner <strong>{createdKey.agencyName}</strong> creado. Esta es la ÚNICA vez que se muestra la API key —
+          cópiala ahora, no se puede recuperar después:
         </p>
-        <code style={{ display: "block", padding: 8, background: "#f0f0f0", wordBreak: "break-all" }}>
+        <code className="mt-2 block rounded-xs bg-surface-sunken p-2 font-mono text-xs break-all">
           {createdKey.apiKey}
         </code>
-        <button onClick={() => setCreatedKey(null)} style={{ marginTop: 8 }}>
+        <Button size="sm" variant="secondary" className="mt-3" onClick={() => setCreatedKey(null)}>
           Entendido
-        </button>
-      </div>
+        </Button>
+      </Alert>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8, alignItems: "end", marginBottom: 16 }}>
-      <label>
-        Agencia
-        <br />
-        <input value={agencyName} onChange={(e) => setAgencyName(e.target.value)} required minLength={2} />
-      </label>
-      <label>
-        % revenue share
-        <br />
-        <input
+    <form
+      onSubmit={handleSubmit}
+      className="mb-5 flex flex-wrap items-end gap-4 rounded-md border border-border bg-surface p-5 sm:p-6"
+    >
+      <div>
+        <Label htmlFor="agencyName">Agencia</Label>
+        <Input
+          id="agencyName"
+          value={agencyName}
+          onChange={(e) => setAgencyName(e.target.value)}
+          required
+          minLength={2}
+          className="w-56"
+        />
+      </div>
+      <div>
+        <Label htmlFor="revenueShare">% revenue share</Label>
+        <Input
+          id="revenueShare"
           type="number"
           min={0}
           max={100}
@@ -73,12 +85,13 @@ export default function NewPartnerForm() {
           value={revenueSharePct}
           onChange={(e) => setRevenueSharePct(e.target.value)}
           placeholder="opcional"
+          className="w-32"
         />
-      </label>
-      <button type="submit" disabled={loading}>
+      </div>
+      <Button type="submit" size="sm" disabled={loading}>
         {loading ? "Creando..." : "Crear partner"}
-      </button>
-      {error && <span style={{ color: "red" }}>{error}</span>}
+      </Button>
+      {error && <span className="text-sm text-critical">{error}</span>}
     </form>
   );
 }

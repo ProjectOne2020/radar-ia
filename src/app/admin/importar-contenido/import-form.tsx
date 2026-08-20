@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input, Label, Textarea } from "@/components/ui/field";
+import { Panel } from "@/components/ui/panel";
 
 interface JsonLdBlock {
   "@type"?: string;
@@ -55,30 +58,29 @@ export default function ImportForm() {
 
   return (
     <div>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 600 }}>
-        <label>
-          Client ID
-          <br />
-          <input value={clientId} onChange={(e) => setClientId(e.target.value)} required style={{ width: "100%" }} />
-        </label>
-        <label>
-          Contenido JSON generado en Antigravity
-          <br />
-          <textarea
+      <form onSubmit={handleSubmit} className="flex max-w-[600px] flex-col gap-4">
+        <div>
+          <Label htmlFor="clientId">Client ID</Label>
+          <Input id="clientId" value={clientId} onChange={(e) => setClientId(e.target.value)} required />
+        </div>
+        <div>
+          <Label htmlFor="importJson">Contenido JSON generado en Antigravity</Label>
+          <Textarea
+            id="importJson"
             value={importJson}
             onChange={(e) => setImportJson(e.target.value)}
             required
             rows={12}
-            style={{ width: "100%", fontFamily: "monospace" }}
+            className="font-mono text-xs"
           />
-        </label>
-        <button type="submit" disabled={loading}>
+        </div>
+        <Button type="submit" size="sm" disabled={loading} className="self-start">
           {loading ? "Importando..." : "Importar"}
-        </button>
+        </Button>
         {error && (
-          <div style={{ color: "red" }}>
+          <div className="text-sm text-critical">
             {Array.isArray(error) ? (
-              <ul>
+              <ul className="list-disc pl-5">
                 {error.map((e, i) => (
                   <li key={i}>{e}</li>
                 ))}
@@ -91,17 +93,22 @@ export default function ImportForm() {
       </form>
 
       {result && (
-        <div style={{ marginTop: 24, border: "1px solid #ccc", borderRadius: 8, padding: 12 }}>
-          <p>
-            <strong>{result.faqsInserted}</strong> preguntas insertadas en prompt_sets (activas, categoría
-            &quot;imported&quot;) — se usarán en la próxima medición (pilar 5).
+        <Panel raised className="mt-6">
+          <p className="text-sm text-text">
+            <strong className="text-ink">{result.faqsInserted}</strong> preguntas insertadas en prompt_sets (activas,
+            categoría &quot;imported&quot;) — se usarán en la próxima medición (pilar 5).
           </p>
 
           {result.jsonLd.length > 0 && (
             <>
-              <h3>Bloques JSON-LD ({result.jsonLd.length}) — copiar al sitio real del cliente</h3>
+              <h3 className="mt-4 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+                Bloques JSON-LD ({result.jsonLd.length}) — copiar al sitio real del cliente
+              </h3>
               {result.jsonLd.map((block, i) => (
-                <pre key={i} style={{ background: "#f5f5f5", padding: 8, overflowX: "auto", fontSize: 12 }}>
+                <pre
+                  key={i}
+                  className="mt-2 overflow-x-auto rounded-xs bg-surface-sunken p-3 font-mono text-xs text-text-secondary"
+                >
                   {JSON.stringify(block, null, 2)}
                 </pre>
               ))}
@@ -110,21 +117,23 @@ export default function ImportForm() {
 
           {result.landing && (
             <>
-              <h3>Landing mínima — copiar al sitio real del cliente</h3>
-              <p>
-                <strong>{result.landing.title}</strong>
+              <h3 className="mt-4 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+                Landing mínima — copiar al sitio real del cliente
+              </h3>
+              <p className="mt-2 text-sm text-text">
+                <strong className="text-ink">{result.landing.title}</strong>
                 <br />
                 {result.landing.description}
               </p>
               {result.landing.sections.map((s, i) => (
-                <div key={i} style={{ marginBottom: 8 }}>
-                  <strong>{s.heading}</strong>
-                  <p>{s.body}</p>
+                <div key={i} className="mt-2">
+                  <strong className="text-sm text-ink">{s.heading}</strong>
+                  <p className="text-sm text-text-secondary">{s.body}</p>
                 </div>
               ))}
             </>
           )}
-        </div>
+        </Panel>
       )}
     </div>
   );
