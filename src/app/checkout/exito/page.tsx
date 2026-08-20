@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Container } from "@/components/ui/container";
 import { Panel, Alert } from "@/components/ui/panel";
 import { ButtonLink } from "@/components/ui/button";
+import { IntakeForm } from "./intake-form";
 
 function ExitoContent() {
   const t = useTranslations("CheckoutExito");
@@ -14,6 +15,7 @@ function ExitoContent() {
   const plan = searchParams.get("plan");
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(type === "setup");
+  const [intakeDone, setIntakeDone] = useState(false);
 
   useEffect(() => {
     if (type !== "setup" || !plan) return;
@@ -48,6 +50,20 @@ function ExitoContent() {
     return (
       <Container narrow className="py-16">
         <p className="text-text-secondary">{t("redirecting")}</p>
+      </Container>
+    );
+  }
+
+  // El formulario de "que necesitamos para implementar" se muestra AQUI, justo despues de
+  // confirmar el pago (setup + suscripcion), no antes de pagar — pedido explicito del
+  // fundador para no meter friccion extra en la decision de compra.
+  if (type === "subscription" && !intakeDone) {
+    return (
+      <Container narrow className="py-16">
+        <Alert tone="good" className="mb-6">
+          {t("body")}
+        </Alert>
+        <IntakeForm onDone={() => setIntakeDone(true)} />
       </Container>
     );
   }

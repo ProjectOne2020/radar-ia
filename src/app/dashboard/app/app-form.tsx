@@ -12,11 +12,15 @@ interface AppListing {
   ios_app_id: string | null;
   android_package_id: string | null;
   landing_url: string | null;
+  app_type: string | null;
 }
 
 export default function AppForm({ appListing }: { appListing: AppListing | null }) {
   const t = useTranslations("DashboardApp");
   const router = useRouter();
+  const [appType, setAppType] = useState<"native" | "web">(
+    appListing?.app_type === "web" ? "web" : "native",
+  );
   const [appName, setAppName] = useState(appListing?.app_name ?? "");
   const [iosAppId, setIosAppId] = useState(appListing?.ios_app_id ?? "");
   const [androidPackageId, setAndroidPackageId] = useState(appListing?.android_package_id ?? "");
@@ -33,6 +37,7 @@ export default function AppForm({ appListing }: { appListing: AppListing | null 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        appType,
         appName,
         iosAppId: iosAppId.trim() || null,
         androidPackageId: androidPackageId.trim() || null,
@@ -53,35 +58,61 @@ export default function AppForm({ appListing }: { appListing: AppListing | null 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
+        <Label>{t("appTypeLabel")}</Label>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant={appType === "web" ? "primary" : "secondary"}
+            onClick={() => setAppType("web")}
+          >
+            {t("appTypeWeb")}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={appType === "native" ? "primary" : "secondary"}
+            onClick={() => setAppType("native")}
+          >
+            {t("appTypeNative")}
+          </Button>
+        </div>
+      </div>
+      <div>
         <Label htmlFor="appName">{t("appName")}</Label>
         <Input id="appName" value={appName} onChange={(e) => setAppName(e.target.value)} required />
       </div>
+      {appType === "native" ? (
+        <>
+          <div>
+            <Label htmlFor="iosAppId">{t("iosAppId")}</Label>
+            <Input
+              id="iosAppId"
+              value={iosAppId}
+              onChange={(e) => setIosAppId(e.target.value)}
+              placeholder={t("iosAppIdPlaceholder")}
+            />
+          </div>
+          <div>
+            <Label htmlFor="androidPackageId">{t("androidPackageId")}</Label>
+            <Input
+              id="androidPackageId"
+              value={androidPackageId}
+              onChange={(e) => setAndroidPackageId(e.target.value)}
+              placeholder={t("androidPackageIdPlaceholder")}
+            />
+          </div>
+        </>
+      ) : null}
       <div>
-        <Label htmlFor="iosAppId">{t("iosAppId")}</Label>
-        <Input
-          id="iosAppId"
-          value={iosAppId}
-          onChange={(e) => setIosAppId(e.target.value)}
-          placeholder={t("iosAppIdPlaceholder")}
-        />
-      </div>
-      <div>
-        <Label htmlFor="androidPackageId">{t("androidPackageId")}</Label>
-        <Input
-          id="androidPackageId"
-          value={androidPackageId}
-          onChange={(e) => setAndroidPackageId(e.target.value)}
-          placeholder={t("androidPackageIdPlaceholder")}
-        />
-      </div>
-      <div>
-        <Label htmlFor="landingUrl">{t("landingUrl")}</Label>
+        <Label htmlFor="landingUrl">{appType === "web" ? t("landingUrlWeb") : t("landingUrl")}</Label>
         <Input
           id="landingUrl"
           type="url"
           value={landingUrl}
           onChange={(e) => setLandingUrl(e.target.value)}
           placeholder={t("landingUrlPlaceholder")}
+          required={appType === "web"}
         />
       </div>
       <Button type="submit" disabled={loading}>

@@ -120,6 +120,7 @@ export async function POST(request: Request) {
       publicListingOptIn: publicListingOptIn === true,
       iosAppId: iosAppId || undefined,
       androidPackageId: androidPackageId || undefined,
+      appType: isApp ? (isNativeApp ? "native" : "web") : undefined,
     });
 
     // Enlaza la solicitud con el cliente que genero — es lo que impide que

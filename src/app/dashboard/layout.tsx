@@ -16,6 +16,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect("/login");
 
   const { data: client } = await supabase.from("clients").select("business_name").single();
+  const { data: subscription } = await supabase.from("subscriptions").select("plan, status").maybeSingle();
 
-  return <DashboardShell businessName={client?.business_name ?? t("yourBusiness")}>{children}</DashboardShell>;
+  return (
+    <DashboardShell
+      businessName={client?.business_name ?? t("yourBusiness")}
+      plan={subscription?.plan ?? null}
+      planStatus={subscription?.status ?? null}
+    >
+      {children}
+    </DashboardShell>
+  );
 }

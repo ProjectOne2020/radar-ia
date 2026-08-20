@@ -147,7 +147,7 @@ export function scorePillar4App(findings: FindingRow[]): PillarScore {
   const values = findings.map((f) => {
     if (f.finding.includes("declara SoftwareApplication con operatingSystem y applicationCategory")) return 100;
     if (f.finding.includes("declara SoftwareApplication pero le falta")) return 50;
-    if (f.finding.includes("no declara schema SoftwareApplication ni MobileApplication")) return 0;
+    if (f.finding.includes("no declara schema SoftwareApplication, MobileApplication ni WebApplication")) return 0;
     return null;
   });
   return aggregate(values);

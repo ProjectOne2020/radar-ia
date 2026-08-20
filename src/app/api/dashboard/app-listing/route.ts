@@ -29,13 +29,21 @@ export async function POST(request: Request) {
   if (!clientId) return NextResponse.json({ error: "Sesión sin client_id." }, { status: 401 });
 
   const body = await request.json().catch(() => null);
-  const { appName, iosAppId, androidPackageId, landingUrl } = body ?? {};
+  const { appName, iosAppId, androidPackageId, landingUrl, appType } = body ?? {};
 
   if (!appName || typeof appName !== "string" || appName.trim().length < 2) {
     return NextResponse.json({ error: "appName requerido." }, { status: 400 });
   }
-  if (!iosAppId && !androidPackageId) {
+  if (appType !== "native" && appType !== "web") {
+    return NextResponse.json({ error: "appType debe ser 'native' o 'web'." }, { status: 400 });
+  }
+  // M23 — misma distincion que /api/free-audit/request: una app nativa necesita ficha de
+  // tienda (ios/android ID), una app web solo necesita su URL, como cualquier sitio.
+  if (appType === "native" && !iosAppId && !androidPackageId) {
     return NextResponse.json({ error: "Debes indicar al menos ios_app_id o android_package_id." }, { status: 400 });
+  }
+  if (appType === "web" && !landingUrl) {
+    return NextResponse.json({ error: "Debes indicar la URL de tu app web." }, { status: 400 });
   }
 
   const { data: existing } = await supabase.from("app_listings").select("id").maybeSingle();
@@ -43,9 +51,10 @@ export async function POST(request: Request) {
   const payload = {
     client_id: clientId,
     app_name: appName.trim(),
-    ios_app_id: iosAppId || null,
-    android_package_id: androidPackageId || null,
+    ios_app_id: appType === "native" ? iosAppId || null : null,
+    android_package_id: appType === "native" ? androidPackageId || null : null,
     landing_url: landingUrl || null,
+    app_type: appType,
   };
 
   const { data, error } = existing

@@ -50,6 +50,7 @@ export type Database = {
         Row: {
           android_package_id: string | null
           app_name: string
+          app_type: string | null
           client_id: string | null
           created_at: string | null
           id: string
@@ -59,6 +60,7 @@ export type Database = {
         Insert: {
           android_package_id?: string | null
           app_name: string
+          app_type?: string | null
           client_id?: string | null
           created_at?: string | null
           id?: string
@@ -68,6 +70,7 @@ export type Database = {
         Update: {
           android_package_id?: string | null
           app_name?: string
+          app_type?: string | null
           client_id?: string | null
           created_at?: string | null
           id?: string
@@ -447,6 +450,56 @@ export type Database = {
           },
         ]
       }
+      onboarding_intake: {
+        Row: {
+          client_id: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          gbp_notes: string | null
+          has_gbp: boolean | null
+          id: string
+          invite_email: string | null
+          website_access_method: string | null
+          website_platform: string | null
+        }
+        Insert: {
+          client_id: string
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          gbp_notes?: string | null
+          has_gbp?: boolean | null
+          id?: string
+          invite_email?: string | null
+          website_access_method?: string | null
+          website_platform?: string | null
+        }
+        Update: {
+          client_id?: string
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          gbp_notes?: string | null
+          has_gbp?: boolean | null
+          id?: string
+          invite_email?: string | null
+          website_access_method?: string | null
+          website_platform?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_intake_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_accounts: {
         Row: {
           agency_name: string
@@ -762,7 +815,7 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals["public"]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends

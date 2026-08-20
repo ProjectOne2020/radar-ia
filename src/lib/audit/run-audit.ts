@@ -36,7 +36,7 @@ export async function runAuditForClient(clientId: string): Promise<AuditSummary>
     admin.from("sku_catalogs").select("id, store_url, merchant_center_id").eq("client_id", clientId).maybeSingle(),
     admin
       .from("app_listings")
-      .select("id, app_name, ios_app_id, android_package_id, landing_url")
+      .select("id, app_name, ios_app_id, android_package_id, landing_url, app_type")
       .eq("client_id", clientId)
       .maybeSingle(),
   ]);
@@ -195,7 +195,13 @@ export async function runAuditForClient(clientId: string): Promise<AuditSummary>
   // Pilar 2: Google Business Profile (local), Google Merchant Center (e-commerce) o
   // ficha de tienda de apps (apps) — son sustitutos, nunca se corren dos para el mismo
   // cliente (02-METODOLOGIA-SCORING.md).
-  if (isApp) {
+  //
+  // app_type === "web" (M23): una app web no tiene ficha en App Store/Google Play por
+  // diseño, no por un dato faltante — antes esto se reportaba como hallazgo "Critico"
+  // ("no tiene ios_app_id ni android_package_id configurado"), confundiendo al fundador
+  // al probar su propia app web. El pilar simplemente no aplica: se omite el chequeo
+  // (measured:false ya era el resultado numerico real, esto solo corrige el mensaje).
+  if (isApp && appListing?.app_type !== "web") {
     try {
       allFindings.push(
         ...(await auditAppListing(

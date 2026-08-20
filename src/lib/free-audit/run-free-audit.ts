@@ -37,6 +37,10 @@ export interface FreeAuditInput {
   // M16 — solo cuando axis === "app" y appType === "native" (M23).
   iosAppId?: string;
   androidPackageId?: string;
+  // M23 — distingue app nativa de app web; se persiste en app_listings.app_type para que
+  // run-audit.ts sepa que la ficha de tienda (pilar 2/7) no aplica a una app web y deje de
+  // marcarla como "Critico" por no tener ios_app_id/android_package_id.
+  appType?: "native" | "web";
 }
 
 export interface FreeAuditRunResult {
@@ -97,6 +101,7 @@ export async function runFreeAudit(input: FreeAuditInput): Promise<FreeAuditRunR
     websiteUrl: input.websiteUrl,
     iosAppId: input.iosAppId,
     androidPackageId: input.androidPackageId,
+    appType: input.appType,
   });
   if (axisError) throw new Error(axisError);
 

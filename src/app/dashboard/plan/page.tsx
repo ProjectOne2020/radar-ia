@@ -53,6 +53,11 @@ export default function PlanPage() {
   return (
     <>
       <h1 className="text-2xl sm:text-3xl">{t("title")}</h1>
+
+      <Alert tone="neutral" className="mt-4 max-w-[560px]">
+        {t("doubleChargeNote")}
+      </Alert>
+
       {error && (
         <Alert tone="critical" className="mt-4 max-w-[420px]">
           {error}

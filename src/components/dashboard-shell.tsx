@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Container } from "@/components/ui/container";
+import { Badge } from "@/components/ui/badge";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 
 type DashboardNavKey =
@@ -26,15 +28,29 @@ const NAV: Array<{ href: string; key: DashboardNavKey }> = [
   { href: "/dashboard/plan", key: "navPlan" },
 ];
 
+const PLAN_LABEL: Record<string, string> = { lite: "Lite", plus: "Plus", pro: "Pro", enterprise: "Enterprise" };
+
 export function DashboardShell({
   businessName,
+  plan,
+  planStatus,
   children,
 }: {
   businessName: string;
+  plan: string | null;
+  planStatus: string | null;
   children: React.ReactNode;
 }) {
   const t = useTranslations("Dashboard");
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <div className="min-h-screen">
@@ -47,8 +63,25 @@ export function DashboardShell({
             <span className="hidden truncate text-sm text-text-secondary sm:inline">
               {businessName}
             </span>
+            {plan && (
+              <Badge tone={planStatus === "past_due" ? "warning" : "signal"}>
+                {t("planBadge", { plan: PLAN_LABEL[plan] ?? plan })}
+              </Badge>
+            )}
           </div>
-          <LanguageSwitcher />
+          <div className="flex items-center gap-3">
+            <Link href="/listado" className="text-sm text-text-secondary hover:text-ink">
+              {t("navPublicListing")}
+            </Link>
+            <LanguageSwitcher />
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="text-sm text-text-secondary transition-colors duration-[var(--duration-micro)] hover:text-ink"
+            >
+              {t("logout")}
+            </button>
+          </div>
         </Container>
 
         <Container>

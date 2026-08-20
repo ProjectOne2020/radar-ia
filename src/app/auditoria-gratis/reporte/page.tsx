@@ -136,9 +136,15 @@ function ReporteContent() {
         })}
       </ul>
 
-      <Panel className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-text-secondary">{t("detailNote")}</p>
-        <ButtonLink href="/precios" size="md" className="shrink-0">
+      <Panel
+        raised
+        className="mt-8 flex flex-col items-start gap-4 border-signal bg-signal-soft ring-1 ring-signal sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <p className="font-display text-lg font-semibold text-signal-ink">{t("ctaTitle")}</p>
+          <p className="mt-1.5 text-sm text-signal-ink/90">{t("detailNote")}</p>
+        </div>
+        <ButtonLink href="/precios" size="lg" className="shrink-0">
           {t("ctaSeePlans")}
         </ButtonLink>
       </Panel>

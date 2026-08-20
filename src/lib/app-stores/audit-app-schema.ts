@@ -18,13 +18,18 @@ export function auditAppSchema(html: string, fetched: boolean): AuditFindingDraf
   }
 
   const entities = extractJsonLd(html);
-  const appNode = entities.find((e) => e.type.includes("SoftwareApplication") || e.type.includes("MobileApplication"));
+  // WebApplication es el subtipo correcto de SoftwareApplication para una app web (M23) —
+  // sin esto, una app web que sigue la recomendacion "correcta" de schema.org quedaba
+  // marcada igual que si no declarara nada.
+  const appNode = entities.find(
+    (e) => e.type.includes("SoftwareApplication") || e.type.includes("MobileApplication") || e.type.includes("WebApplication")
+  );
 
   if (!appNode) {
     return [
       {
         pillar: 4,
-        finding: "La landing page de la app no declara schema SoftwareApplication ni MobileApplication.",
+        finding: "La landing page de la app no declara schema SoftwareApplication, MobileApplication ni WebApplication.",
         severity: "warning",
         detail_locked: false,
       },

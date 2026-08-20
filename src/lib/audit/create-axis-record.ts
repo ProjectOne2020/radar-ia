@@ -10,6 +10,7 @@ export interface AxisRecordInput {
   websiteUrl?: string;
   iosAppId?: string;
   androidPackageId?: string;
+  appType?: "native" | "web";
 }
 
 // M28 — extraido de run-free-audit.ts para reusar la misma logica de creacion de fila
@@ -30,6 +31,7 @@ export async function createAxisRecord(
       ios_app_id: input.iosAppId ?? null,
       android_package_id: input.androidPackageId ?? null,
       landing_url: input.websiteUrl ?? null,
+      app_type: input.appType ?? null,
     });
     if (error) return { error: `No se pudo registrar la app: ${error.message}` };
   } else if (input.axis === "ecommerce") {

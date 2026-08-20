@@ -23,6 +23,7 @@ export default async function CitasPage() {
   return (
     <>
       <h1 className="text-2xl sm:text-3xl">{t("title")}</h1>
+      <p className="mt-2 max-w-[70ch] text-text-secondary">{t("intro")}</p>
 
       <div className="mt-8 flex flex-col gap-4">
         {(runs ?? []).map((run) => (
@@ -50,15 +51,18 @@ export default async function CitasPage() {
             </div>
 
             {run.citations && run.citations.length > 0 ? (
-              <ul className="mt-4 flex flex-col gap-2 border-t border-border pt-4">
-                {run.citations.map((c, i) => (
-                  <li key={i} className="flex flex-wrap items-center gap-2 text-sm text-text">
-                    <span>{c.cited_domain}</span>
-                    {c.is_client_domain && <Badge tone="signal">{t("yourSite")}</Badge>}
-                    {c.is_directory && <Badge tone="observed">{t("directory")}</Badge>}
-                  </li>
-                ))}
-              </ul>
+              <>
+                <p className="mt-4 border-t border-border pt-4 text-xs text-text-muted">{t("citationsIntro")}</p>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {run.citations.map((c, i) => (
+                    <li key={i} className="flex flex-wrap items-center gap-2 text-sm text-text">
+                      <span>{c.cited_domain}</span>
+                      {c.is_client_domain && <Badge tone="signal">{t("yourSite")}</Badge>}
+                      {c.is_directory && <Badge tone="observed">{t("directory")}</Badge>}
+                    </li>
+                  ))}
+                </ul>
+              </>
             ) : (
               <p className="mt-4 border-t border-border pt-4 text-sm text-text-muted">
                 {t("noCitationsInRun")}
