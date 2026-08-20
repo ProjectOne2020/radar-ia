@@ -96,7 +96,23 @@ function ReporteContent() {
 
   return (
     <Container narrow className="py-10 sm:py-16">
-      <h1 className="text-2xl sm:text-3xl">{t("title", { businessName: data.businessName })}</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl">{t("title", { businessName: data.businessName })}</h1>
+        <Badge tone="warning">{t("partialBadge")}</Badge>
+      </div>
+
+      <Panel
+        raised
+        className="mt-5 flex flex-col items-start gap-4 border-warning bg-warning-soft ring-1 ring-warning sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <p className="font-display text-lg font-semibold text-warning">{t("partialTitle")}</p>
+          <p className="mt-1.5 text-sm text-warning/90">{t("partialBody")}</p>
+        </div>
+        <ButtonLink href="/precios" size="md" className="shrink-0">
+          {t("ctaSeePlans")}
+        </ButtonLink>
+      </Panel>
 
       <Panel raised className="mt-6">
         <ScoreRing
@@ -145,7 +161,7 @@ function ReporteContent() {
           <p className="mt-1.5 text-sm text-signal-ink/90">{t("detailNote")}</p>
         </div>
         <ButtonLink href="/precios" size="lg" className="shrink-0">
-          {t("ctaSeePlans")}
+          {t("ctaSeePlansBottom")}
         </ButtonLink>
       </Panel>
     </Container>

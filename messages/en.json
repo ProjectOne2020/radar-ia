@@ -285,9 +285,13 @@
     "breakdownTitle": "Breakdown by pillar",
     "notMeasured": "not enough data",
     "diagnosisTitle": "Diagnosis",
+    "partialBadge": "Partial report",
+    "partialTitle": "This is NOT the full audit",
+    "partialBody": "What you're seeing here is a free, partial preview. To get the complete audit of your business — and have our team implement the fix for you — you need to subscribe to a plan.",
     "ctaTitle": "This is just the tip of the iceberg",
-    "detailNote": "This is the high-level diagnosis. The full actionable detail — exactly what to fix, step by step — is available on paid plans.",
-    "ctaSeePlans": "See plans and unlock the detail"
+    "detailNote": "This is the high-level diagnosis, not the full analysis. The complete audit — exactly what to fix, pillar by pillar — and having our team implement the fix are only available on paid plans.",
+    "ctaSeePlans": "See plans",
+    "ctaSeePlansBottom": "Subscribe and unlock the full audit"
   },
   "Login": {
     "title": "Log in",

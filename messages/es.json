@@ -285,9 +285,13 @@
     "breakdownTitle": "Desglose por pilar",
     "notMeasured": "sin datos suficientes",
     "diagnosisTitle": "Diagnóstico",
+    "partialBadge": "Reporte parcial",
+    "partialTitle": "Esto NO es la auditoría completa",
+    "partialBody": "Lo que ves aquí es un adelanto gratuito y parcial. Para tener la auditoría completa de tu negocio — y que nuestro equipo implemente la solución por ti — necesitas suscribirte a un plan.",
     "ctaTitle": "Esto es solo la punta del iceberg",
-    "detailNote": "Este es el diagnóstico de alto nivel. El detalle accionable completo — qué corregir exactamente, paso a paso — está disponible en los planes pagados.",
-    "ctaSeePlans": "Ver planes y desbloquear el detalle"
+    "detailNote": "Este es el diagnóstico de alto nivel, no el análisis completo. La auditoría completa —qué corregir exactamente, pilar por pilar— y la implementación de la solución por nuestro equipo solo están disponibles en los planes pagados.",
+    "ctaSeePlans": "Ver planes",
+    "ctaSeePlansBottom": "Suscribirme y desbloquear la auditoría completa"
   },
   "Login": {
     "title": "Inicia sesión",

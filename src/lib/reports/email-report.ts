@@ -21,6 +21,9 @@ export interface ReportData {
   scoreByPillar: Record<string, PillarEntry>;
   findingsCount: { critical: number; warning: number; info: number };
   dashboardUrl: string;
+  // true solo para el correo de la auditoria gratis (M34) -- un cliente de pago ya tiene
+  // la auditoria completa, decirle "suscribete para desbloquearla" no aplica y confunde.
+  isFreeTier?: boolean;
 }
 
 // M10 — reporte periodico por email (Resend). No usa el SDK de Resend, fetch directo a su
@@ -34,9 +37,22 @@ export function buildReportHtml(data: ReportData): string {
     })
     .join("");
 
+  const partialBanner = data.isFreeTier
+    ? `
+      <div style="margin:16px 0;padding:14px 16px;background:#fff4e5;border:1px solid #f0b429;border-radius:6px;">
+        <p style="margin:0;font-size:14px;font-weight:bold;color:#92400e;">⚠️ Esto NO es la auditoría completa</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#92400e;">Este correo muestra un adelanto gratuito y parcial. Para la auditoría completa de tu negocio — y que nuestro equipo implemente la solución por ti — necesitas suscribirte a un plan.</p>
+      </div>
+    `
+    : "";
+
+  const ctaLabel = data.isFreeTier ? "Ver planes y desbloquear la auditoría completa" : "Ver reporte completo";
+  const ctaHref = data.isFreeTier ? "https://radar.omniflowcreator.com/precios" : data.dashboardUrl;
+
   return `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
       <h1 style="color:#1a1a1a;">Radar IA — Reporte de ${data.businessName}</h1>
+      ${partialBanner}
       <p style="font-size:32px;font-weight:bold;color:#3c78d8;margin:16px 0;">${Math.round(data.scoreTotal)}/100</p>
 
       <h2 style="font-size:16px;color:#333;">Desglose por pilar</h2>
@@ -47,9 +63,10 @@ export function buildReportHtml(data: ReportData): string {
         ${data.findingsCount.critical} crítico(s), ${data.findingsCount.warning} advertencia(s), ${data.findingsCount.info} informativo(s).
       </p>
 
-      <a href="${data.dashboardUrl}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#3c78d8;color:#fff;text-decoration:none;border-radius:6px;">
-        Ver reporte completo
+      <a href="${ctaHref}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#3c78d8;color:#fff;text-decoration:none;border-radius:6px;">
+        ${ctaLabel}
       </a>
+      ${data.isFreeTier ? `<p style="margin-top:8px;"><a href="${data.dashboardUrl}" style="font-size:12px;color:#777;">o ver este adelanto de nuevo</a></p>` : ""}
 
       <p style="font-size:12px;color:#999;margin-top:32px;">
         Radar IA — no podemos controlar qué negocio recomienda una IA, pero medimos mes a mes qué tan completa y verificable es la información que esa IA encuentra sobre tu negocio.

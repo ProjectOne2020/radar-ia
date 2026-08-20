@@ -152,6 +152,7 @@ export async function POST(request: Request) {
           // propio dashboard. /dashboard es una ruta protegida: si no hay sesion en ese
           // dispositivo, el proxy manda a /login?next=/dashboard y vuelve aqui despues.
           dashboardUrl: `${appUrl}/dashboard`,
+          isFreeTier: true,
         });
       }
     }
