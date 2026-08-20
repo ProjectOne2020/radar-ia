@@ -13,6 +13,7 @@
     "howItWorks": "How it works",
     "audit": "Free audit",
     "login": "Log in",
+    "goToDashboard": "Go to my dashboard",
     "menu": "Menu"
   },
   "Footer": {
@@ -410,7 +411,7 @@
   },
   "DashboardCatalogo": {
     "title": "Product catalog",
-    "intro": "Set up your store to activate the e-commerce score variant (pillar 2: Google Merchant Center feed completeness; pillar 4: GTIN and feed-vs-site consistency).",
+    "intro": "Set up your store so we can measure your e-commerce visibility: your Google Merchant Center feed completeness, and whether your product data matches between the feed and your site.",
     "merchantCenterConfigured": "Merchant Center configured — the next measurement will sync the feed.",
     "merchantCenterMissing": "No Merchant Center ID: the feed can't sync yet, only the site is audited (robots.txt, schema).",
     "platform": "Platform",
@@ -426,7 +427,7 @@
   },
   "DashboardApp": {
     "title": "Your app",
-    "intro": "Set up your app to activate the apps score variant (pillar 2: App Store / Google Play listing completeness; pillar 4: schema.org SoftwareApplication on your landing; pillar 7: store rating).",
+    "intro": "Set up your app so we can measure your visibility: your App Store / Google Play listing completeness, the technical data on your landing page, and your store rating.",
     "noLandingNote": "No landing configured: the crawlability/schema/question-coverage pillars will remain unmeasured until you add your marketing site's URL.",
     "appTypeLabel": "Does the app have an app store listing?",
     "appTypeWeb": "Web app (no App Store/Google Play)",

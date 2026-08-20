@@ -1,15 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ButtonLink } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 
 export function SiteHeader() {
   const t = useTranslations("Nav");
   const [open, setOpen] = useState(false);
+  // Antes este header siempre mostraba "Iniciar sesión" sin importar si ya habia sesion
+  // activa -- un cliente logueado que navegaba a una pagina publica (ej. /listado) perdia
+  // toda forma de volver a su dashboard salvo re-loguearse. Se revisa la sesion en el
+  // navegador (esta pagina puede ser estatica/publica, no hay garantia de sesion server-side).
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session?.user);
+    });
+    return () => subscription.subscription.unsubscribe();
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-paper/95 backdrop-blur-sm">
@@ -36,10 +51,10 @@ export function SiteHeader() {
             {t("pricing")}
           </Link>
           <Link
-            href="/login"
+            href={loggedIn ? "/dashboard" : "/login"}
             className="text-sm text-text-secondary transition-colors hover:text-ink"
           >
-            {t("login")}
+            {loggedIn ? t("goToDashboard") : t("login")}
           </Link>
           <LanguageSwitcher />
           <ButtonLink href="/auditoria-gratis" size="sm">
@@ -77,8 +92,12 @@ export function SiteHeader() {
           <Link href="/precios" className="text-[0.95rem] text-text" onClick={() => setOpen(false)}>
             {t("pricing")}
           </Link>
-          <Link href="/login" className="text-[0.95rem] text-text" onClick={() => setOpen(false)}>
-            {t("login")}
+          <Link
+            href={loggedIn ? "/dashboard" : "/login"}
+            className="text-[0.95rem] text-text"
+            onClick={() => setOpen(false)}
+          >
+            {loggedIn ? t("goToDashboard") : t("login")}
           </Link>
           <LanguageSwitcher />
           <ButtonLink href="/auditoria-gratis" size="md" onClick={() => setOpen(false)}>

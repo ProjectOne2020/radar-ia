@@ -13,6 +13,7 @@
     "howItWorks": "Como funciona",
     "audit": "Auditoria grátis",
     "login": "Entrar",
+    "goToDashboard": "Ir para meu painel",
     "menu": "Menu"
   },
   "Footer": {
@@ -410,7 +411,7 @@
   },
   "DashboardCatalogo": {
     "title": "Catálogo de produtos",
-    "intro": "Configure sua loja para ativar a pontuação da variante e-commerce (pilar 2: completude do feed do Google Merchant Center; pilar 4: GTIN e consistência feed-site).",
+    "intro": "Configure sua loja para que possamos medir sua visibilidade como e-commerce: a completude do seu feed do Google Merchant Center, e se os dados dos seus produtos coincidem entre o feed e o seu site.",
     "merchantCenterConfigured": "Merchant Center configurado — a próxima medição vai sincronizar o feed.",
     "merchantCenterMissing": "Sem ID do Merchant Center: o feed ainda não pode ser sincronizado, apenas o site é auditado (robots.txt, schema).",
     "platform": "Plataforma",
@@ -426,7 +427,7 @@
   },
   "DashboardApp": {
     "title": "Seu app",
-    "intro": "Configure seu app para ativar a pontuação da variante apps (pilar 2: completude da ficha na App Store / Google Play; pilar 4: schema.org SoftwareApplication na sua landing; pilar 7: avaliação da loja).",
+    "intro": "Configure seu app para que possamos medir sua visibilidade: a completude da sua ficha na App Store / Google Play, os dados técnicos da sua landing, e a avaliação da loja.",
     "noLandingNote": "Sem landing configurada: os pilares de rastreabilidade/schema/cobertura de perguntas ficarão sem medição até você adicionar a URL do seu site de marketing.",
     "appTypeLabel": "O app tem ficha nas lojas de apps?",
     "appTypeWeb": "App web (sem App Store/Google Play)",

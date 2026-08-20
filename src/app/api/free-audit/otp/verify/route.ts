@@ -147,7 +147,11 @@ export async function POST(request: Request) {
           scoreTotal: score.score_total,
           scoreByPillar: score.score_by_pillar as unknown as ReportData["scoreByPillar"],
           findingsCount,
-          dashboardUrl: `${appUrl}/auditoria-gratis/reporte?freeAuditId=${freeAuditId}&clientId=${freeAudit.client_id}`,
+          // Antes mandaba a la pagina publica del reporte -- si quien abre el correo ya
+          // tiene cuenta (siempre la tiene, se crea/enlaza arriba mismo), eso lo saca de su
+          // propio dashboard. /dashboard es una ruta protegida: si no hay sesion en ese
+          // dispositivo, el proxy manda a /login?next=/dashboard y vuelve aqui despues.
+          dashboardUrl: `${appUrl}/dashboard`,
         });
       }
     }

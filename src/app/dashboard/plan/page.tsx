@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn";
 // M9 — dispara los dos cargos SEPARADOS (setup fee -> suscripcion), nunca combinados.
 export default function PlanPage() {
   const t = useTranslations("DashboardPlan");
+  const tFeatures = useTranslations("Precios");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,6 +76,9 @@ export default function PlanPage() {
               <h2 className="text-lg font-semibold text-ink">{plan.name}</h2>
               {plan.flagship && <Badge tone="signal">{t("flagshipLabel")}</Badge>}
             </div>
+            <p className="mt-3 border-t border-border pt-3 text-sm leading-relaxed text-text-secondary">
+              {tFeatures(plan.featuresKey)}
+            </p>
             <Button
               onClick={() => handleChoose(plan.id)}
               disabled={loadingPlan !== null}
