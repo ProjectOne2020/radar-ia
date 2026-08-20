@@ -20,18 +20,33 @@ export async function buildPromptsFromBank(
   const normalized = niche.trim().toLowerCase();
   const categoryType = axis === "app" ? "app" : "vertical";
 
-  const { data } = await admin
-    .from("question_bank")
-    .select("question_text, rubro, rubro_label")
-    .eq("country", country)
-    .eq("category_type", categoryType)
-    .eq("active", true);
+  // Filtrar por rubro/rubro_label ya en la consulta (no traer country+category_type
+  // completo y filtrar en JS): PostgREST tiene un limite por defecto de 1000 filas por
+  // respuesta (db-max-rows). Con menos de 1000 preguntas cargadas nunca se noto, pero
+  // country='MX'+category_type='vertical' ya tiene 4,650 filas reales y 'app' 1,050 —
+  // la consulta sin filtrar por rubro se truncaba silenciosamente al primer ~1000,
+  // haciendo que auditorias de rubros cuyas filas quedaban fuera del corte cayeran al
+  // fallback generico aunque el banco para ese rubro existiera completo. Cada una de
+  // estas dos consultas queda acotada a ~150 filas (un solo rubro), muy por debajo del
+  // limite sin importar cuanto crezca la tabla completa.
+  const [{ data: byRubro }, { data: byLabel }] = await Promise.all([
+    admin
+      .from("question_bank")
+      .select("question_text")
+      .eq("country", country)
+      .eq("category_type", categoryType)
+      .eq("active", true)
+      .eq("rubro", normalized),
+    admin
+      .from("question_bank")
+      .select("question_text")
+      .eq("country", country)
+      .eq("category_type", categoryType)
+      .eq("active", true)
+      .ilike("rubro_label", normalized),
+  ]);
 
-  if (!data || data.length === 0) return null;
-
-  const matched = data.filter(
-    (row) => row.rubro.toLowerCase() === normalized || row.rubro_label.toLowerCase() === normalized,
-  );
+  const matched = [...(byRubro ?? []), ...(byLabel ?? [])];
   if (matched.length === 0) return null;
 
   const shuffled = [...matched].sort(() => Math.random() - 0.5);

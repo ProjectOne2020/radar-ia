@@ -20,26 +20,26 @@ export default async function AdminPreguntasPage({
   const params = await searchParams;
   const admin = createAdminClient();
 
-  const { data: allRows } = await admin.from("question_bank").select("rubro, country, active");
+  // M28 — el select() plano sin agregar (rubro, country, active de TODAS las filas)
+  // se topaba con el limite por defecto de PostgREST (db-max-rows = 1000): con menos de
+  // 1000 preguntas cargadas nunca se noto, pero al pasar de 1000 filas reales el panel
+  // empezo a mostrar un subconjunto truncado y aleatorio (ej. "7 de 774 combinaciones,
+  // 1000 preguntas" con miles de filas reales en la tabla) — bug real reportado en vivo
+  // por el fundador. Se corrige agregando en Postgres (RPC `question_bank_coverage()`,
+  // GROUP BY rubro+country) en vez de traer cada fila a JS: nunca devuelve mas de 774
+  // filas (una por combinacion), muy por debajo del limite, sin importar cuantas
+  // preguntas individuales existan.
+  const [{ data: coverageRows }, { count: totalQuestions }] = await Promise.all([
+    admin.rpc("question_bank_coverage"),
+    admin.from("question_bank").select("id", { count: "exact", head: true }),
+  ]);
 
-  const coverage = new Map<string, { total: number; active: number }>();
-  for (const row of allRows ?? []) {
-    const key = `${row.rubro}|${row.country}`;
-    const entry = coverage.get(key) ?? { total: 0, active: 0 };
-    entry.total += 1;
-    if (row.active) entry.active += 1;
-    coverage.set(key, entry);
-  }
-
-  const populatedCombos = Array.from(coverage.entries())
-    .map(([key, counts]) => {
-      const [rubro, country] = key.split("|");
-      const rubroDef = RUBROS.find((r) => r.slug === rubro);
-      return { rubro, country, label: rubroDef?.label ?? rubro, ...counts };
+  const populatedCombos = (coverageRows ?? [])
+    .map((row) => {
+      const rubroDef = RUBROS.find((r) => r.slug === row.rubro);
+      return { rubro: row.rubro, country: row.country, label: rubroDef?.label ?? row.rubro, total: row.total, active: row.active };
     })
     .sort((a, b) => b.total - a.total);
-
-  const totalQuestions = (allRows ?? []).length;
 
   const selectedRubro = params.rubro ?? "";
   const selectedCountry = params.country ?? "";

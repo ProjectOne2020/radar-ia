@@ -855,6 +855,15 @@ export type Database = {
     }
     Functions: {
       current_client_id: { Args: never; Returns: string }
+      question_bank_coverage: {
+        Args: never
+        Returns: {
+          active: number
+          country: string
+          rubro: string
+          total: number
+        }[]
+      }
       select_1: { Args: never; Returns: number }
     }
     Enums: {

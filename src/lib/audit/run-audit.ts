@@ -239,6 +239,16 @@ export async function runAuditForClient(clientId: string): Promise<AuditSummary>
     }
   }
 
+  // M40 — cada corrida reemplaza el batch anterior del cliente en vez de acumularse:
+  // sin esto, cada re-medicion (cron M11 via upgrade-audit.ts, boton manual, etc.)
+  // dejaba los hallazgos viejos en la tabla, duplicando lo mostrado en
+  // /dashboard/hallazgos y sesgando calculate-score.ts (aggregate() promedia valores
+  // viejos y nuevos juntos en vez de reflejar el estado actual del sitio).
+  const { error: deleteError } = await admin.from("audit_findings").delete().eq("client_id", clientId);
+  if (deleteError) {
+    summary.errors.push(`Borrado de audit_findings previos: ${deleteError.message}`);
+  }
+
   if (allFindings.length > 0) {
     const { error: insertError, count } = await admin
       .from("audit_findings")
