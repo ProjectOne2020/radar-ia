@@ -20,8 +20,23 @@ export async function GET(request: Request) {
     }),
   ]);
 
-  const account = await accountRes.json();
-  const status = await statusRes.json();
+  const accountText = await accountRes.text();
+  const statusText = await statusRes.text();
+  let account: unknown = accountText;
+  let status: unknown = statusText;
+  try {
+    account = JSON.parse(accountText);
+  } catch {}
+  try {
+    status = JSON.parse(statusText);
+  } catch {}
 
-  return NextResponse.json({ accountId, accountHttpStatus: accountRes.status, account, statusHttpStatus: statusRes.status, status });
+  return NextResponse.json({
+    accountId,
+    hasToken: !!token,
+    accountHttpStatus: accountRes.status,
+    account,
+    statusHttpStatus: statusRes.status,
+    status,
+  });
 }
