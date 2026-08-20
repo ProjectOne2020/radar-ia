@@ -386,6 +386,7 @@
     "yourBusiness": "Seu negócio",
     "planLabel": "Plano: {plan} · Ramo: {niche} · Verificação: {status}",
     "planBadge": "Plano {plan}",
+    "navAdmin": "Painel admin",
     "navPublicListing": "Listagem pública",
     "logout": "Sair",
     "navHome": "Resumo",

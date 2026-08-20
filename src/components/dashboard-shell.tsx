@@ -34,11 +34,13 @@ export function DashboardShell({
   businessName,
   plan,
   planStatus,
+  isAdmin,
   children,
 }: {
   businessName: string;
   plan: string | null;
   planStatus: string | null;
+  isAdmin?: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations("Dashboard");
@@ -70,6 +72,14 @@ export function DashboardShell({
             )}
           </div>
           <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="rounded-xs border border-border-strong px-2 py-1 text-sm font-medium text-text-secondary hover:border-signal hover:text-ink"
+              >
+                {t("navAdmin")}
+              </Link>
+            )}
             <Link href="/listado" className="text-sm text-text-secondary hover:text-ink">
               {t("navPublicListing")}
             </Link>

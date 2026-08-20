@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/admin/is-admin";
 import { DashboardShell } from "@/components/dashboard-shell";
 
 // M7 — chrome compartido de todo /dashboard/*: la sesion se valida una sola vez aqui
@@ -23,6 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       businessName={client?.business_name ?? t("yourBusiness")}
       plan={subscription?.plan ?? null}
       planStatus={subscription?.status ?? null}
+      isAdmin={isAdminEmail(user.email)}
     >
       {children}
     </DashboardShell>
