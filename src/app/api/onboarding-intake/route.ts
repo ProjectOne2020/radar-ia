@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sendIntakeNotification } from "@/lib/onboarding/send-intake-notification";
 
 // Pedido del fundador: justo despues de pagar (setup + suscripcion), pedir todo lo que el
 // equipo necesita para implementar la primera mejora sugerida por la auditoria — contacto,
@@ -78,6 +79,23 @@ export async function POST(request: Request) {
     : await supabase.from("onboarding_intake").insert(payload).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Solo se avisa al equipo la primera vez -- si el cliente vuelve a guardar (editar un
+  // dato), no hace falta notificar de nuevo, ya se enteraron con el primer envio.
+  if (!existing) {
+    const { data: client } = await supabase.from("clients").select("business_name").eq("id", clientId).single();
+    await sendIntakeNotification({
+      businessName: client?.business_name ?? "(negocio desconocido)",
+      contactName: payload.contact_name,
+      contactEmail: payload.contact_email,
+      contactPhone: payload.contact_phone,
+      websitePlatform: payload.website_platform,
+      websiteAccessMethod: payload.website_access_method,
+      inviteEmail: payload.invite_email,
+      hasGbp: payload.has_gbp,
+      gbpNotes: payload.gbp_notes,
+    });
+  }
 
   return NextResponse.json({ intake: data });
 }
