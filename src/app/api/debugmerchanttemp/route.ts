@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     fetch(`https://shoppingcontent.googleapis.com/content/v2.1/${accountId}/accounts/${accountId}`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
-    fetch(`https://shoppingcontent.googleapis.com/content/v2.1/${accountId}/accountstatus/${accountId}`, {
+    fetch(`https://shoppingcontent.googleapis.com/content/v2.1/${accountId}/accountstatuses/${accountId}`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
   ]);
