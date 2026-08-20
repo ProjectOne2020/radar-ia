@@ -299,8 +299,28 @@
     "password": "Contraseña",
     "submitting": "Entrando...",
     "submit": "Entrar",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
     "noAccount": "¿No tienes cuenta?",
     "createAccount": "Crea una gratis"
+  },
+  "OlvidePassword": {
+    "title": "Recupera tu contraseña",
+    "subtitle": "Escribe el correo con el que te registraste y te mandamos un enlace para elegir una contraseña nueva.",
+    "email": "Correo",
+    "sending": "Enviando...",
+    "submit": "Enviar enlace",
+    "sentBody": "Si ese correo tiene una cuenta, te acabamos de mandar un enlace para elegir una contraseña nueva. Revisa tu bandeja de entrada (y spam).",
+    "backToLogin": "Volver a iniciar sesión"
+  },
+  "RestablecerPassword": {
+    "title": "Elige una contraseña nueva",
+    "subtitle": "Esto reemplaza tu contraseña anterior.",
+    "loading": "Verificando tu enlace...",
+    "invalidLink": "Este enlace ya no es válido o expiró. Pide uno nuevo desde \"¿Olvidaste tu contraseña?\" en el login.",
+    "password": "Contraseña nueva",
+    "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+    "saving": "Guardando...",
+    "submit": "Guardar contraseña"
   },
   "ActivarCuenta": {
     "title": "Activa tu cuenta",

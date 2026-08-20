@@ -89,7 +89,12 @@ function LoginForm() {
             {loading ? t("submitting") : t("submit")}
           </Button>
         </form>
-        <p className="mt-5 text-sm text-text-secondary">
+        <p className="mt-3 text-sm text-text-secondary">
+          <Link href="/olvide-password" className="text-ink underline underline-offset-2">
+            {t("forgotPassword")}
+          </Link>
+        </p>
+        <p className="mt-2 text-sm text-text-secondary">
           {t("noAccount")}{" "}
           <Link href="/auditoria-gratis" className="text-ink underline underline-offset-2">
             {t("createAccount")}

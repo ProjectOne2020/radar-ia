@@ -299,8 +299,28 @@
     "password": "Senha",
     "submitting": "Entrando...",
     "submit": "Entrar",
+    "forgotPassword": "Esqueceu sua senha?",
     "noAccount": "Ainda não tem conta?",
     "createAccount": "Crie uma grátis"
+  },
+  "OlvidePassword": {
+    "title": "Recupere sua senha",
+    "subtitle": "Digite o e-mail com o qual você se cadastrou e enviaremos um link para escolher uma nova senha.",
+    "email": "E-mail",
+    "sending": "Enviando...",
+    "submit": "Enviar link",
+    "sentBody": "Se esse e-mail tem uma conta, acabamos de enviar um link para escolher uma nova senha. Confira sua caixa de entrada (e spam).",
+    "backToLogin": "Voltar para o login"
+  },
+  "RestablecerPassword": {
+    "title": "Escolha uma nova senha",
+    "subtitle": "Isso substitui sua senha anterior.",
+    "loading": "Verificando seu link...",
+    "invalidLink": "Este link não é mais válido ou expirou. Peça um novo em \"Esqueceu sua senha?\" na tela de login.",
+    "password": "Nova senha",
+    "passwordTooShort": "A senha deve ter pelo menos 8 caracteres.",
+    "saving": "Salvando...",
+    "submit": "Salvar senha"
   },
   "ActivarCuenta": {
     "title": "Ative sua conta",

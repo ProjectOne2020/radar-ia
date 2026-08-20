@@ -299,8 +299,28 @@
     "password": "Password",
     "submitting": "Logging in...",
     "submit": "Log in",
+    "forgotPassword": "Forgot your password?",
     "noAccount": "Don't have an account?",
     "createAccount": "Create one for free"
+  },
+  "OlvidePassword": {
+    "title": "Reset your password",
+    "subtitle": "Enter the email you signed up with and we'll send you a link to choose a new password.",
+    "email": "Email",
+    "sending": "Sending...",
+    "submit": "Send link",
+    "sentBody": "If that email has an account, we just sent a link to choose a new password. Check your inbox (and spam).",
+    "backToLogin": "Back to log in"
+  },
+  "RestablecerPassword": {
+    "title": "Choose a new password",
+    "subtitle": "This replaces your previous password.",
+    "loading": "Verifying your link...",
+    "invalidLink": "This link is no longer valid or expired. Request a new one from \"Forgot your password?\" on the login page.",
+    "password": "New password",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "saving": "Saving...",
+    "submit": "Save password"
   },
   "ActivarCuenta": {
     "title": "Activate your account",
