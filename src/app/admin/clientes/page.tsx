@@ -8,7 +8,7 @@ export default async function AdminClientesPage() {
   await requireAdmin();
   const admin = createAdminClient();
 
-  const [{ data: clients }, { data: scores }, { data: subs }] = await Promise.all([
+  const [{ data: clients }, { data: scores }, { data: subs }, { data: activeTrialGrants }] = await Promise.all([
     admin
       .from("clients")
       .select("id, business_name, plan, country, niche, verification_status, onboarding_type, created_at")
@@ -18,6 +18,7 @@ export default async function AdminClientesPage() {
       .select("client_id, score_total, calculated_at")
       .order("calculated_at", { ascending: false }),
     admin.from("subscriptions").select("client_id, status, setup_fee_paid, current_period_end"),
+    admin.from("trial_grants").select("client_id").eq("active", true),
   ]);
 
   const latestScoreByClient = new Map<string, number>();
@@ -31,6 +32,8 @@ export default async function AdminClientesPage() {
     if (!s.client_id) continue;
     subByClient.set(s.client_id, { status: s.status, setup_fee_paid: s.setup_fee_paid });
   }
+
+  const trialClientIds = new Set((activeTrialGrants ?? []).map((g) => g.client_id));
 
   return (
     <AdminShell title={`Todos los clientes (${clients?.length ?? 0})`}>
@@ -58,7 +61,18 @@ export default async function AdminClientesPage() {
                       {c.business_name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-text-secondary capitalize">{c.plan}</td>
+                  <td className="px-4 py-3 text-text-secondary">
+                    {c.plan === "founder" ? (
+                      <Badge tone="signal">acceso ilimitado</Badge>
+                    ) : (
+                      <span className="capitalize">{c.plan}</span>
+                    )}
+                    {trialClientIds.has(c.id) && (
+                      <Badge tone="warning" className="ml-2">
+                        trial, sin pagar
+                      </Badge>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-text-secondary">{c.country}</td>
                   <td className="px-4 py-3 text-text-secondary">{c.niche}</td>
                   <td className="px-4 py-3">

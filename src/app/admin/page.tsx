@@ -32,6 +32,7 @@ export default async function AdminHomePage() {
     { count: freeAuditsCount },
     { data: subscribedClientIds },
     { data: recentScores },
+    { data: activeTrialGrants },
   ] = await Promise.all([
     admin.from("clients").select("id, plan, country, niche, verification_status, onboarding_type"),
     admin.from("subscriptions").select("client_id, plan, status, clients(currency)").eq("status", "active"),
@@ -42,35 +43,53 @@ export default async function AdminHomePage() {
       .select("calculated_at")
       .order("calculated_at", { ascending: false })
       .limit(1000),
+    admin.from("trial_grants").select("client_id").eq("active", true),
   ]);
 
+  // Un cliente NO ha pagado de verdad si (a) su "suscripcion activa" viene de un trial
+  // gratuito otorgado a mano (src/lib/admin/trial-grant.ts, nunca toca Stripe) mientras
+  // ese trial siga activo, o (b) es la cuenta "founder" del propio fundador (acceso de
+  // por vida sin plan, ver plans.ts) — ninguna de las dos debe contarse como cliente
+  // pagador, suscripcion activa, ni sumar a MRR/distribucion por plan.
+  const unpaidClientIds = new Set((activeTrialGrants ?? []).map((g) => g.client_id));
+  const isRealPayer = (clientId: string | null, plan: string) =>
+    !!clientId && plan !== "founder" && !unpaidClientIds.has(clientId);
+
   // Auditorias "de plan pagado": toda medicion (ai_visibility_scores) de un cliente que
-  // tiene o tuvo alguna suscripcion — incluye el checkout inicial y cada re-medicion
-  // periodica de M11, no solo la primera.
-  const paidClientIds = Array.from(new Set((subscribedClientIds ?? []).map((s) => s.client_id).filter(Boolean)));
+  // tiene o tuvo alguna suscripcion realmente pagada — incluye el checkout inicial y cada
+  // re-medicion periodica de M11, no solo la primera. Excluye trials activos y la cuenta
+  // founder, igual que el resto de estas metricas.
+  const clientPlanById = new Map((clients ?? []).map((c) => [c.id, c.plan]));
+  const paidClientIds = Array.from(
+    new Set(
+      (subscribedClientIds ?? [])
+        .filter((s) => s.client_id && isRealPayer(s.client_id, clientPlanById.get(s.client_id) ?? ""))
+        .map((s) => s.client_id as string),
+    ),
+  );
   const { count: paidAuditsCount } =
     paidClientIds.length > 0
       ? await admin
           .from("ai_visibility_scores")
           .select("id", { count: "exact", head: true })
-          .in("client_id", paidClientIds as string[])
+          .in("client_id", paidClientIds)
       : { count: 0 };
 
   // Los clientes internos (auditoria gratis M6, competidores M7) no son negocios reales
   // — se identifican porque nunca pasan por onboarding_type real de M5/M6 con intencion
-  // de compra... en la practica, el unico marcador confiable hoy es no tener suscripcion.
-  // Para esta vista se cuentan solo los que SI tienen alguna fila en subscriptions.
-  const { data: allSubClientIds } = await admin.from("subscriptions").select("client_id");
-  const realClientIds = new Set((allSubClientIds ?? []).map((s) => s.client_id));
-  const realClients = (clients ?? []).filter((c) => realClientIds.has(c.id));
+  // de compra... en la practica, el marcador es tener alguna fila en subscriptions Y que
+  // esa suscripcion sea un pago real (no un trial activo ni la cuenta founder).
+  const realClients = (clients ?? []).filter((c) => paidClientIds.includes(c.id));
 
-  const activeCount = (activeSubs ?? []).length;
-  // flagged se cuenta sobre TODOS los clientes, no solo los "reales" con suscripcion —
+  const paidActiveSubs = (activeSubs ?? []).filter((s) => isRealPayer(s.client_id, s.plan));
+  const activeCount = paidActiveSubs.length;
+  const trialCount = unpaidClientIds.size;
+  // flagged se cuenta sobre TODOS los clientes, no solo los que pagan —
   // una cuenta puede quedar marcada por anti-abuso antes de llegar a pagar nada.
   const flaggedCount = (clients ?? []).filter((c) => c.verification_status === "flagged").length;
 
   const mrrByCurrency: Record<string, number> = {};
-  for (const sub of activeSubs ?? []) {
+  for (const sub of paidActiveSubs) {
     const currency = (sub.clients as { currency?: string } | null)?.currency;
     if (!currency || !isManualCurrency(currency)) continue;
     const fee = getRecurringFee(sub.plan as PlanId, currency);
@@ -123,9 +142,15 @@ export default async function AdminHomePage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Clientes reales" value={realClients.length} hint="Con historial de suscripción" />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+        <StatCard label="Clientes que pagan" value={realClients.length} hint="Suscripción real, sin trials" />
         <StatCard label="Suscripciones activas" value={activeCount} tone="signal" />
+        <StatCard
+          label="En trial gratuito"
+          value={trialCount}
+          tone={trialCount > 0 ? "warning" : "neutral"}
+          hint="Sin pagar — no cuentan en MRR"
+        />
         <StatCard
           label="Cuentas marcadas"
           value={flaggedCount}

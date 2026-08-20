@@ -2,7 +2,10 @@
 // seccion 4 para la tabla completa y las notas. NO ajustar/inventar numeros aqui sin
 // confirmar con el fundador primero (regla no negociable #2 de 00-README.md).
 
-export type PlanId = "lite" | "plus" | "pro" | "enterprise";
+// "founder" no es un plan vendible: acceso de por vida sin limites para la cuenta del
+// fundador (ver src/lib/admin/is-admin.ts). Nunca aparece en PLANS (no tiene checkout de
+// Stripe, no tiene precio, no cuenta como cliente pagador en las metricas de /admin).
+export type PlanId = "lite" | "plus" | "pro" | "enterprise" | "founder";
 export type ManualCurrency = "MXN" | "COP" | "CLP" | "PEN" | "ARS" | "BRL";
 
 export const MANUAL_CURRENCIES: ManualCurrency[] = ["MXN", "COP", "CLP", "PEN", "ARS", "BRL"];
@@ -24,13 +27,13 @@ export const PLANS: PlanInfo[] = [
 
 // Setup fee (pago unico). Lite: este valor aplica SOLO a onboarding asistido — el
 // self-serve es $0 (ver getSetupFee). Enterprise: sin Price de Stripe, no aplica.
-const SETUP_FEES: Record<Exclude<PlanId, "enterprise">, Record<ManualCurrency, number>> = {
+const SETUP_FEES: Record<Exclude<PlanId, "enterprise" | "founder">, Record<ManualCurrency, number>> = {
   lite: { MXN: 499, COP: 89900, CLP: 26900, PEN: 99, ARS: 43900, BRL: 149 },
   plus: { MXN: 1349, COP: 249900, CLP: 72900, PEN: 275, ARS: 118900, BRL: 399 },
   pro: { MXN: 5999, COP: 1099900, CLP: 319900, PEN: 1199, ARS: 524900, BRL: 1799 },
 };
 
-const RECURRING_FEES: Record<Exclude<PlanId, "enterprise">, Record<ManualCurrency, number>> = {
+const RECURRING_FEES: Record<Exclude<PlanId, "enterprise" | "founder">, Record<ManualCurrency, number>> = {
   lite: { MXN: 159, COP: 29900, CLP: 8290, PEN: 32, ARS: 13900, BRL: 47 },
   plus: { MXN: 499, COP: 89900, CLP: 26900, PEN: 99, ARS: 43900, BRL: 149 },
   pro: { MXN: 1699, COP: 309900, CLP: 90900, PEN: 349, ARS: 148900, BRL: 499 },
@@ -43,13 +46,13 @@ export function getSetupFee(
   currency: ManualCurrency,
   onboardingType: "self_serve" | "assisted"
 ): number | null {
-  if (plan === "enterprise") return null;
+  if (plan === "enterprise" || plan === "founder") return null;
   if (plan === "lite" && onboardingType === "self_serve") return 0;
   return SETUP_FEES[plan][currency];
 }
 
 export function getRecurringFee(plan: PlanId, currency: ManualCurrency): number | null {
-  if (plan === "enterprise") return null;
+  if (plan === "enterprise" || plan === "founder") return null;
   return RECURRING_FEES[plan][currency];
 }
 

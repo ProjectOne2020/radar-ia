@@ -49,15 +49,20 @@ export async function grantTemporaryPlan(
         .insert({ client_id: clientId, plan: grantedPlan, status: "active", setup_fee_paid: true });
   if (subError) return { error: subError.message };
 
+  // clients.plan es lo que muestran /admin/clientes y el dashboard del propio cliente —
+  // debe reflejar el plan otorgado mientras el trial este activo, igual que
+  // upsertSubscription lo mantiene sincronizado para un pago real.
+  await admin.from("clients").update({ plan: grantedPlan }).eq("id", clientId);
+
   return {};
 }
 
 // Se llama justo despues de que una auditoria termina de verdad (calculateScoreForClient
 // ya inserto la fila en ai_visibility_scores) -- si el cliente tiene un trial activo,
 // descuenta una auditoria; al llegar a 0, revierte subscriptions a como estaba antes
-// (o la borra si nunca tuvo una) y desactiva el trial. No borra clients/locations/
-// app_listings/prompt_sets/scores/findings -- solo subscriptions, que es lo que se
-// modifico para dar el trial.
+// (o la borra si nunca tuvo una) y desactiva el trial. No borra locations/app_listings/
+// prompt_sets/scores/findings -- solo subscriptions (y clients.plan, que es el reflejo
+// de subscriptions.plan) es lo que se modifico para dar el trial.
 export async function consumeTrialAuditIfActive(
   admin: ReturnType<typeof createAdminClient>,
   clientId: string,
@@ -92,8 +97,12 @@ export async function consumeTrialAuditIfActive(
         current_period_end: grant.original_current_period_end,
       })
       .eq("client_id", clientId);
+    await admin.from("clients").update({ plan: grant.original_plan }).eq("id", clientId);
   } else if (!grant.had_subscription) {
     await admin.from("subscriptions").delete().eq("client_id", clientId);
+    // "queda como un usuario que se acaba de registrar" (pedido original) -- "lite" es el
+    // plan con el que clients.plan siempre arranca hoy (ver run-free-audit.ts).
+    await admin.from("clients").update({ plan: "lite" }).eq("id", clientId);
   }
 
   await admin.from("trial_grants").update({ audits_remaining: 0, active: false }).eq("id", grant.id);

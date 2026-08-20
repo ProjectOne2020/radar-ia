@@ -37,4 +37,11 @@ export async function upsertSubscription(
       current_period_end: fields.current_period_end,
     });
   }
+
+  // clients.plan tambien se mantenia congelado en "lite" (el valor puesto al registrarse)
+  // para siempre, sin importar lo que el cliente realmente pagara despues — el panel de
+  // admin (y cualquier otra pantalla que lea clients.plan en vez de subscriptions.plan)
+  // mostraba un plan viejo. subscriptions.plan es la fuente de verdad; clients.plan debe
+  // reflejarla siempre que cambie.
+  await admin.from("clients").update({ plan }).eq("id", clientId);
 }

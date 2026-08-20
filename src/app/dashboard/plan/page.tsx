@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { PLANS } from "@/lib/pricing/plans";
 import { Panel, Alert } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PublicListingToggle } from "@/components/dashboard/public-listing-toggle";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 
 // M9 — dispara los dos cargos SEPARADOS (setup fee -> suscripcion), nunca combinados.
@@ -15,6 +16,16 @@ export default function PlanPage() {
   const tFeatures = useTranslations("Precios");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("subscriptions")
+      .select("plan")
+      .maybeSingle()
+      .then(({ data }) => setCurrentPlan(data?.plan ?? null));
+  }, []);
 
   async function handleChoose(planId: string) {
     setError(null);
@@ -49,6 +60,18 @@ export default function PlanPage() {
       setError(err instanceof Error ? err.message : String(err));
       setLoadingPlan(null);
     }
+  }
+
+  if (currentPlan === "founder") {
+    return (
+      <>
+        <h1 className="text-2xl sm:text-3xl">{t("founderTitle")}</h1>
+        <Alert tone="signal" className="mt-4 max-w-[560px]">
+          {t("founderBody")}
+        </Alert>
+        <PublicListingToggle />
+      </>
+    );
   }
 
   return (

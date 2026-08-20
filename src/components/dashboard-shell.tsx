@@ -65,10 +65,14 @@ export function DashboardShell({
             <span className="hidden truncate text-sm text-text-secondary sm:inline">
               {businessName}
             </span>
-            {plan && (
-              <Badge tone={planStatus === "past_due" ? "warning" : "signal"}>
-                {t("planBadge", { plan: PLAN_LABEL[plan] ?? plan })}
-              </Badge>
+            {plan === "founder" ? (
+              <Badge tone="signal">{t("unlimitedBadge")}</Badge>
+            ) : (
+              plan && (
+                <Badge tone={planStatus === "past_due" ? "warning" : "signal"}>
+                  {t("planBadge", { plan: PLAN_LABEL[plan] ?? plan })}
+                </Badge>
+              )
             )}
           </div>
           <div className="flex items-center gap-3">

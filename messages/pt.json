@@ -386,6 +386,7 @@
     "yourBusiness": "Seu negócio",
     "planLabel": "Plano: {plan} · Ramo: {niche} · Verificação: {status}",
     "planBadge": "Plano {plan}",
+    "unlimitedBadge": "Acesso ilimitado",
     "navAdmin": "Painel admin",
     "navPublicListing": "Listagem pública",
     "logout": "Sair",
@@ -473,6 +474,8 @@
   "DashboardPlan": {
     "title": "Escolha seu plano",
     "doubleChargeNote": "Ao escolher um plano você vai ver duas cobranças separadas no Stripe: primeiro a configuração inicial (implementação das primeiras melhorias, pagamento único) e depois a assinatura mensal. Não é um erro nem uma cobrança duplicada — são dois conceitos diferentes.",
+    "founderTitle": "Você já tem acesso ilimitado",
+    "founderBody": "Esta conta tem acesso vitalício a todas as funções do Radar IA, sem limites e sem precisar assinar nenhum plano.",
     "flagshipLabel": "Recomendado",
     "redirectingToStripe": "Redirecionando para o Stripe...",
     "choosePlan": "Escolher {plan}",

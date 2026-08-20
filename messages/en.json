@@ -386,6 +386,7 @@
     "yourBusiness": "Your business",
     "planLabel": "Plan: {plan} · Industry: {niche} · Verification: {status}",
     "planBadge": "{plan} plan",
+    "unlimitedBadge": "Unlimited access",
     "navAdmin": "Admin panel",
     "navPublicListing": "Public listing",
     "logout": "Log out",
@@ -473,6 +474,8 @@
   "DashboardPlan": {
     "title": "Choose your plan",
     "doubleChargeNote": "Choosing a plan will show two separate charges on Stripe: first the initial setup (implementing the first fixes, one-time payment), then the monthly subscription. This isn't an error or a duplicate charge — they're two different things.",
+    "founderTitle": "You already have unlimited access",
+    "founderBody": "This account has lifetime access to every Radar IA feature, with no limits and no need to subscribe to any plan.",
     "flagshipLabel": "Recommended",
     "redirectingToStripe": "Redirecting to Stripe...",
     "choosePlan": "Choose {plan}",
