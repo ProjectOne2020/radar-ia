@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyOtpCookie, OTP_COOKIE_NAME } from "@/lib/auth/otp";
 import { getClientIp } from "@/lib/security/client-ip";
 import { consumeRateLimit, tooManyRequests } from "@/lib/security/rate-limit";
+import { sendReportEmail, type ReportData } from "@/lib/reports/email-report";
 
 // Anti fuerza bruta: el codigo es de 6 digitos (1M combinaciones) y la cookie vive
 // 10 minutos. Sin tope de intentos, un atacante que llame /otp/send con el
@@ -113,6 +114,42 @@ export async function POST(request: Request) {
       // reasigna su client_id — cada cuenta de Supabase Auth mapea a un solo negocio.
       // Sigue viendo el reporte igual (ya probo ser dueño del correo con el OTP), solo
       // no se le abre sesion nueva.
+    }
+
+    // Pedido del fundador: el codigo por correo no basta, quiere el reporte de la
+    // auditoria gratis tambien por correo. El score y los hallazgos ya existen para
+    // este punto — runFreeAudit corre sincrono dentro de /api/free-audit/request,
+    // antes de que exista siquiera un freeAuditId que verificar. Si el envio falla,
+    // no se bloquea la respuesta: el usuario ya puede ver el reporte en el navegador.
+    if (email) {
+      const [{ data: client }, { data: score }, { data: findings }] = await Promise.all([
+        admin.from("clients").select("business_name").eq("id", freeAudit.client_id).single(),
+        admin
+          .from("ai_visibility_scores")
+          .select("score_total, score_by_pillar")
+          .eq("client_id", freeAudit.client_id)
+          .order("calculated_at", { ascending: false })
+          .limit(1)
+          .single(),
+        admin.from("audit_findings").select("severity").eq("client_id", freeAudit.client_id).eq("detail_locked", false),
+      ]);
+
+      if (client?.business_name && score && score.score_by_pillar) {
+        const findingsCount = { critical: 0, warning: 0, info: 0 };
+        for (const f of findings ?? []) {
+          if (f.severity === "critical") findingsCount.critical += 1;
+          else if (f.severity === "warning") findingsCount.warning += 1;
+          else findingsCount.info += 1;
+        }
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+        await sendReportEmail(email, {
+          businessName: client.business_name,
+          scoreTotal: score.score_total,
+          scoreByPillar: score.score_by_pillar as unknown as ReportData["scoreByPillar"],
+          findingsCount,
+          dashboardUrl: `${appUrl}/auditoria-gratis/reporte?freeAuditId=${freeAuditId}&clientId=${freeAudit.client_id}`,
+        });
+      }
     }
   }
 

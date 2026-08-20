@@ -9,13 +9,13 @@ const PILLAR_NAMES: Record<string, string> = {
   "8": "Medición directa en motores de IA",
 };
 
-interface PillarEntry {
+export interface PillarEntry {
   subscore: number;
   measured: boolean;
   weight_pct: number;
 }
 
-interface ReportData {
+export interface ReportData {
   businessName: string;
   scoreTotal: number;
   scoreByPillar: Record<string, PillarEntry>;
