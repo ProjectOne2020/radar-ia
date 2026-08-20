@@ -796,6 +796,59 @@ export type Database = {
           },
         ]
       }
+      trial_grants: {
+        Row: {
+          active: boolean
+          audits_remaining: number
+          client_id: string
+          created_at: string
+          granted_plan: string
+          had_subscription: boolean
+          id: string
+          original_current_period_end: string | null
+          original_plan: string | null
+          original_setup_fee_paid: boolean | null
+          original_status: string | null
+          original_stripe_subscription_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          audits_remaining: number
+          client_id: string
+          created_at?: string
+          granted_plan: string
+          had_subscription: boolean
+          id?: string
+          original_current_period_end?: string | null
+          original_plan?: string | null
+          original_setup_fee_paid?: boolean | null
+          original_status?: string | null
+          original_stripe_subscription_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          audits_remaining?: number
+          client_id?: string
+          created_at?: string
+          granted_plan?: string
+          had_subscription?: boolean
+          id?: string
+          original_current_period_end?: string | null
+          original_plan?: string | null
+          original_setup_fee_paid?: boolean | null
+          original_status?: string | null
+          original_stripe_subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_grants_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

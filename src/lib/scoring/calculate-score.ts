@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
+import { consumeTrialAuditIfActive } from "@/lib/admin/trial-grant";
 import { PILLAR_WEIGHTS } from "./weights";
 import {
   scorePillar1Nap,
@@ -126,6 +127,10 @@ export async function calculateScoreForClient(
   if (insertError || !inserted) {
     throw new Error(`No se pudo insertar ai_visibility_scores: ${insertError?.message}`);
   }
+
+  // No-op para el 99% de los clientes (no tienen fila en trial_grants) -- solo descuenta/
+  // revierte cuando hay un trial temporal activo para este cliente especifico.
+  await consumeTrialAuditIfActive(admin, clientId);
 
   return {
     scoreId: inserted.id,
