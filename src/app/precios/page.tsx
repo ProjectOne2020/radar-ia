@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { PLANS, getSetupFee, getRecurringFee, isManualCurrency } from "@/lib/pricing/plans";
+import { createClient } from "@/lib/supabase/server";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/ui/container";
@@ -30,12 +31,24 @@ function formatMoney(amount: number, currency: string): string {
 // M8 — el middleware ya resolvio pais->moneda y lo dejo en el header x-radar-currency.
 // Si el pais no tiene moneda manual configurada, cae a USD y Adaptive Pricing de Stripe
 // resuelve la conversion real en el Checkout (M9) — aqui solo se muestra el precio.
+//
+// Bug encontrado por el fundador: los botones "Elegir plan" siempre mandaban a
+// /auditoria-gratis (correcto para un visitante nuevo, desde M30), pero un cliente que
+// YA tiene cuenta terminaba reiniciando el registro en vez de llegar al checkout real
+// (que vive en /dashboard/plan, detras de sesion). Ahora se revisa la sesion aqui mismo
+// para decidir el destino del boton.
 export default async function PreciosPage() {
   const t = await getTranslations("Precios");
   const tPlan = await getTranslations("DashboardPlan");
   const headerList = await headers();
   const detectedCurrency = headerList.get("x-radar-currency") ?? "USD";
   const currency = isManualCurrency(detectedCurrency) ? detectedCurrency : "USD";
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const choosePlanHref = user ? "/dashboard/plan" : "/auditoria-gratis";
 
   return (
     <>
@@ -92,7 +105,7 @@ export default async function PreciosPage() {
 
                   {plan.hasStripeCheckout ? (
                     <ButtonLink
-                      href="/auditoria-gratis"
+                      href={choosePlanHref}
                       variant={plan.flagship ? "primary" : "secondary"}
                       className="mt-5 w-full"
                     >
