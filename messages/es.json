@@ -296,6 +296,16 @@
     "noAccount": "¿No tienes cuenta?",
     "createAccount": "Crea una gratis"
   },
+  "ActivarCuenta": {
+    "title": "Activa tu cuenta",
+    "subtitle": "Crea tu contraseña para entrar a tu panel de Radar IA.",
+    "loading": "Verificando tu enlace...",
+    "invalidLink": "Este enlace ya no es válido o expiró. Pide uno nuevo.",
+    "password": "Contraseña",
+    "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+    "saving": "Guardando...",
+    "submit": "Activar cuenta"
+  },
   "Verificar": {
     "title": "Verifica tu negocio",
     "subtitle": "Te vamos a enviar un código de 6 dígitos por WhatsApp al número que registraste.",

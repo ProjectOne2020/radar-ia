@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStripeClient } from "@/lib/stripe/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { upsertSubscription } from "@/lib/stripe/upsert-subscription";
+import { sendEnterpriseInviteEmail } from "@/lib/enterprise/send-invite-email";
 import type Stripe from "stripe";
 
 // M9 — actualiza subscriptions.status y subscriptions.setup_fee_paid tal como pide
@@ -58,6 +59,14 @@ export async function POST(request: Request) {
           status: mapStripeStatus(stripeSub.status),
           current_period_end: getCurrentPeriodEnd(stripeSub),
         });
+
+        // M31 — hueco encontrado: el cliente Enterprise pagaba pero nunca quedaba con
+        // forma de iniciar sesion (a diferencia de lite/plus/pro via /registro-ahora-
+        // auditoria-gratis). Se crea la cuenta AQUI, solo tras confirmar el pago real —
+        // nunca antes, para no dar de alta cuentas de leads que nunca pagaron. El cliente
+        // define su propia contraseña via el link de invitacion (nunca se genera ni se
+        // envia una contraseña en texto plano).
+        await createEnterpriseAccount(admin, clientId);
       }
       break;
     }
@@ -101,4 +110,48 @@ function getCurrentPeriodEnd(sub: Stripe.Subscription): string | null {
   const item = sub.items.data[0];
   const periodEnd = item?.current_period_end;
   return periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
+}
+
+// M31 — usa el link de invitacion nativo de Supabase Auth (no el mecanismo de OTP+cookie
+// de M30, que solo funciona dentro del mismo navegador/paso a paso): el fundador aprueba
+// esto desde SU sesion en /admin/empresas, pero quien debe terminar logueado es el cliente
+// real, en otro dispositivo por completo. `generateLink` crea la cuenta y devuelve un link
+// que, al abrirse, establece sesion real en /activar-cuenta para que el cliente defina su
+// propia contraseña.
+async function createEnterpriseAccount(
+  admin: ReturnType<typeof createAdminClient>,
+  clientId: string
+): Promise<void> {
+  const { data: client } = await admin
+    .from("clients")
+    .select("email, business_name")
+    .eq("id", clientId)
+    .single();
+
+  if (!client?.email) return;
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "invite",
+    email: client.email,
+    options: { redirectTo: `${appUrl}/activar-cuenta` },
+  });
+
+  // Si ya existe una cuenta con este correo (ej. este cliente ya habia hecho una
+  // auditoria gratis antes y ya tiene login), no se crea una segunda ni se reasigna
+  // su client_id — mismo criterio de "una cuenta = un negocio" que M30.
+  if (error || !data.user) return;
+
+  const { error: metadataError } = await admin.auth.admin.updateUserById(data.user.id, {
+    app_metadata: { client_id: clientId },
+  });
+  if (metadataError) {
+    await admin.auth.admin.deleteUser(data.user.id);
+    return;
+  }
+
+  const actionLink = data.properties?.action_link;
+  if (actionLink) {
+    await sendEnterpriseInviteEmail(client.email, client.business_name, actionLink);
+  }
 }

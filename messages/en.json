@@ -296,6 +296,16 @@
     "noAccount": "Don't have an account?",
     "createAccount": "Create one for free"
   },
+  "ActivarCuenta": {
+    "title": "Activate your account",
+    "subtitle": "Create your password to access your Radar IA dashboard.",
+    "loading": "Checking your link...",
+    "invalidLink": "This link is no longer valid or has expired. Ask for a new one.",
+    "password": "Password",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "saving": "Saving...",
+    "submit": "Activate account"
+  },
   "Verificar": {
     "title": "Verify your business",
     "subtitle": "We'll send a 6-digit code via WhatsApp to the number you registered.",
