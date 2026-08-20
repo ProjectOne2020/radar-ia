@@ -36,6 +36,30 @@ interface PlaceSearchResult {
   name: string;
 }
 
+function normalizeName(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-z0-9\s]/g, "")
+    .trim();
+}
+
+// Google Places Text Search es busqueda difusa: para un nombre corto o poco comun puede
+// devolver como primer resultado un negocio totalmente distinto (ej. "Snakesun" matcheo con
+// "Sumincol SAS - Snap-On Colombia", prestandole a Snakesun el rating/reseñas de un
+// distribuidor de herramientas sin ninguna relacion). Sin este filtro, results[0] se
+// aceptaba ciegamente y el pilar 2 y 7 quedaban inflados con datos de un negocio ajeno.
+function looksLikeSameBusiness(queryName: string, placeName: string): boolean {
+  const query = normalizeName(queryName);
+  const place = normalizeName(placeName);
+  if (!query || !place) return false;
+  if (place.includes(query) || query.includes(place)) return true;
+  const queryTokens = query.split(/\s+/).filter((t) => t.length >= 4);
+  const placeTokens = new Set(place.split(/\s+/).filter((t) => t.length >= 4));
+  return queryTokens.some((t) => placeTokens.has(t));
+}
+
 interface PlaceDetails {
   name?: string;
   formatted_phone_number?: string;
@@ -84,7 +108,8 @@ export async function auditGoogleBusinessProfile({
   }
 
   const results: PlaceSearchResult[] = searchData.results ?? [];
-  if (results.length === 0) {
+  const match = results.find((r) => looksLikeSameBusiness(businessName, r.name));
+  if (!match) {
     return [
       {
         pillar: 2,
@@ -95,7 +120,7 @@ export async function auditGoogleBusinessProfile({
     ];
   }
 
-  const placeId = results[0].place_id;
+  const placeId = match.place_id;
   const fields = "name,formatted_phone_number,website,rating,user_ratings_total,business_status,opening_hours,photos,types";
   const detailsRes = await fetch(
     `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${apiKey}`
