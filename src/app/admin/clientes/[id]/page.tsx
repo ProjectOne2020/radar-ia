@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { TrendBarChart } from "@/components/admin/dist-bar-chart";
+import RemeasureButton from "./remeasure-button";
 
 const SEVERITY_TONE = { critical: "critical", warning: "warning", info: "neutral" } as const;
 
@@ -59,9 +60,12 @@ export default async function AdminClienteDetailPage({ params }: { params: Promi
     <AdminShell
       title={client.business_name}
       actions={
-        <Link href="/admin/clientes" className="text-sm text-text-secondary hover:text-ink">
-          ← Volver a clientes
-        </Link>
+        <>
+          <RemeasureButton clientId={client.id} />
+          <Link href="/admin/clientes" className="text-sm text-text-secondary hover:text-ink">
+            ← Volver a clientes
+          </Link>
+        </>
       }
     >
       <div className="grid gap-4 lg:grid-cols-3">
