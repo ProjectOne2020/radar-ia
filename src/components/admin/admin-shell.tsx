@@ -9,6 +9,7 @@ const NAV: Array<{ href: string; label: string }> = [
   { href: "/admin", label: "Resumen" },
   { href: "/admin/clientes", label: "Clientes" },
   { href: "/admin/auditorias", label: "Auditorías" },
+  { href: "/admin/auditar", label: "Auditar negocio" },
   { href: "/admin/flagged", label: "Marcados" },
   { href: "/admin/partners", label: "Partners" },
   { href: "/admin/empresas", label: "Enterprise" },
