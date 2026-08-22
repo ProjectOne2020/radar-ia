@@ -2,6 +2,7 @@ import type { createAdminClient } from "@/lib/supabase/admin";
 import { runMeasurementForPromptSet } from "@/lib/ai-engines/run-measurement";
 import { runAuditForClient } from "./run-audit";
 import { calculateScoreForClient } from "@/lib/scoring/calculate-score";
+import { consumeTrialAuditForMeasurement } from "@/lib/admin/trial-policy";
 
 // M42 — boton "Correr auditoria completa ahora" en /admin/clientes/[id], a pedido del
 // fundador. Distinto de dos cosas que ya existen: el cron de M11 (remeasure-due-clients.ts)
@@ -27,4 +28,13 @@ export async function remeasureClientNow(
   await Promise.allSettled((activePrompts ?? []).map((p) => runMeasurementForPromptSet(p.id)));
   await runAuditForClient(clientId);
   await calculateScoreForClient(clientId);
+
+  // P0.2-A — el consumo se decide aqui, no dentro del calculo del score. Va DESPUES de
+  // calculateScoreForClient a proposito: si el calculo lanza, no se descuenta nada.
+  //
+  // Este trigger NO consume (decision del fundador al cerrar P0.2-A): correr la auditoria
+  // a mano desde /admin es trabajo interno y gratuito para el cliente. La llamada se
+  // conserva igual para que el "por que" quede declarado en el sitio donde se mide y la
+  // politica siga viviendo en un solo lugar — ver trial-policy.ts.
+  await consumeTrialAuditForMeasurement(admin, clientId, "admin_manual_remeasure");
 }

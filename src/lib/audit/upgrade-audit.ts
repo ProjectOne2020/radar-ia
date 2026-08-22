@@ -3,6 +3,7 @@ import { buildFreeAuditPrompts, buildPromptsFromBank } from "@/lib/free-audit/pr
 import { runMeasurementForPromptSet } from "@/lib/ai-engines/run-measurement";
 import { runAuditForClient } from "./run-audit";
 import { calculateScoreForClient } from "@/lib/scoring/calculate-score";
+import { consumeTrialAuditForMeasurement } from "@/lib/admin/trial-policy";
 
 // 01-CONTEXTO-NEGOCIO.md seccion 4 da el numero de preguntas por plan como un RANGO
 // (Lite "5-10", Plus "15-30") -- se usa el extremo superior de cada rango como el numero
@@ -65,4 +66,10 @@ export async function upgradeAuditForClient(
   await Promise.allSettled((allActivePrompts ?? []).map((p) => runMeasurementForPromptSet(p.id)));
   await runAuditForClient(clientId);
   await calculateScoreForClient(clientId);
+
+  // P0.2-A — este trigger NO consume (decision del fundador al cerrar P0.2-A): esta
+  // medicion es parte de la ACTIVACION de lo que el cliente acaba de pagar, no una de sus
+  // auditorias del trial. La llamada se conserva para que el "por que" quede declarado
+  // aqui y la politica siga viviendo en un solo lugar — ver trial-policy.ts.
+  await consumeTrialAuditForMeasurement(admin, clientId, "upgrade_after_payment");
 }

@@ -6,6 +6,7 @@ import { buildFreeAuditPrompts, buildPromptsFromBank } from "@/lib/free-audit/pr
 import { runMeasurementForPromptSet } from "@/lib/ai-engines/run-measurement";
 import { runAuditForClient } from "@/lib/audit/run-audit";
 import { calculateScoreForClient } from "@/lib/scoring/calculate-score";
+import { consumeTrialAuditForMeasurement } from "@/lib/admin/trial-policy";
 import { extractDomain } from "@/lib/ai-engines/classify-domain";
 
 const VALID_AXES: Axis[] = ["local", "ecommerce", "app"];
@@ -109,6 +110,10 @@ export async function POST(request: Request) {
   await Promise.allSettled(prompts.map((p) => runMeasurementForPromptSet(p.id)));
   await runAuditForClient(clientId);
   const scoreResult = await calculateScoreForClient(clientId);
+
+  // P0.2-A — preserva el comportamiento previo: esta primera medicion ya descontaba, via
+  // el consumo que vivia dentro de calculateScoreForClient.
+  await consumeTrialAuditForMeasurement(admin, clientId, "dashboard_setup");
 
   return NextResponse.json({ scoreTotal: scoreResult.scoreTotal });
 }

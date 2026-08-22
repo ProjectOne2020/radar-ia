@@ -1,6 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
-import { consumeTrialAuditIfActive } from "@/lib/admin/trial-grant";
 import { computeTaoFromRuns } from "@/lib/metrics/tao";
 import { PILLAR_WEIGHTS } from "./weights";
 import {
@@ -137,9 +136,18 @@ export async function calculateScoreForClient(
     throw new Error(`No se pudo insertar ai_visibility_scores: ${insertError?.message}`);
   }
 
-  // No-op para el 99% de los clientes (no tienen fila en trial_grants) -- solo descuenta/
-  // revierte cuando hay un trial temporal activo para este cliente especifico.
-  await consumeTrialAuditIfActive(admin, clientId);
+  // P0.2-A — AQUI NO SE CONSUME NADA, A PROPOSITO.
+  //
+  // Hasta P0.2-A esta funcion llamaba a consumeTrialAuditIfActive(), asi que CUALQUIER
+  // calculo de score descontaba una auditoria del trial: recalcular para depurar,
+  // recalcular tras un cambio de metodologia, o un POST de prueba a /api/score cobraban
+  // igual que una auditoria real. Una funcion de calculo no puede tener efectos
+  // comerciales.
+  //
+  // El consumo ahora lo decide el orquestador, que es el unico que sabe POR QUE se midio:
+  // ver consumeTrialAuditForMeasurement() en @/lib/admin/trial-policy.
+  //
+  // NO reintroducir la llamada aqui.
 
   return {
     scoreId: inserted.id,

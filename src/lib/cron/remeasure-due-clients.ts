@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runMeasurementForPromptSet } from "@/lib/ai-engines/run-measurement";
 import { calculateScoreForClient } from "@/lib/scoring/calculate-score";
+import { consumeTrialAuditForMeasurement } from "@/lib/admin/trial-policy";
 import { sendReportForClient } from "@/lib/reports/send-report";
 import { checkAndSendAlerts } from "@/lib/reports/check-alerts";
 import { isDueForRemeasurement } from "./plan-frequency";
@@ -58,6 +59,12 @@ export async function remeasureDueClients(): Promise<RemeasureSummary> {
 
       await Promise.allSettled((activePrompts ?? []).map((p) => runMeasurementForPromptSet(p.id)));
       await calculateScoreForClient(sub.client_id);
+
+      // P0.2-A — el caso canonico del trial: "N auditorias completas" son exactamente
+      // estas. grantTemporaryPlan deja subscriptions.status='active', asi que un cliente
+      // con trial entra por este mismo cron que un cliente que paga.
+      await consumeTrialAuditForMeasurement(admin, sub.client_id, "cron_scheduled");
+
       await sendReportForClient(sub.client_id);
       await checkAndSendAlerts(sub.client_id);
 
