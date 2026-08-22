@@ -12,7 +12,7 @@ export default async function AdminAuditarPage() {
   return (
     <AdminShell title="Auditar cualquier negocio">
       <p className="mb-6 max-w-[560px] text-sm text-text-secondary">
-        Corre una auditoría completa real (medición en los 4 motores de IA + auditoría técnica + score) sobre
+        Corre una auditoría completa real (medición en los motores de IA activos + auditoría técnica + score) sobre
         cualquier negocio, esté registrado o no. Crea una ficha interna marcada como <code>admin</code> para poder
         verla después en /admin/clientes — no aparece como prospecto real ni se le puede enviar acceso de login.
       </p>

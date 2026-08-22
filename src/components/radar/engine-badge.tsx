@@ -1,7 +1,18 @@
 import { cn } from "@/lib/cn";
+import { ACTIVE_ENGINES, type ActiveEngine } from "@/lib/ai-engines/types";
 
-export const AI_ENGINES = ["ChatGPT", "Claude", "Gemini", "Perplexity"] as const;
-export type AiEngine = (typeof AI_ENGINES)[number];
+// P0.1 — Nombres comerciales de los motores ACTIVOS, derivados de la unica fuente de
+// verdad (ACTIVE_ENGINES en src/lib/ai-engines/types.ts). Antes esta lista estaba escrita
+// a mano e incluia Perplexity, que nunca corrio: por eso el hero y la pantalla de escaneo
+// prometian un motor inexistente. Ahora es imposible que la UI anuncie un motor que el
+// backend no llama — si cambia ACTIVE_ENGINES, esta lista cambia sola.
+const DISPLAY_NAME: Record<ActiveEngine, string> = {
+  openai: "ChatGPT",
+  anthropic: "Claude",
+  gemini: "Gemini",
+};
+
+export const AI_ENGINES = ACTIVE_ENGINES.map((e) => DISPLAY_NAME[e]) as readonly string[];
 
 /**
  * Representacion tipografica de un motor de IA — sin logos fabricados (no

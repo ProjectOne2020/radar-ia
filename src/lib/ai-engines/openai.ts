@@ -29,6 +29,11 @@ export async function runOpenAI(promptText: string): Promise<EngineOutcome> {
       // Forzado por seguridad/consistencia (ver mismo fix en anthropic.ts) — verificado
       // en vivo que sin esto el modelo a veces decide no buscar por su cuenta.
       tool_choice: "required",
+      // P0.1 — Tope explicito de salida. Antes no habia ninguno: una respuesta larga podia
+      // multiplicar el costo sin aviso (los tokens de salida son ~6x los de entrada en este
+      // modelo). 1024 es el mismo valor que anthropic.ts ya usaba, elegido para no cambiar
+      // el comportamiento de medicion — las respuestas reales observadas caben de sobra.
+      max_output_tokens: 1024,
     }),
   });
 

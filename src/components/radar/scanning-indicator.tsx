@@ -1,7 +1,7 @@
 import { AI_ENGINES } from "./engine-badge";
 
 /**
- * Estado de escaneo honesto: los 4 motores se muestran "activos" en
+ * Estado de escaneo honesto: los motores activos (ver ACTIVE_ENGINES) se muestran "activos" en
  * conjunto (pulso compartido), NUNCA como una lista de ticks secuenciales
  * falsos — el backend corre la medicion como una sola llamada sincrona, no
  * hay señal real de progreso por motor. Mostrar "✓ ChatGPT / ◉ Gemini

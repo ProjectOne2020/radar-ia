@@ -2,10 +2,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { runOpenAI } from "./openai";
 import { runAnthropic } from "./anthropic";
 import { runGemini } from "./gemini";
-import { runPerplexity } from "./perplexity";
+// NOTA: `./perplexity` NO se importa a proposito. El codigo se conserva intacto para una
+// futura migracion a la Agent API (la Chat Completions que implementa queda sin soporte el
+// 27/09/2026), pero el motor esta fuera de ACTIVE_ENGINES y no debe llamarse.
 import { classifyMention } from "./classify";
 import { extractDomain, isClientDomain, isDirectoryDomain } from "./classify-domain";
-import { isSkipped, type EngineOutcome } from "./types";
+import { ACTIVE_ENGINES, isSkipped, type EngineOutcome } from "./types";
+import { loadClientIdentity } from "@/lib/identity/load-identity";
+import { classifyPrompt } from "@/lib/prompt-class/classify-prompt";
 
 export interface MeasurementSummary {
   promptSetId: string;
@@ -17,14 +21,19 @@ export interface MeasurementSummary {
   >;
 }
 
-// M2 — corre un prompt_set contra los 4 motores reales del pilar 8, parsea, y persiste
-// tracking_runs + citations. bing_copilot NO participa aqui — ver ai-engines/types.ts.
+// M2 — corre un prompt_set contra los motores ACTIVOS del pilar 8 (ver ACTIVE_ENGINES en
+// ai-engines/types.ts: OpenAI, Anthropic, Gemini), parsea, y persiste tracking_runs +
+// citations. bing_copilot y perplexity NO participan — ver types.ts para el motivo de cada uno.
+//
+// P0.1 — Cada tracking_run guarda ahora `prompt_class` y `mention_method`. Sin esos dos
+// campos la compuerta de TAO no puede distinguir una medicion limpia de una contaminada ni
+// de una degradada, que es exactamente como se colaba el sesgo en v1.
 export async function runMeasurementForPromptSet(promptSetId: string): Promise<MeasurementSummary> {
   const admin = createAdminClient();
 
   const { data: prompt, error: promptError } = await admin
     .from("prompt_sets")
-    .select("id, prompt_text, client_id")
+    .select("id, prompt_text, client_id, prompt_class")
     .eq("id", promptSetId)
     .single();
 
@@ -58,12 +67,32 @@ export async function runMeasurementForPromptSet(promptSetId: string): Promise<M
     .map(extractDomain)
     .filter((d): d is string => Boolean(d));
 
-  const engineRuns = await Promise.allSettled<EngineOutcome>([
-    runOpenAI(prompt.prompt_text),
-    runAnthropic(prompt.prompt_text),
-    runGemini(prompt.prompt_text),
-    runPerplexity(prompt.prompt_text),
-  ]);
+  // P0.1 — Clase de contaminacion del prompt, decidida de forma DETERMINISTA antes de
+  // medir. Se calcula aqui (y no solo al crear el prompt) para que la clase refleje la
+  // identidad vigente del cliente, y se guarda como snapshot en cada tracking_run: si
+  // mañana alguien edita la pregunta o el nombre del negocio, la evidencia de que ESTA
+  // medicion vino de un prompt limpio no cambia retroactivamente.
+  const identity = await loadClientIdentity(admin, prompt.client_id);
+  const classification = identity ? classifyPrompt(prompt.prompt_text, identity) : null;
+  // Sin identidad no se puede afirmar que el prompt sea limpio -> se deja null, que la
+  // compuerta de TAO trata como NO elegible (fail-safe).
+  const promptClass = classification?.promptClass ?? null;
+
+  // Persistir la clase tambien en el prompt para que el admin pueda verla sin recalcular.
+  if (promptClass && prompt.prompt_class !== promptClass) {
+    await admin.from("prompt_sets").update({ prompt_class: promptClass }).eq("id", prompt.id);
+  }
+
+  // Solo se llaman los motores ACTIVOS (ver ai-engines/types.ts). Perplexity queda fuera
+  // por decision de producto, no por falta de codigo.
+  const engineCalls: Record<(typeof ACTIVE_ENGINES)[number], Promise<EngineOutcome>> = {
+    openai: runOpenAI(prompt.prompt_text),
+    anthropic: runAnthropic(prompt.prompt_text),
+    gemini: runGemini(prompt.prompt_text),
+  };
+  const engineRuns = await Promise.allSettled<EngineOutcome>(
+    ACTIVE_ENGINES.map((name) => engineCalls[name]),
+  );
 
   const summary: MeasurementSummary = { promptSetId, promptText: prompt.prompt_text, results: [] };
 
@@ -81,7 +110,8 @@ export async function runMeasurementForPromptSet(promptSetId: string): Promise<M
       continue;
     }
 
-    const mentioned = await classifyMention(outcome.raw, client.business_name);
+    const mention = await classifyMention(outcome.raw, client.business_name);
+    const mentioned = mention.mentioned;
 
     const { data: trackingRun, error: insertError } = await admin
       .from("tracking_runs")
@@ -91,6 +121,8 @@ export async function runMeasurementForPromptSet(promptSetId: string): Promise<M
         engine: outcome.engine,
         mentioned,
         response_raw: outcome.raw,
+        prompt_class: promptClass,
+        mention_method: mention.method,
       })
       .select("id")
       .single();

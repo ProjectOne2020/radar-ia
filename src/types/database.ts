@@ -196,6 +196,41 @@ export type Database = {
           },
         ]
       }
+      client_identity_variants: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          kind: string
+          source: string
+          value: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          source?: string
+          value: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          source?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_identity_variants_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           business_name: string
@@ -587,6 +622,7 @@ export type Database = {
           client_id: string | null
           created_at: string | null
           id: string
+          prompt_class: string | null
           prompt_text: string
         }
         Insert: {
@@ -595,6 +631,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string | null
           id?: string
+          prompt_class?: string | null
           prompt_text: string
         }
         Update: {
@@ -603,6 +640,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string | null
           id?: string
+          prompt_class?: string | null
           prompt_text?: string
         }
         Relationships: [
@@ -756,7 +794,9 @@ export type Database = {
           client_id: string | null
           engine: string
           id: string
+          mention_method: string | null
           mentioned: boolean
+          prompt_class: string | null
           prompt_id: string | null
           response_raw: string | null
           run_at: string | null
@@ -765,7 +805,9 @@ export type Database = {
           client_id?: string | null
           engine: string
           id?: string
+          mention_method?: string | null
           mentioned: boolean
+          prompt_class?: string | null
           prompt_id?: string | null
           response_raw?: string | null
           run_at?: string | null
@@ -774,7 +816,9 @@ export type Database = {
           client_id?: string | null
           engine?: string
           id?: string
+          mention_method?: string | null
           mentioned?: boolean
+          prompt_class?: string | null
           prompt_id?: string | null
           response_raw?: string | null
           run_at?: string | null

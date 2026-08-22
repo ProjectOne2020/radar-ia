@@ -5,7 +5,7 @@ import type { MetadataRoute } from "next";
 // 02-METODOLOGIA-SCORING.md: "bloqueado = invisible, sin gradiente", el factor de mayor
 // peso dentro de ese pilar). Sin este archivo, Next no genera ningun robots.txt y el
 // comportamiento por default de los crawlers de IA frente a un sitio sin robots.txt
-// varia por bot — mejor ser explicito. Se permiten los crawlers de los 4 motores que el
+// varia por bot — mejor ser explicito. Se permiten los crawlers de los motores que el
 // producto mismo mide (OpenAI, Anthropic, Google, Perplexity) mas los agentes de
 // navegación en tiempo real que citan paginas puntuales, y los de busqueda estandar.
 const AI_AND_SEARCH_BOTS = [

@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
 import { consumeTrialAuditIfActive } from "@/lib/admin/trial-grant";
+import { computeTaoFromRuns } from "@/lib/metrics/tao";
 import { PILLAR_WEIGHTS } from "./weights";
 import {
   scorePillar1Nap,
@@ -62,7 +63,15 @@ export async function calculateScoreForClient(
     { data: appListing, error: appListingError },
   ] = await Promise.all([
     admin.from("audit_findings").select("pillar, finding, severity").eq("client_id", clientId),
-    admin.from("tracking_runs").select("id, mentioned, citations(is_directory)").eq("client_id", clientId),
+    // P0.1 — se traen tambien prompt_class y mention_method: sin ellos el pilar 8 no puede
+    // distinguir una medicion limpia de una contaminada.
+    // TODO(P0.2): esta consulta sigue leyendo TODO el historico sin ventana temporal y sin
+    // .limit(), asi que arrastra el promedio de por vida y el tope de 1000 filas de
+    // PostgREST. Corregirlo es P0.2 (measurement_sessions), no P0.1.
+    admin
+      .from("tracking_runs")
+      .select("id, mentioned, prompt_class, prompt_id, mention_method, citations(is_directory)")
+      .eq("client_id", clientId),
     admin.from("sku_catalogs").select("id").eq("client_id", clientId).maybeSingle(),
     admin.from("app_listings").select("id").eq("client_id", clientId).maybeSingle(),
   ]);
@@ -95,7 +104,7 @@ export async function calculateScoreForClient(
     5: scorePillar5QuestionCoverage(byPillar(5)),
     6: scorePillar6ExternalCitations(trackingRuns ?? []),
     7: isApp ? scorePillar7AppRating(byPillar(7)) : scorePillar7Reputation(byPillar(7)),
-    8: scorePillar8DirectMeasurement(trackingRuns ?? []),
+    8: scorePillar8Tao(trackingRuns ?? []),
   };
 
   const scoreByPillar: Record<string, PillarEntry> = {};
@@ -144,6 +153,9 @@ export async function calculateScoreForClient(
 interface TrackingRunWithCitations {
   id: string;
   mentioned: boolean;
+  prompt_id?: string | null;
+  prompt_class?: string | null;
+  mention_method?: string | null;
   citations: Array<{ is_directory: boolean | null }> | null;
 }
 
@@ -161,13 +173,35 @@ function scorePillar6ExternalCitations(trackingRuns: TrackingRunWithCitations[])
   return { subscore: (runsWithDirectoryCitation / trackingRuns.length) * 100, measured: true };
 }
 
-// Pilar 8 — Medicion directa de citacion en motores de IA (13%). El ancla del score a la
-// realidad, no a proxies — ver 02-METODOLOGIA-SCORING.md.
-function scorePillar8DirectMeasurement(trackingRuns: TrackingRunWithCitations[]): PillarScore {
-  if (trackingRuns.length === 0) return { subscore: 0, measured: false };
+// Pilar 8 — Tasa de Aparicion Organica (TAO), 13%. El ancla del score a la realidad.
+//
+// P0.1 — CAMBIO DE SIGNIFICADO. Antes este pilar promediaba TODAS las menciones, incluidas
+// las de preguntas que llevaban el nombre del negocio dentro del prompt. Con datos reales
+// de produccion eso daba 94.4% de mencion en preguntas con nombre contra 0.0% en preguntas
+// ciegas para el MISMO negocio: el pilar medía mayormente el diseño de nuestras preguntas,
+// no la visibilidad del cliente.
+//
+// Ahora solo entran runs `clean_blind` con clasificacion no degradada. La compuerta vive
+// en toTaoObservation() y es imposible de saltar por tipos (ver src/lib/metrics/tao.ts).
+//
+// Consecuencia esperada y correcta: los scores publicados BAJAN. El numero anterior era
+// artefactual.
+function scorePillar8Tao(trackingRuns: TrackingRunWithCitations[]): PillarScore {
+  const tao = computeTaoFromRuns(
+    trackingRuns.map((r) => ({
+      prompt_id: r.prompt_id ?? null,
+      mentioned: r.mentioned,
+      prompt_class: r.prompt_class ?? null,
+      mention_method: r.mention_method ?? null,
+    })),
+  );
 
-  const mentionedCount = trackingRuns.filter((run) => run.mentioned).length;
-  return { subscore: (mentionedCount / trackingRuns.length) * 100, measured: true };
+  // Sin muestra admisible el pilar queda SIN MEDIR — nunca 0. Un cliente cuyas preguntas
+  // estan todas contaminadas no "tiene visibilidad cero": es que todavia no lo medimos
+  // bien. Confundir ambas cosas es exactamente el error que P0.1 corrige.
+  if (tao.rate === null) return { subscore: 0, measured: false };
+
+  return { subscore: tao.rate, measured: true };
 }
 
 function round2(n: number): number {

@@ -5,6 +5,8 @@ import { ScoreRing } from "@/components/radar/score-ring";
 import { PillarSignal, type PillarStatus } from "@/components/radar/pillar-signal";
 import { ScoreTrend } from "@/components/radar/score-trend";
 import { SetupOnboarding } from "@/components/dashboard/setup-onboarding";
+import { OrganicMetrics } from "@/components/radar/organic-metrics";
+import { computeBrandRecognition, computeTaoFromRuns } from "@/lib/metrics/tao";
 
 // M16 — nombres de pilar por eje (local/e-commerce/apps): los pilares 2, 4 y 7 miden
 // cosas distintas segun el eje (02-METODOLOGIA-SCORING.md) — mostrar "Google Business
@@ -41,17 +43,30 @@ export default async function DashboardPage() {
   const tCommon = await getTranslations("Common");
   const supabase = await createClient();
 
-  const [{ data: client }, { data: scoreHistory }, { data: appListing }, { data: skuCatalog }, { data: location }] =
-    await Promise.all([
-      supabase.from("clients").select("business_name, niche, plan, verification_status").single(),
-      supabase
-        .from("ai_visibility_scores")
-        .select("id, score_total, score_by_pillar, calculated_at")
-        .order("calculated_at", { ascending: false }),
-      supabase.from("app_listings").select("id").maybeSingle(),
-      supabase.from("sku_catalogs").select("id").maybeSingle(),
-      supabase.from("locations").select("id").maybeSingle(),
-    ]);
+  const [
+    { data: client },
+    { data: scoreHistory },
+    { data: appListing },
+    { data: skuCatalog },
+    { data: location },
+    { data: runs },
+  ] = await Promise.all([
+    supabase.from("clients").select("business_name, niche, plan, verification_status").single(),
+    supabase
+      .from("ai_visibility_scores")
+      .select("id, score_total, score_by_pillar, calculated_at")
+      .order("calculated_at", { ascending: false }),
+    supabase.from("app_listings").select("id").maybeSingle(),
+    supabase.from("sku_catalogs").select("id").maybeSingle(),
+    supabase.from("locations").select("id").maybeSingle(),
+    // P0.1 — TAO y Reconocimiento de Marca se calculan en vivo desde tracking_runs, para
+    // que el dashboard nunca muestre la metrica contaminada guardada en scores viejos.
+    // TODO(P0.2): esto sigue sin ventana temporal — lo corrige measurement_sessions.
+    supabase.from("tracking_runs").select("prompt_id, mentioned, prompt_class, mention_method"),
+  ]);
+
+  const tao = computeTaoFromRuns(runs ?? []);
+  const brand = computeBrandRecognition(runs ?? []);
 
   // M28 — un cliente self-serve (/registro) no tiene ninguna fila de eje hasta que
   // completa este paso; sin esto, el dashboard quedaba vacio para siempre sin forma de
@@ -83,6 +98,24 @@ export default async function DashboardPage() {
           status: client?.verification_status ?? "",
         })}
       </p>
+
+      {hasAxisSetup && (tao.samplePrompts > 0 || brand.sampleRuns > 0) && (
+        <OrganicMetrics
+          tao={tao}
+          brand={brand}
+          labels={{
+            taoTitle: t("taoTitle"),
+            taoHelp: t("taoHelp", { total: tao.samplePrompts, count: tao.promptsWithAppearance }),
+            taoNone: t("taoNone"),
+            brandTitle: t("brandTitle"),
+            brandHelp: t("brandHelp", { total: brand.sampleRuns, count: brand.appearances }),
+            brandNone: t("brandNone"),
+            metricsNote: t("metricsNote"),
+            appearances: t("appearances"),
+            noAppearances: t("noAppearances"),
+          }}
+        />
+      )}
 
       {!hasAxisSetup ? (
         <SetupOnboarding />

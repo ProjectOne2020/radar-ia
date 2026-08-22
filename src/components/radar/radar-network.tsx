@@ -2,19 +2,32 @@ import { AI_ENGINES } from "./engine-badge";
 
 const SIZE = 320;
 const CENTER = SIZE / 2;
-// Cruz (arriba/derecha/abajo/izquierda), no un circulo militar literal —
-// el negocio es el nodo central, cada motor de IA es un nodo conectado.
-const NODES: Array<{ engine: string; x: number; y: number; labelDx: number; labelDy: number }> = [
-  { engine: AI_ENGINES[2], x: CENTER, y: 46, labelDx: 0, labelDy: -18 }, // Gemini, arriba
-  { engine: AI_ENGINES[0], x: SIZE - 46, y: CENTER, labelDx: 0, labelDy: 24 }, // ChatGPT, derecha
-  { engine: AI_ENGINES[3], x: CENTER, y: SIZE - 46, labelDx: 0, labelDy: 24 }, // Perplexity, abajo
-  { engine: AI_ENGINES[1], x: 46, y: CENTER, labelDx: 0, labelDy: 24 }, // Claude, izquierda
-];
+const RADIUS = CENTER - 46;
+
+// P0.1 — Los nodos se GENERAN desde AI_ENGINES (que a su vez deriva de ACTIVE_ENGINES),
+// en vez de estar cableados a mano. Antes eran 4 posiciones fijas, una de ellas
+// Perplexity — un motor que nunca corrio. Ahora el hero no puede prometer un motor que el
+// backend no consulta: si la lista activa cambia, el visual se reacomoda solo.
+const NODES = AI_ENGINES.map((engine, i) => {
+  // Se reparten en circulo empezando arriba, para que cualquier cantidad quede equilibrada.
+  const angle = -Math.PI / 2 + (i * 2 * Math.PI) / AI_ENGINES.length;
+  const y = CENTER + RADIUS * Math.sin(angle);
+  return {
+    engine,
+    x: CENTER + RADIUS * Math.cos(angle),
+    y,
+    labelDx: 0,
+    // La etiqueta va arriba del nodo solo cuando el nodo esta en la mitad superior.
+    labelDy: y < CENTER ? -18 : 24,
+  };
+});
+
+const ENGINE_LIST = AI_ENGINES.join(", ");
 
 /**
- * Visual de hero: el negocio (nodo central) conectado a los 4 motores de IA
- * que Radar consulta de verdad. SVG puro + CSS keyframes (sin canvas/WebGL),
- * respeta prefers-reduced-motion via la media query global.
+ * Visual de hero: el negocio (nodo central) conectado a los motores de IA que Radar
+ * consulta de verdad. SVG puro + CSS keyframes (sin canvas/WebGL), respeta
+ * prefers-reduced-motion via la media query global.
  */
 export function RadarNetwork({ className }: { className?: string }) {
   return (
@@ -22,7 +35,7 @@ export function RadarNetwork({ className }: { className?: string }) {
       viewBox={`0 0 ${SIZE} ${SIZE}`}
       className={className}
       role="img"
-      aria-label="Radar conectando tu negocio con ChatGPT, Claude, Gemini y Perplexity"
+      aria-label={`Radar conectando tu negocio con ${ENGINE_LIST}`}
     >
       <defs>
         <radialGradient id="rd-center-glow" cx="50%" cy="50%" r="50%">

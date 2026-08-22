@@ -13,6 +13,10 @@ export async function runGemini(promptText: string): Promise<EngineOutcome> {
       body: JSON.stringify({
         contents: [{ parts: [{ text: promptText }] }],
         tools: [{ google_search: {} }],
+        // P0.1 — Tope explicito de salida. Antes no habia ninguno, y es el motor mas caro
+        // de los tres por token de salida, asi que era la exposicion de costo mas grande
+        // del sistema. 1024 iguala a openai.ts y anthropic.ts.
+        generationConfig: { maxOutputTokens: 1024 },
       }),
     }
   );
