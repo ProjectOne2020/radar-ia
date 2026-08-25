@@ -159,7 +159,7 @@ describe("TEST 6 — un fallo del calculo no produce consumo accidental", () => 
   for (const { file } of FLOWS_WITH_CONSUME_CALL) {
     it(`${file.join("/")} consume DESPUES de calcular, no antes`, () => {
       const source = read(...file);
-      const calcAt = source.indexOf("calculateScoreForClient(");
+      const calcAt = source.indexOf("calculateScoreForSession(");
       const consumeAt = source.indexOf("consumeTrialAuditForMeasurement(");
       expect(calcAt).toBeGreaterThan(-1);
       expect(consumeAt).toBeGreaterThan(-1);
@@ -169,20 +169,23 @@ describe("TEST 6 — un fallo del calculo no produce consumo accidental", () => 
   }
 });
 
-describe("TEST 7 — reintento (alcance real de P0.2-A)", () => {
+describe("TEST 7 — reintento", () => {
   it("reintentar SOLO el calculo del score no consume nada, cuantas veces sea", () => {
-    // Esto es lo que P0.2-A si garantiza: el calculo es puro respecto del trial.
+    // Garantia de P0.2-A: el calculo es puro respecto del trial.
     expect(read("lib", "scoring", "calculate-score.ts")).not.toMatch(TRIAL_REFERENCE);
   });
 
-  it("LIMITACION CONOCIDA: reintentar el FLUJO COMPLETO si consume de nuevo", () => {
-    // No hay identidad durable de "esta medicion concreta" hasta measurement_sessions,
-    // asi que dos ejecuciones completas del mismo flujo son indistinguibles de dos
-    // auditorias legitimas. Ya era cierto antes de P0.2-A; no empeora aqui.
-    // Este test documenta el hueco a proposito — se cierra en P0.2-B.
-    const policy = readRaw("lib", "admin", "trial-policy.ts");
-    expect(policy).toMatch(/NO ES IDEMPOTENTE TODAVIA/);
-    expect(policy).toMatch(/P0\.2-B/);
+  it("reintentar el FLUJO COMPLETO tampoco consume dos veces (cerrado en P0.2-B)", () => {
+    // Este test documentaba un hueco conocido de P0.2-A: sin identidad durable de "esta
+    // medicion concreta", dos ejecuciones del mismo flujo eran indistinguibles de dos
+    // auditorias legitimas. measurement_sessions aporto esa identidad y la RPC la usa como
+    // clave de idempotencia (PK de trial_consumptions), asi que el hueco quedo cerrado.
+    const policy = read("lib", "admin", "trial-policy.ts");
+    expect(policy).toMatch(/sessionId: string/);
+    expect(policy).toMatch(/p_session_id: sessionId/);
+    expect(policy).toMatch(/consume_trial_audit_for_session/);
+    // Y ya no se usa la version JS con lost update.
+    expect(policy).not.toMatch(/consumeTrialAuditIfActive/);
   });
 });
 

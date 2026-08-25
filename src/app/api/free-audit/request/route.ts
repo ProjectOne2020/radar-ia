@@ -7,10 +7,21 @@ import { extractDomain } from "@/lib/ai-engines/classify-domain";
 const VALID_AXES: AuditAxis[] = ["local", "ecommerce", "app"];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Corre M2 ligero (llamadas reales a OpenAI/Anthropic/Gemini/Perplexity) + M3 + M4 de forma
-// sincrona — puede tardar. En Vercel Hobby el limite por defecto de una function es corto;
-// hay que confirmar el plan/limite real antes de lanzar a producción (ver resumen al fundador).
-export const maxDuration = 60;
+// Corre M2 ligero (llamadas reales a los motores activos) + M3 + M4 de forma sincrona.
+//
+// P0.2-B — 60s se quedaron cortos. Con el reintento de celdas fallidas el peor caso
+// estimado sube a ~55-70s (base medida en produccion ~16-21s, mas hasta 2 rondas de
+// reintento y la auditoria tecnica del sitio del cliente). Si la funcion muere antes de
+// closeSession(), no hay trabajo en segundo plano que la termine: la sesion queda `running`,
+// nunca se escribe el snapshot y el prospecto ve un 404 PERMANENTE en su reporte.
+//
+// 300 deja ~5x de margen y es el mismo valor que ya usan /api/admin/remeasure,
+// /api/cron/remeasure y el webhook de Stripe.
+//
+// PENDIENTE (fuera del alcance de P0.2-B): una peticion HTTP sincrona de hasta 300s es
+// fragil y mala UX. La solucion correcta es hacer la auditoria gratis asincrona (respuesta
+// inmediata + polling), pero eso es un cambio de arquitectura.
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);

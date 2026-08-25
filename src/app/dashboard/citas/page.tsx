@@ -13,11 +13,16 @@ export default async function CitasPage() {
   const t = await getTranslations("DashboardCitas");
   const supabase = await createClient();
 
+  // P0.2-B — solo intentos EXITOSOS. Desde que los fallos se persisten como filas reales
+  // (antes desaparecian), mostrarlos aqui sin filtrar pintaria un timeout de OpenAI como
+  // "no te mencionó" — que es exactamente la confusion entre ERROR y ABSENT que P0.2-B
+  // elimina. Un fallo reduce la confianza en la medicion, no es una ausencia del negocio.
   const { data: runs } = await supabase
     .from("tracking_runs")
     .select(
       "id, engine, mentioned, run_at, prompt_sets(prompt_text), citations(cited_url, cited_domain, is_client_domain, is_directory)",
     )
+    .eq("outcome", "success")
     .order("run_at", { ascending: false });
 
   return (

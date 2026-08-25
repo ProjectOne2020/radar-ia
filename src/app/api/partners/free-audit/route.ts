@@ -13,7 +13,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // con la misma logica de anti-abuso, no da de alta clientes de pago via API todavia.
 // M23 — mismo eje explicito (axis/appType) que el endpoint publico, en vez de inferirlo
 // del string de niche.
-export const maxDuration = 60;
+// P0.2-B — mismo motivo que /api/free-audit/request: corre el mismo runFreeAudit(), que con
+// los reintentos puede acercarse a los 60s y morir antes de closeSession().
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   const partner = await authenticatePartner(request);

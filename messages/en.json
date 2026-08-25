@@ -412,7 +412,9 @@
     "brandNone": "No questions naming your business in this measurement.",
     "metricsNote": "These two metrics measure different things and are never averaged together.",
     "appearances": "appearances",
-    "noAppearances": "no appearances"
+    "noAppearances": "no appearances",
+    "legacyNotice": "This result was measured with an earlier methodology, so it is not comparable with current measurements. A new measurement is already on the way.",
+    "coverageNote": "Based on {successful} of {expected} completed queries."
   },
   "DashboardHallazgos": {
     "title": "Full findings",
@@ -518,6 +520,7 @@
     "trendUp": "Up",
     "trendDown": "Down",
     "trendFlat": "No change",
-    "trendNew": "New"
+    "trendNew": "New",
+    "legacyBadge": "Earlier methodology · not comparable"
   }
 }

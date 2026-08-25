@@ -29,9 +29,12 @@ export default async function AdminClienteDetailPage({ params }: { params: Promi
         .select("id, score_total, calculated_at")
         .eq("client_id", id)
         .order("calculated_at", { ascending: false }),
+      // P0.2-B — se listan los hallazgos mas recientes con su sesion visible. En admin SI
+      // interesa ver el historico completo (para auditar que se midio y cuando), a
+      // diferencia del dashboard del cliente, que solo debe ver la sesion publicada.
       admin
         .from("audit_findings")
-        .select("id, pillar, finding, severity, audited_at, detail_locked")
+        .select("id, pillar, finding, severity, audited_at, detail_locked, session_id")
         .eq("client_id", id)
         .order("audited_at", { ascending: false })
         .limit(60),

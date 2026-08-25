@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { METHODOLOGY_VERSION } from "@/lib/measurement/versions";
 import { sendScoreDropAlert, sendNapDiscrepancyAlert } from "./whatsapp-summary";
 
 // Umbral de "caida significativa" — NO esta definido en ningun documento del proyecto.
@@ -20,15 +21,20 @@ export async function checkAndSendAlerts(clientId: string): Promise<AlertCheckRe
 
   const [{ data: client, error: clientError }, { data: scores }, { data: napFindings }] = await Promise.all([
     admin.from("clients").select("business_name, phone_whatsapp").eq("id", clientId).single(),
+    // P0.2-B — solo la metodologia vigente. Comparar un score v2 contra uno legacy
+    // produciria una "caida" falsa: tras P0.1 el pilar 8 cambio de significado, asi que la
+    // alerta le diria al cliente que empeoro cuando lo que cambio fue como medimos.
     admin
       .from("ai_visibility_scores")
       .select("score_total, calculated_at")
       .eq("client_id", clientId)
+      .eq("methodology_version", METHODOLOGY_VERSION)
+      .in("publication_status", ["published", "superseded"])
       .order("calculated_at", { ascending: false })
       .limit(2),
     admin
       .from("audit_findings")
-      .select("finding, severity, audited_at")
+      .select("finding, severity, audited_at, session_id")
       .eq("client_id", clientId)
       .eq("pillar", 1)
       .eq("severity", "critical")

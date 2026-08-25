@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { METHODOLOGY_VERSION } from "@/lib/measurement/versions";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/ui/container";
@@ -17,6 +18,12 @@ interface ListingRow {
   score: number;
   trend: "up" | "down" | "flat" | "new";
   measuredAt: string;
+  /**
+   * P0.2-B — medido con la metodologia anterior a P0.1/P0.2-B. Sigue visible (decision del
+   * fundador: un negocio ya medido no debe desaparecer), pero queda FUERA del ranking
+   * competitivo y sin tendencia, y se muestra etiquetado.
+   */
+  isLegacy: boolean;
 }
 
 // M27 — listado publico (05-MARKETING-DISTRIBUCION.md seccion 2.3), pedido
@@ -42,12 +49,18 @@ async function fetchListingRows(): Promise<ListingRow[]> {
 
   const clientIds = clients.map((c) => c.id);
 
+  // P0.2-B — se traen TODOS los scores (v2 y legacy) y se separan despues. Un negocio ya
+  // medido no desaparece del listado, pero legacy y v2 no pueden compararse entre si: el
+  // pilar 8 de un score legacy esta inflado por preguntas con nombre (ver P0.1), asi que
+  // ordenarlos juntos pondria al legacy por encima sin que ninguno de los dos negocios
+  // hubiera cambiado. Los legacy se muestran etiquetados y FUERA del ranking.
   const [{ data: locations }, { data: scores }] = await Promise.all([
     admin.from("locations").select("client_id, city").in("client_id", clientIds),
     admin
       .from("ai_visibility_scores")
-      .select("client_id, score_total, calculated_at")
+      .select("client_id, score_total, calculated_at, methodology_version, publication_status")
       .in("client_id", clientIds)
+      .in("publication_status", ["published", "superseded"])
       .order("calculated_at", { ascending: false }),
   ]);
 
@@ -58,22 +71,34 @@ async function fetchListingRows(): Promise<ListingRow[]> {
     }
   }
 
-  const scoresByClient = new Map<string, Array<{ score_total: number; calculated_at: string | null }>>();
+  type ScoreRow = { score_total: number; calculated_at: string | null; methodology_version: string };
+  const currentByClient = new Map<string, ScoreRow[]>();
+  const legacyByClient = new Map<string, ScoreRow[]>();
+
   for (const s of scores ?? []) {
     if (!s.client_id) continue;
-    const list = scoresByClient.get(s.client_id) ?? [];
+    const isCurrent = s.methodology_version === METHODOLOGY_VERSION && s.publication_status === "published";
+    const bucket = isCurrent ? currentByClient : legacyByClient;
+    const list = bucket.get(s.client_id) ?? [];
     list.push(s);
-    scoresByClient.set(s.client_id, list);
+    bucket.set(s.client_id, list);
   }
 
   const rows: ListingRow[] = [];
   for (const c of clients) {
-    const history = scoresByClient.get(c.id);
+    // Prioridad: si el negocio ya tiene medicion con la metodologia vigente, esa manda.
+    const current = currentByClient.get(c.id);
+    const legacy = legacyByClient.get(c.id);
+    const history = current?.length ? current : legacy;
     if (!history || history.length === 0) continue; // opt-in pero todavia sin medicion
 
+    const isLegacy = !current?.length;
+
     const [latest, previous] = history;
+    // La tendencia solo tiene sentido dentro de una misma metodologia. Para un negocio
+    // legacy no se calcula: mostrar una flecha implicaria una continuidad que no existe.
     let trend: ListingRow["trend"] = "new";
-    if (previous) {
+    if (previous && !isLegacy) {
       trend = latest.score_total > previous.score_total ? "up" : latest.score_total < previous.score_total ? "down" : "flat";
     }
 
@@ -86,10 +111,16 @@ async function fetchListingRows(): Promise<ListingRow[]> {
       score: Math.round(latest.score_total),
       trend,
       measuredAt: latest.calculated_at ?? "",
+      isLegacy,
     });
   }
 
-  return rows.sort((a, b) => b.score - a.score);
+  // ORDENAMIENTO: solo los v2 compiten. Los legacy van despues, en bloque, ordenados entre
+  // si — nunca intercalados con los v2, porque eso seria justamente el ranking mixto que no
+  // se sostiene.
+  const current = rows.filter((r) => !r.isLegacy).sort((a, b) => b.score - a.score);
+  const legacy = rows.filter((r) => r.isLegacy).sort((a, b) => b.score - a.score);
+  return [...current, ...legacy];
 }
 
 export default async function ListadoPage({
@@ -172,8 +203,22 @@ export default async function ListadoPage({
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
-                      <TrendBadge trend={row.trend} labels={t} />
-                      <span className="font-mono text-lg font-semibold text-ink">{row.score}</span>
+                      {/* P0.2-B — un score legacy se muestra, pero nunca compite: sin
+                          tendencia y con etiqueta explicita de que no es comparable. */}
+                      {row.isLegacy ? (
+                        <Badge tone="neutral">{t("legacyBadge")}</Badge>
+                      ) : (
+                        <TrendBadge trend={row.trend} labels={t} />
+                      )}
+                      <span
+                        className={
+                          row.isLegacy
+                            ? "font-mono text-lg font-semibold text-text-muted"
+                            : "font-mono text-lg font-semibold text-ink"
+                        }
+                      >
+                        {row.score}
+                      </span>
                     </div>
                   </div>
                 ))}

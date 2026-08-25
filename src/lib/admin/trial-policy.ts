@@ -1,5 +1,4 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
-import { consumeTrialAuditIfActive } from "./trial-grant";
 
 // P0.2-A — QUIEN decide si una medicion consume una auditoria del trial.
 //
@@ -81,19 +80,36 @@ export function consumesTrialAudit(trigger: MeasurementTrigger): boolean {
 }
 
 /**
- * Unico punto por el que una medicion puede descontar del trial. Los orquestadores
- * llaman aqui DESPUES de que la medicion termino de verdad; nunca lo hace el calculo.
+ * Unico punto por el que una medicion puede descontar del trial. Los orquestadores llaman
+ * aqui DESPUES de que la medicion termino de verdad; nunca lo hace el calculo del score.
  *
- * ⚠️ NO ES IDEMPOTENTE TODAVIA. Sin una identidad durable de "esta medicion concreta"
- * (measurement_sessions), dos ejecuciones completas del mismo flujo son indistinguibles
- * de dos auditorias legitimas y descuentan dos veces. Eso ya era cierto antes de P0.2-A
- * y no empeora aqui; se cierra en P0.2-B. Ver el reporte, seccion "Riesgos restantes".
+ * P0.2-B — AHORA SI ES IDEMPOTENTE Y ATOMICO. El descuento se delega a la RPC
+ * `consume_trial_audit_for_session`, que en UNA transaccion:
+ *
+ *   1. bloquea la fila del grant (`for update`) — serializa a los concurrentes;
+ *   2. inserta en `trial_consumptions` con PK = session_id — si ya se consumio, no hay
+ *      segunda vez, nunca;
+ *   3. descuenta con `audits_remaining = audits_remaining - 1` en SQL, no con un `n - 1`
+ *      calculado en JS (que era un lost update clasico);
+ *   4. si llega a 0, revierte la suscripcion dentro de la misma transaccion.
+ *
+ * Por eso `sessionId` es obligatorio: es la identidad durable que hace posible la
+ * idempotencia. Sin sesion no hay forma de distinguir un reintento de una auditoria nueva.
  */
 export async function consumeTrialAuditForMeasurement(
   admin: ReturnType<typeof createAdminClient>,
   clientId: string,
   trigger: MeasurementTrigger,
+  sessionId: string,
 ): Promise<void> {
   if (!consumesTrialAudit(trigger)) return;
-  await consumeTrialAuditIfActive(admin, clientId);
+
+  const { error } = await admin.rpc("consume_trial_audit_for_session", {
+    p_session_id: sessionId,
+    p_client_id: clientId,
+  });
+
+  if (error) {
+    throw new Error(`No se pudo consumir la auditoria del trial (sesion ${sessionId}): ${error.message}`);
+  }
 }

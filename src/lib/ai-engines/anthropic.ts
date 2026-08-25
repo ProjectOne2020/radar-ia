@@ -20,6 +20,14 @@ export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
 
   const model = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
 
+  // P0.2-B — declarada una sola vez: se envia y se guarda en el run, sin poder derivar.
+  const requestConfig = {
+    max_tokens: 1024,
+    tools: [{ type: "web_search_20250305", name: "web_search" }],
+    tool_choice: { type: "tool", name: "web_search" },
+    anthropic_version: "2023-06-01",
+  };
+
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -29,10 +37,10 @@ export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
     },
     body: JSON.stringify({
       model,
-      max_tokens: 1024,
       messages: [{ role: "user", content: promptText }],
-      tools: [{ type: "web_search_20250305", name: "web_search" }],
-      tool_choice: { type: "tool", name: "web_search" },
+      max_tokens: requestConfig.max_tokens,
+      tools: requestConfig.tools,
+      tool_choice: requestConfig.tool_choice,
     }),
   });
 
@@ -55,5 +63,13 @@ export async function runAnthropic(promptText: string): Promise<EngineOutcome> {
     .filter((c) => c.url)
     .map((c) => ({ url: c.url as string }));
 
-  return { engine: "anthropic", raw, citations };
+  return {
+    engine: "anthropic",
+    raw,
+    citations,
+    provider: "anthropic",
+    modelRequested: model,
+    modelResolved: typeof data.model === "string" ? data.model : undefined,
+    requestConfig,
+  };
 }

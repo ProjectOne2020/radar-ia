@@ -1,7 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runMeasurementForPromptSet } from "@/lib/ai-engines/run-measurement";
 import { runAuditForClient } from "@/lib/audit/run-audit";
-import { calculateScoreForClient } from "@/lib/scoring/calculate-score";
+import { calculateScoreForSession } from "@/lib/scoring/calculate-score";
+import { closeSession, openSession } from "@/lib/measurement/session";
+import { retryIncompleteRuns } from "@/lib/measurement/retry";
 import { buildFreeAuditPrompts, buildPromptsFromBank } from "./prompts";
 import { extractDomain } from "@/lib/ai-engines/classify-domain";
 import { currencyForCountry } from "@/lib/auth/country";
@@ -114,14 +116,41 @@ export async function runFreeAudit(input: FreeAuditInput): Promise<FreeAuditRunR
 
   if (promptError || !prompts) throw new Error(`No se pudieron crear las preguntas: ${promptError?.message}`);
 
-  // M2 ligero: corre los prompts en paralelo contra los 4 motores reales.
-  await Promise.allSettled(prompts.map((p) => runMeasurementForPromptSet(p.id)));
+  // P0.2-B — tambien la auditoria gratis mide dentro de una sesion. El cliente es una fila
+  // recien creada, asi que openSession no puede colisionar; se hace igual para que el score
+  // que se le enseña al prospecto sea tan reconstruible como el de un cliente que paga.
+  const session = await openSession(admin, {
+    clientId: client.id,
+    trigger: "free_audit",
+    promptTexts: promptTexts,
+  });
+  if (!session) throw new Error("No se pudo abrir la sesion de medicion de la auditoria gratis.");
+
+  // M2 ligero: corre los prompts en paralelo contra los motores activos.
+  await Promise.allSettled(prompts.map((p) => runMeasurementForPromptSet(p.id, session.sessionId)));
+
+  // P0.2-B — Reintento de celdas fallidas, ANTES de cerrar la sesion (la cobertura se
+  // calcula al cerrar; un reintento posterior no contaria).
+  //
+  // Sin esto, un solo 429 de un motor dejaba la sesion en `partial`, sin snapshot, y el
+  // prospecto veia un 404 en su reporte: 5 preguntas x 3 motores = 15 runs esperados, y
+  // basta que falte uno. Se reintentan SOLO los fallos transitorios; no se toca ningun
+  // umbral de publicacion. Si tras los reintentos sigue faltando algo, la sesion queda
+  // partial/failed y NO se publica — conseguir los datos es legitimo, relajar el criterio no.
+  await retryIncompleteRuns(
+    admin,
+    session.sessionId,
+    prompts.map((p) => p.id),
+    runMeasurementForPromptSet,
+  );
 
   // M3: auditoria tecnica completa (robots, schema, NAP, GBP nivel 1, Bing, cobertura).
-  await runAuditForClient(client.id);
+  await runAuditForClient(client.id, session.sessionId);
 
-  // M4: calculo del score con los pesos exactos.
-  const scoreResult = await calculateScoreForClient(client.id);
+  await closeSession(admin, session.sessionId);
+
+  // M4: calculo del score con los pesos exactos, acotado a esta sesion.
+  const scoreResult = await calculateScoreForSession(session.sessionId);
 
   return { clientId: client.id, domain, scoreTotal: scoreResult.scoreTotal };
 }

@@ -14,7 +14,9 @@ const VALID_AXES: AuditAxis[] = ["local", "ecommerce", "app"];
 // tal cual (mismo motor real: M2+M3+M4), la unica diferencia es quien la dispara y que no
 // exige telefono/correo verificados. onboarding_type se marca "admin" despues de crear el
 // cliente para distinguir estas fichas de un alta real de cliente/prospecto.
-export const maxDuration = 60;
+// P0.2-B — mismo motivo que /api/free-audit/request: corre el mismo runFreeAudit(), que con
+// los reintentos puede acercarse a los 60s y morir antes de closeSession().
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   const supabase = await createClient();

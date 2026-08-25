@@ -17,24 +17,57 @@ export type Database = {
       ai_visibility_scores: {
         Row: {
           calculated_at: string | null
+          classifier_version: string | null
           client_id: string | null
+          code_sha: string | null
+          comparability: string | null
+          coverage_expected: number | null
+          coverage_successful: number | null
+          delta_total: number | null
           id: string
+          methodology_version: string
+          previous_snapshot_id: string | null
+          publication_status: string
           score_by_pillar: Json
           score_total: number
+          scoring_version: string | null
+          session_id: string | null
         }
         Insert: {
           calculated_at?: string | null
+          classifier_version?: string | null
           client_id?: string | null
+          code_sha?: string | null
+          comparability?: string | null
+          coverage_expected?: number | null
+          coverage_successful?: number | null
+          delta_total?: number | null
           id?: string
+          methodology_version?: string
+          previous_snapshot_id?: string | null
+          publication_status?: string
           score_by_pillar: Json
           score_total: number
+          scoring_version?: string | null
+          session_id?: string | null
         }
         Update: {
           calculated_at?: string | null
+          classifier_version?: string | null
           client_id?: string | null
+          code_sha?: string | null
+          comparability?: string | null
+          coverage_expected?: number | null
+          coverage_successful?: number | null
+          delta_total?: number | null
           id?: string
+          methodology_version?: string
+          previous_snapshot_id?: string | null
+          publication_status?: string
           score_by_pillar?: Json
           score_total?: number
+          scoring_version?: string | null
+          session_id?: string | null
         }
         Relationships: [
           {
@@ -42,6 +75,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_visibility_scores_previous_snapshot_id_fkey"
+            columns: ["previous_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "ai_visibility_scores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_visibility_scores_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "measurement_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -95,6 +142,7 @@ export type Database = {
           finding: string
           id: string
           pillar: number
+          session_id: string | null
           severity: string | null
         }
         Insert: {
@@ -104,6 +152,7 @@ export type Database = {
           finding: string
           id?: string
           pillar: number
+          session_id?: string | null
           severity?: string | null
         }
         Update: {
@@ -113,6 +162,7 @@ export type Database = {
           finding?: string
           id?: string
           pillar?: number
+          session_id?: string | null
           severity?: string | null
         }
         Relationships: [
@@ -121,6 +171,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -789,39 +846,180 @@ export type Database = {
           },
         ]
       }
+      measurement_sessions: {
+        Row: {
+          classifier_version: string
+          client_id: string
+          code_sha: string | null
+          completed_at: string | null
+          engine_set: string[]
+          execution_status: string
+          expected_runs: number
+          failure_reason: string | null
+          id: string
+          methodology_version: string
+          prompt_set_hash: string
+          publication_status: string
+          scoring_version: string
+          started_at: string
+          trigger_source: string
+        }
+        Insert: {
+          classifier_version: string
+          client_id: string
+          code_sha?: string | null
+          completed_at?: string | null
+          engine_set: string[]
+          execution_status?: string
+          expected_runs: number
+          failure_reason?: string | null
+          id?: string
+          methodology_version: string
+          prompt_set_hash: string
+          publication_status?: string
+          scoring_version: string
+          started_at?: string
+          trigger_source: string
+        }
+        Update: {
+          classifier_version?: string
+          client_id?: string
+          code_sha?: string | null
+          completed_at?: string | null
+          engine_set?: string[]
+          execution_status?: string
+          expected_runs?: number
+          failure_reason?: string | null
+          id?: string
+          methodology_version?: string
+          prompt_set_hash?: string
+          publication_status?: string
+          scoring_version?: string
+          started_at?: string
+          trigger_source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trial_consumptions: {
+        Row: {
+          client_id: string
+          consumed_at: string
+          grant_id: string
+          session_id: string
+        }
+        Insert: {
+          client_id: string
+          consumed_at?: string
+          grant_id: string
+          session_id: string
+        }
+        Update: {
+          client_id?: string
+          consumed_at?: string
+          grant_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_consumptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trial_consumptions_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "trial_grants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trial_consumptions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "measurement_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tracking_runs: {
         Row: {
+          attempt: number
+          classifier_version: string | null
           client_id: string | null
           engine: string
           id: string
+          is_canonical: boolean
           mention_method: string | null
           mentioned: boolean
+          model_requested: string | null
+          model_resolved: string | null
+          outcome: string
           prompt_class: string | null
+          prompt_hash: string | null
           prompt_id: string | null
+          prompt_text_executed: string | null
+          provider: string | null
+          request_config: Json | null
+          request_config_hash: string | null
           response_raw: string | null
           run_at: string | null
+          session_id: string | null
         }
         Insert: {
+          attempt?: number
+          classifier_version?: string | null
           client_id?: string | null
           engine: string
           id?: string
+          is_canonical?: boolean
           mention_method?: string | null
           mentioned: boolean
+          model_requested?: string | null
+          model_resolved?: string | null
+          outcome?: string
           prompt_class?: string | null
+          prompt_hash?: string | null
           prompt_id?: string | null
+          prompt_text_executed?: string | null
+          provider?: string | null
+          request_config?: Json | null
+          request_config_hash?: string | null
           response_raw?: string | null
           run_at?: string | null
+          session_id?: string | null
         }
         Update: {
+          attempt?: number
+          classifier_version?: string | null
           client_id?: string | null
           engine?: string
           id?: string
+          is_canonical?: boolean
           mention_method?: string | null
           mentioned?: boolean
+          model_requested?: string | null
+          model_resolved?: string | null
+          outcome?: string
           prompt_class?: string | null
+          prompt_hash?: string | null
           prompt_id?: string | null
+          prompt_text_executed?: string | null
+          provider?: string | null
+          request_config?: Json | null
+          request_config_hash?: string | null
           response_raw?: string | null
           run_at?: string | null
+          session_id?: string | null
         }
         Relationships: [
           {
@@ -836,6 +1034,13 @@ export type Database = {
             columns: ["prompt_id"]
             isOneToOne: false
             referencedRelation: "prompt_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tracking_runs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -898,6 +1103,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_trial_audit_for_session: {
+        Args: { p_client_id: string; p_session_id: string }
+        Returns: string
+      }
       current_client_id: { Args: never; Returns: string }
       question_bank_coverage: {
         Args: never

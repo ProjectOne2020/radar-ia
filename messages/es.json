@@ -412,7 +412,9 @@
     "brandNone": "Sin preguntas con tu nombre en esta medición.",
     "metricsNote": "Estas dos métricas miden cosas distintas y nunca se promedian.",
     "appearances": "apariciones",
-    "noAppearances": "sin apariciones"
+    "noAppearances": "sin apariciones",
+    "legacyNotice": "Este resultado se midió con una metodología anterior, así que no es comparable con las mediciones actuales. Ya hay una nueva medición en camino.",
+    "coverageNote": "Basado en {successful} de {expected} consultas completadas."
   },
   "DashboardHallazgos": {
     "title": "Hallazgos completos",
@@ -518,6 +520,7 @@
     "trendUp": "Subió",
     "trendDown": "Bajó",
     "trendFlat": "Sin cambio",
-    "trendNew": "Nuevo"
+    "trendNew": "Nuevo",
+    "legacyBadge": "Metodología anterior · no comparable"
   }
 }

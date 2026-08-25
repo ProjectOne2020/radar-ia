@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { findingsQueryForSnapshot, loadCurrentSnapshot } from "@/lib/measurement/current-snapshot";
 import { sendReportEmail } from "./email-report";
 import { sendReportWhatsAppSummary } from "./whatsapp-summary";
 
@@ -18,21 +19,20 @@ export interface SendReportResult {
 export async function sendReportForClient(clientId: string): Promise<SendReportResult> {
   const admin = createAdminClient();
 
-  const [{ data: client, error: clientError }, { data: score, error: scoreError }, { data: findings }] =
-    await Promise.all([
-      admin.from("clients").select("business_name, email, phone_whatsapp").eq("id", clientId).single(),
-      admin
-        .from("ai_visibility_scores")
-        .select("score_total, score_by_pillar")
-        .eq("client_id", clientId)
-        .order("calculated_at", { ascending: false })
-        .limit(1)
-        .single(),
-      admin.from("audit_findings").select("severity").eq("client_id", clientId),
-    ]);
+  // P0.2-B — el reporte describe UNA medicion, no el acumulado. Los hallazgos se leen de la
+  // sesion del snapshot publicado: desde que run-audit dejo de borrar, `where client_id`
+  // devolveria los findings de todas las auditorias juntas y el conteo por severidad
+  // crecería en cada corrida sin que el sitio del cliente hubiera cambiado.
+  const [{ data: client, error: clientError }, snapshot] = await Promise.all([
+    admin.from("clients").select("business_name, email, phone_whatsapp").eq("id", clientId).single(),
+    loadCurrentSnapshot(admin, clientId),
+  ]);
 
   if (clientError || !client) throw new Error(`No se encontró el cliente ${clientId}: ${clientError?.message}`);
-  if (scoreError || !score) throw new Error(`El cliente ${clientId} todavía no tiene un score calculado.`);
+  if (!snapshot) throw new Error(`El cliente ${clientId} todavía no tiene un score calculado.`);
+
+  const { data: findings } = await findingsQueryForSnapshot(admin, snapshot, clientId);
+  const score = { score_total: snapshot.scoreTotal, score_by_pillar: snapshot.scoreByPillar };
 
   const findingsCount = { critical: 0, warning: 0, info: 0 };
   for (const f of findings ?? []) {

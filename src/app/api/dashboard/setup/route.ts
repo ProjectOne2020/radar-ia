@@ -5,8 +5,9 @@ import { createAxisRecord, type Axis } from "@/lib/audit/create-axis-record";
 import { buildFreeAuditPrompts, buildPromptsFromBank } from "@/lib/free-audit/prompts";
 import { runMeasurementForPromptSet } from "@/lib/ai-engines/run-measurement";
 import { runAuditForClient } from "@/lib/audit/run-audit";
-import { calculateScoreForClient } from "@/lib/scoring/calculate-score";
+import { calculateScoreForSession } from "@/lib/scoring/calculate-score";
 import { consumeTrialAuditForMeasurement } from "@/lib/admin/trial-policy";
+import { closeSession, openSession } from "@/lib/measurement/session";
 import { extractDomain } from "@/lib/ai-engines/classify-domain";
 
 const VALID_AXES: Axis[] = ["local", "ecommerce", "app"];
@@ -107,13 +108,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `No se pudieron crear las preguntas: ${promptError?.message}` }, { status: 500 });
   }
 
-  await Promise.allSettled(prompts.map((p) => runMeasurementForPromptSet(p.id)));
-  await runAuditForClient(clientId);
-  const scoreResult = await calculateScoreForClient(clientId);
+  // P0.2-B — null = ya hay una sesion abierta viva (doble envio del formulario).
+  const session = await openSession(admin, {
+    clientId,
+    trigger: "dashboard_setup",
+    promptTexts,
+  });
+  if (!session) {
+    return NextResponse.json({ error: "Ya hay una medicion en curso para esta cuenta." }, { status: 409 });
+  }
 
-  // P0.2-A — preserva el comportamiento previo: esta primera medicion ya descontaba, via
-  // el consumo que vivia dentro de calculateScoreForClient.
-  await consumeTrialAuditForMeasurement(admin, clientId, "dashboard_setup");
+  await Promise.allSettled(prompts.map((p) => runMeasurementForPromptSet(p.id, session.sessionId)));
+  await runAuditForClient(clientId, session.sessionId);
+  await closeSession(admin, session.sessionId);
+  const scoreResult = await calculateScoreForSession(session.sessionId);
+
+  // P0.2-A/B — este flujo SI consume, y ahora de forma idempotente por sesion.
+  await consumeTrialAuditForMeasurement(admin, clientId, "dashboard_setup", session.sessionId);
 
   return NextResponse.json({ scoreTotal: scoreResult.scoreTotal });
 }

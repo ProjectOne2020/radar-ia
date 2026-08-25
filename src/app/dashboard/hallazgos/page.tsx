@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
+import { findingsQueryForSnapshot, loadCurrentSnapshot } from "@/lib/measurement/current-snapshot";
 
 const PILLAR_KEYS: Record<number, string> = {
   1: "1",
@@ -26,10 +27,15 @@ export default async function HallazgosPage() {
   const tCommon = await getTranslations("Common");
   const supabase = await createClient();
 
-  const { data: findings } = await supabase
-    .from("audit_findings")
-    .select("pillar, finding, severity, detail_locked, audited_at")
-    .order("pillar", { ascending: true });
+  // P0.2-B — los hallazgos que se muestran son los de LA SESION del score publicado, no
+  // "todos los del cliente". Desde que run-audit dejo de borrar (para no destruir la
+  // evidencia de los scores anteriores), preguntar por client_id devolveria el acumulado
+  // de todas las auditorias — justo la duplicacion que el DELETE evitaba.
+  const snapshot = await loadCurrentSnapshot(supabase);
+
+  const { data: findings } = snapshot
+    ? await findingsQueryForSnapshot(supabase, snapshot).order("pillar", { ascending: true })
+    : { data: null };
 
   const byPillar = new Map<number, NonNullable<typeof findings>>();
   for (const f of findings ?? []) {

@@ -412,7 +412,9 @@
     "brandNone": "Sem perguntas com seu nome nesta medição.",
     "metricsNote": "Estas duas métricas medem coisas diferentes e nunca são combinadas em média.",
     "appearances": "aparições",
-    "noAppearances": "sem aparições"
+    "noAppearances": "sem aparições",
+    "legacyNotice": "Este resultado foi medido com uma metodologia anterior, portanto não é comparável às medições atuais. Uma nova medição já está a caminho.",
+    "coverageNote": "Com base em {successful} de {expected} consultas concluídas."
   },
   "DashboardHallazgos": {
     "title": "Diagnósticos completos",
@@ -518,6 +520,7 @@
     "trendUp": "Subiu",
     "trendDown": "Caiu",
     "trendFlat": "Sem mudança",
-    "trendNew": "Novo"
+    "trendNew": "Novo",
+    "legacyBadge": "Metodologia anterior · não comparável"
   }
 }

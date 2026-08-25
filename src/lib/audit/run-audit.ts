@@ -20,7 +20,14 @@ export interface AuditSummary {
 
 // M3 — audita la huella digital publica de un cliente (todas sus sedes con sitio propio)
 // e inserta los hallazgos en audit_findings.
-export async function runAuditForClient(clientId: string): Promise<AuditSummary> {
+//
+// P0.2-B — los hallazgos pertenecen ahora a una SESION. Es el cambio que hace reproducible
+// el 72% del score: los pilares 1-5 y 7 salen de esta tabla, y hasta ahora cada auditoria
+// BORRABA la anterior, asi que la evidencia detras de un score publicado se destruia en la
+// siguiente corrida. Ocurrio de verdad: los findings del cliente de032c0a quedaron sellados
+// a las 19:02, despues de sus dos scores de las 16:51 y 17:08 — ninguno de los dos se podia
+// ya explicar.
+export async function runAuditForClient(clientId: string, sessionId: string): Promise<AuditSummary> {
   const admin = createAdminClient();
 
   const [
@@ -239,28 +246,31 @@ export async function runAuditForClient(clientId: string): Promise<AuditSummary>
     }
   }
 
-  // M40 — cada corrida reemplaza el batch anterior del cliente en vez de acumularse:
-  // sin esto, cada re-medicion (cron M11 via upgrade-audit.ts, boton manual, etc.)
-  // dejaba los hallazgos viejos en la tabla, duplicando lo mostrado en
-  // /dashboard/hallazgos y sesgando calculate-score.ts (aggregate() promedia valores
-  // viejos y nuevos juntos en vez de reflejar el estado actual del sitio).
-  const { error: deleteError } = await admin.from("audit_findings").delete().eq("client_id", clientId);
-  if (deleteError) {
-    summary.errors.push(`Borrado de audit_findings previos: ${deleteError.message}`);
-  }
-
+  // P0.2-B — YA NO SE BORRA NADA. El DELETE que vivia aqui (M40) resolvia un problema real
+  // —hallazgos viejos mezclados con nuevos— pero al precio de destruir la evidencia de todo
+  // score anterior. Se sustituye por tres mecanismos, ninguno basado en disciplina:
+  //
+  //   1. Particion por sesion: toda lectura filtra `session_id`, asi que los hallazgos de
+  //      otra auditoria son INALCANZABLES, no "hay que acordarse de excluirlos".
+  //   2. Indice unico (session_id, pillar, finding) + onConflict: re-ejecutar la auditoria
+  //      dentro de la MISMA sesion es idempotente y no puede duplicar. Es el analogo de
+  //      is_canonical para findings.
+  //   3. La vista "actual" se deriva del snapshot publicado, no de "todo lo del cliente".
+  //
+  // Los findings legacy (session_id NULL) quedan fuera de las tres vias, sin borrarse.
   if (allFindings.length > 0) {
     const { error: insertError, count } = await admin
       .from("audit_findings")
-      .insert(
+      .upsert(
         allFindings.map((f) => ({
           client_id: clientId,
+          session_id: sessionId,
           pillar: f.pillar,
           finding: f.finding,
           severity: f.severity,
           detail_locked: f.detail_locked,
         })),
-        { count: "exact" }
+        { onConflict: "session_id,pillar,finding", ignoreDuplicates: true, count: "exact" }
       );
 
     if (insertError) {

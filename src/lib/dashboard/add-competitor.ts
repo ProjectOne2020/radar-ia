@@ -1,7 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runMeasurementForPromptSet } from "@/lib/ai-engines/run-measurement";
 import { runAuditForClient } from "@/lib/audit/run-audit";
-import { calculateScoreForClient } from "@/lib/scoring/calculate-score";
+import { calculateScoreForSession } from "@/lib/scoring/calculate-score";
+import { closeSession, openSession } from "@/lib/measurement/session";
 
 export interface AddCompetitorInput {
   ownerClientId: string;
@@ -82,9 +83,20 @@ export async function addCompetitor(input: AddCompetitorInput): Promise<{ compet
     .insert({ client_id: input.ownerClientId, competitor_client_id: competitor.id });
   if (linkError) throw new Error(`No se pudo enlazar el competidor: ${linkError.message}`);
 
-  await Promise.allSettled(competitorPrompts.map((p) => runMeasurementForPromptSet(p.id)));
-  await runAuditForClient(competitor.id);
-  await calculateScoreForClient(competitor.id);
+  // P0.2-B — el competidor es una fila `clients` interna recien creada; su medicion vive en
+  // su propia sesion, igual que la de cualquier otro. Nunca toca el trial del dueño: el
+  // clientId de esta sesion es el del competidor.
+  const session = await openSession(admin, {
+    clientId: competitor.id,
+    trigger: "competitor_snapshot",
+    promptTexts: ownerPrompts.map((p) => p.prompt_text),
+  });
+  if (!session) throw new Error("No se pudo abrir la sesion de medicion del competidor.");
+
+  await Promise.allSettled(competitorPrompts.map((p) => runMeasurementForPromptSet(p.id, session.sessionId)));
+  await runAuditForClient(competitor.id, session.sessionId);
+  await closeSession(admin, session.sessionId);
+  await calculateScoreForSession(session.sessionId);
 
   return { competitorClientId: competitor.id };
 }

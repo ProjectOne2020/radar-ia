@@ -16,25 +16,27 @@ export async function runOpenAI(promptText: string): Promise<EngineOutcome> {
 
   const model = process.env.OPENAI_MODEL || DEFAULT_MODEL;
 
+  // P0.2-B — la configuracion se declara UNA vez y se usa tanto para la llamada como para
+  // el snapshot que se guarda en el run. Asi no puede derivar de lo que realmente se envio.
+  const requestConfig = {
+    tools: [{ type: "web_search" }],
+    // Forzado por seguridad/consistencia (ver mismo fix en anthropic.ts) — verificado
+    // en vivo que sin esto el modelo a veces decide no buscar por su cuenta.
+    tool_choice: "required",
+    // P0.1 — Tope explicito de salida. Antes no habia ninguno: una respuesta larga podia
+    // multiplicar el costo sin aviso (los tokens de salida son ~6x los de entrada en este
+    // modelo). 1024 es el mismo valor que anthropic.ts ya usaba, elegido para no cambiar
+    // el comportamiento de medicion — las respuestas reales observadas caben de sobra.
+    max_output_tokens: 1024,
+  };
+
   const res = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model,
-      input: promptText,
-      tools: [{ type: "web_search" }],
-      // Forzado por seguridad/consistencia (ver mismo fix en anthropic.ts) — verificado
-      // en vivo que sin esto el modelo a veces decide no buscar por su cuenta.
-      tool_choice: "required",
-      // P0.1 — Tope explicito de salida. Antes no habia ninguno: una respuesta larga podia
-      // multiplicar el costo sin aviso (los tokens de salida son ~6x los de entrada en este
-      // modelo). 1024 es el mismo valor que anthropic.ts ya usaba, elegido para no cambiar
-      // el comportamiento de medicion — las respuestas reales observadas caben de sobra.
-      max_output_tokens: 1024,
-    }),
+    body: JSON.stringify({ model, input: promptText, ...requestConfig }),
   });
 
   if (!res.ok) {
@@ -60,5 +62,15 @@ export async function runOpenAI(promptText: string): Promise<EngineOutcome> {
     .filter((a) => a.type === "url_citation" && a.url)
     .map((a) => ({ url: a.url as string }));
 
-  return { engine: "openai", raw, citations };
+  return {
+    engine: "openai",
+    raw,
+    citations,
+    provider: "openai",
+    modelRequested: model,
+    // El modelo que REALMENTE respondio. `model` puede ser un alias que apunta a otros
+    // pesos con el tiempo; esto es lo unico que permite detectarlo despues.
+    modelResolved: typeof data.model === "string" ? data.model : undefined,
+    requestConfig,
+  };
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { calculateScoreForClient } from "@/lib/scoring/calculate-score";
+import { calculateScoreForSession } from "@/lib/scoring/calculate-score";
 import { requireInternalSecret } from "@/lib/security/internal-secret";
 
 // Disparo manual de M4 para pruebas. Mismo secreto que /api/measure y /api/audit.
@@ -14,13 +14,15 @@ export async function POST(request: Request) {
   if (denied) return denied;
 
   const body = await request.json().catch(() => null);
-  const clientId = body?.clientId;
-  if (!clientId || typeof clientId !== "string") {
-    return NextResponse.json({ error: "clientId requerido" }, { status: 400 });
+  // P0.2-B — se recalcula una SESION, no "un cliente". Un score sin sesion no existe: ya no
+  // hay forma de pedir "el promedio de todo lo que este cliente haya medido alguna vez".
+  const sessionId = body?.sessionId;
+  if (!sessionId || typeof sessionId !== "string") {
+    return NextResponse.json({ error: "sessionId requerido" }, { status: 400 });
   }
 
   try {
-    const result = await calculateScoreForClient(clientId, { isEcommerce: body?.isEcommerce });
+    const result = await calculateScoreForSession(sessionId, { isEcommerce: body?.isEcommerce });
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(

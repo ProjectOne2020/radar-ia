@@ -9,12 +9,19 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
   const clientId = body?.clientId;
+  // P0.2-B — los hallazgos pertenecen a una sesion. Un finding sin sesion seria evidencia
+  // huerfana que ningun score podria explicar, asi que el disparo manual tambien declara
+  // a que sesion contribuye.
+  const sessionId = body?.sessionId;
   if (!clientId || typeof clientId !== "string") {
     return NextResponse.json({ error: "clientId requerido" }, { status: 400 });
   }
+  if (!sessionId || typeof sessionId !== "string") {
+    return NextResponse.json({ error: "sessionId requerido" }, { status: 400 });
+  }
 
   try {
-    const summary = await runAuditForClient(clientId);
+    const summary = await runAuditForClient(clientId, sessionId);
     return NextResponse.json(summary);
   } catch (err) {
     return NextResponse.json(

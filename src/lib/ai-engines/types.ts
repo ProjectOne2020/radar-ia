@@ -37,6 +37,19 @@ export interface EngineRunResult {
   engine: EngineName;
   raw: string;
   citations: Citation[];
+
+  // P0.2-B — Metadatos de reproducibilidad. Opcionales para no romper a ningun adaptador,
+  // pero los tres motores ACTIVOS los rellenan.
+  //
+  // `modelResolved` es el mas importante y el que casi todo el mundo omite: las tres APIs
+  // devuelven en la respuesta el modelo que REALMENTE contesto. Un alias como
+  // "gemini-flash-latest" apunta a pesos distintos con el tiempo, asi que sin este campo el
+  // hecho de que el motor cambiara bajo nuestros pies seria indetectable — y una caida de
+  // score se le atribuiria al cliente en vez de al proveedor.
+  provider?: string;
+  modelRequested?: string;
+  modelResolved?: string;
+  requestConfig?: Record<string, unknown>;
 }
 
 export interface EngineSkipped {
