@@ -9,6 +9,7 @@ import { calculateScoreForSession } from "@/lib/scoring/calculate-score";
 import { consumeTrialAuditForMeasurement } from "@/lib/admin/trial-policy";
 import { closeSession, openSession } from "@/lib/measurement/session";
 import { extractDomain } from "@/lib/ai-engines/classify-domain";
+import { assertHttpUrlFormat } from "@/lib/security/public-url";
 
 const VALID_AXES: Axis[] = ["local", "ecommerce", "app"];
 // Lite (donde cae todo alta self-serve via /registro) mide "5-10 preguntas" segun
@@ -72,6 +73,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Sitio web requerido." }, { status: 400 });
   }
 
+  // Validacion temprana de formato antes de tocar la red — la validacion de red (IP
+  // privada/loopback/metadata) vive en el punto de fetch, en fetchWithLimits.
+  if (websiteUrl) {
+    try {
+      assertHttpUrlFormat(websiteUrl);
+    } catch {
+      return NextResponse.json({ error: "URL de sitio web inválida." }, { status: 400 });
+    }
+  }
   if (websiteUrl && !extractDomain(websiteUrl)) {
     return NextResponse.json({ error: "URL de sitio web inválida." }, { status: 400 });
   }

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addCompetitor } from "@/lib/dashboard/add-competitor";
 import { consumeRateLimit, tooManyRequests } from "@/lib/security/rate-limit";
+import { assertHttpUrlFormat } from "@/lib/security/public-url";
 
 async function getSessionClientId() {
   const supabase = await createClient();
@@ -32,6 +33,19 @@ export async function POST(request: Request) {
   }
   if (competitorName.length > 120 || city.length > 120 || websiteUrl.length > 500) {
     return NextResponse.json({ error: "Alguno de los campos excede el largo permitido." }, { status: 400 });
+  }
+
+  // Validacion temprana de la URL antes de persistirla (antes solo se checaba el largo).
+  // La validacion de red (IP privada/loopback/metadata) vive en el punto de fetch, en
+  // fetchWithLimits — aca se rechaza lo claramente invalido: no parseable, no http(s),
+  // con credenciales embebidas.
+  try {
+    assertHttpUrlFormat(websiteUrl);
+  } catch {
+    return NextResponse.json(
+      { error: "Sitio web inválido. Debe ser una URL http(s) válida." },
+      { status: 400 }
+    );
   }
 
   // Este es el endpoint mas caro del producto: cada alta corre las preguntas activas

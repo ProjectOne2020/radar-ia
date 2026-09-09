@@ -1,3 +1,4 @@
+import { fetchWithLimits, readBodyWithCap } from "@/lib/security/fetch-limits";
 import type { AuditFindingDraft } from "./types";
 
 export interface JsonLdEntity {
@@ -10,14 +11,26 @@ export interface RawHtmlFetch {
   html: string;
 }
 
+// Limites duros del fetch de auditoria (superficie anonima: la URL la introduce un
+// usuario): 15s por salto y 2 MB de HTML. Antes no habia ni timeout ni cap — un host
+// colgado retenia la funcion serverless entera y res.text() cargaba el HTML completo
+// en memoria. fetchWithLimits ademas valida que el host sea publico (SSRF).
+const AUDIT_TIMEOUT_MS = 15_000;
+const AUDIT_MAX_BYTES = 2 * 1024 * 1024;
+
 // Fetch de HTML crudo (no una version pre-procesada) — 02-METODOLOGIA-SCORING.md es
 // explicito en que el HTML renderizado puede diferir del fuente, pero para JSON-LD y
 // robots.txt el codigo fuente crudo es lo que hace falta.
 export async function fetchRawHtml(url: string): Promise<RawHtmlFetch> {
   try {
-    const res = await fetch(url, { headers: { "User-Agent": "RadarIA-Audit/1.0" } });
+    const res = await fetchWithLimits(url, {
+      timeoutMs: AUDIT_TIMEOUT_MS,
+      maxBytes: AUDIT_MAX_BYTES,
+      headers: { "User-Agent": "RadarIA-Audit/1.0" },
+    });
     if (!res.ok) return { fetched: false, html: "" };
-    return { fetched: true, html: await res.text() };
+    const html = await readBodyWithCap(res, AUDIT_MAX_BYTES);
+    return { fetched: true, html };
   } catch {
     return { fetched: false, html: "" };
   }

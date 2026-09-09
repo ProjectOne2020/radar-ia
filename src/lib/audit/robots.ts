@@ -1,3 +1,4 @@
+import { fetchWithLimits, readBodyWithCap } from "@/lib/security/fetch-limits";
 import { AI_CRAWLERS, type AiCrawler, type AuditFindingDraft } from "./types";
 
 interface RobotsRule {
@@ -64,12 +65,21 @@ export interface RobotsAuditResult {
   findings: AuditFindingDraft[];
 }
 
+// Limites duros del fetch de robots.txt (misma superficie anonima que fetchRawHtml):
+// 10s por salto, 1 MB (un robots.txt real es de kilobytes) y validacion SSRF del host.
+const ROBOTS_TIMEOUT_MS = 10_000;
+const ROBOTS_MAX_BYTES = 1024 * 1024;
+
 export async function auditRobotsTxt(websiteUrl: string): Promise<RobotsAuditResult> {
   const robotsUrl = new URL("/robots.txt", websiteUrl).toString();
 
   let raw: string;
   try {
-    const res = await fetch(robotsUrl, { headers: { "User-Agent": "RadarIA-Audit/1.0" } });
+    const res = await fetchWithLimits(robotsUrl, {
+      timeoutMs: ROBOTS_TIMEOUT_MS,
+      maxBytes: ROBOTS_MAX_BYTES,
+      headers: { "User-Agent": "RadarIA-Audit/1.0" },
+    });
     if (!res.ok) {
       // Sin robots.txt = nada bloqueado explicitamente (comportamiento estandar por defecto).
       return {
@@ -85,7 +95,7 @@ export async function auditRobotsTxt(websiteUrl: string): Promise<RobotsAuditRes
         ],
       };
     }
-    raw = await res.text();
+    raw = await readBodyWithCap(res, ROBOTS_MAX_BYTES);
   } catch (err) {
     return {
       fetched: false,

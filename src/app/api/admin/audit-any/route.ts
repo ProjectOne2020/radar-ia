@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminEmail } from "@/lib/admin/is-admin";
 import { runFreeAudit, type AuditAxis } from "@/lib/free-audit/run-free-audit";
 import { extractDomain } from "@/lib/ai-engines/classify-domain";
+import { assertHttpUrlFormat } from "@/lib/security/public-url";
 
 const VALID_AXES: AuditAxis[] = ["local", "ecommerce", "app"];
 
@@ -73,6 +74,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Sitio web requerido." }, { status: 400 });
   }
 
+  // Validacion temprana de formato antes de tocar la red — la validacion de red (IP
+  // privada/loopback/metadata) vive en el punto de fetch, en fetchWithLimits.
+  if (websiteUrl) {
+    try {
+      assertHttpUrlFormat(websiteUrl);
+    } catch {
+      return NextResponse.json({ error: "URL de sitio web inválida." }, { status: 400 });
+    }
+  }
   if (websiteUrl && !extractDomain(websiteUrl)) {
     return NextResponse.json({ error: "URL de sitio web inválida." }, { status: 400 });
   }

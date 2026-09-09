@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { checkFreeAuditRateLimit, getClientIp } from "@/lib/free-audit/rate-limit";
 import { runFreeAudit, type AuditAxis } from "@/lib/free-audit/run-free-audit";
 import { extractDomain } from "@/lib/ai-engines/classify-domain";
+import { assertHttpUrlFormat } from "@/lib/security/public-url";
 
 const VALID_AXES: AuditAxis[] = ["local", "ecommerce", "app"];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -86,6 +87,14 @@ export async function POST(request: Request) {
 
   let domain: string | null = null;
   if (websiteUrl) {
+    // Validacion temprana de formato (protocolo http(s), sin credenciales embebidas) antes
+    // de tocar la red. La validacion de red (IP privada/loopback/metadata) vive en el punto
+    // de fetch, en fetchWithLimits — esto solo adelanta el rechazo de lo claramente invalido.
+    try {
+      assertHttpUrlFormat(websiteUrl);
+    } catch {
+      return NextResponse.json({ error: "URL de sitio web inválida." }, { status: 400 });
+    }
     domain = extractDomain(websiteUrl);
     if (!domain) {
       return NextResponse.json({ error: "URL de sitio web inválida." }, { status: 400 });
