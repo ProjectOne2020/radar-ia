@@ -31,18 +31,20 @@ export default async function AdminHomePage() {
     { data: activeSubs },
     { count: freeAuditsCount },
     { data: subscribedClientIds },
-    { data: recentScores },
+    { data: scoresByDay },
     { data: activeTrialGrants },
   ] = await Promise.all([
     admin.from("clients").select("id, plan, country, niche, verification_status, onboarding_type"),
     admin.from("subscriptions").select("client_id, plan, status, clients(currency)").eq("status", "active"),
     admin.from("free_audits").select("id", { count: "exact", head: true }),
     admin.from("subscriptions").select("client_id"),
-    admin
-      .from("ai_visibility_scores")
-      .select("calculated_at")
-      .order("calculated_at", { ascending: false })
-      .limit(1000),
+    // Agrega POR DIA en la base, no trae filas individuales: con measurement_sessions
+    // (P0.2-B) cada re-medicion produce un snapshot nuevo, asi que el volumen de
+    // ai_visibility_scores crece de forma sostenida con la base de clientes. Un
+    // `.limit(1000)` en JS (lo que habia antes) se hubiera comido los dias mas antiguos
+    // del rango en cuanto el volumen superara ~71 mediciones/dia -- mismo defecto que M42
+    // (question_bank_coverage), aqui resuelto igual: agregacion en Postgres.
+    admin.rpc("admin_scores_by_day", { days_back: 14 }),
     admin.from("trial_grants").select("client_id").eq("active", true),
   ]);
 
@@ -121,11 +123,9 @@ export default async function AdminHomePage() {
     days.push({ key, label: d.toLocaleDateString("es", { day: "2-digit", month: "2-digit" }), value: 0 });
   }
   const dayIndex = new Map(days.map((d, i) => [d.key, i]));
-  for (const s of recentScores ?? []) {
-    if (!s.calculated_at) continue;
-    const key = s.calculated_at.slice(0, 10);
-    const idx = dayIndex.get(key);
-    if (idx !== undefined) days[idx].value += 1;
+  for (const row of scoresByDay ?? []) {
+    const idx = dayIndex.get(row.day);
+    if (idx !== undefined) days[idx].value = Number(row.count);
   }
 
   return (

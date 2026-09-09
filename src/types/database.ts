@@ -1103,6 +1103,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_scores_by_day: {
+        Args: { days_back?: number }
+        Returns: { count: number; day: string }[]
+      }
       consume_trial_audit_for_session: {
         Args: { p_client_id: string; p_session_id: string }
         Returns: string
