@@ -191,6 +191,30 @@
       linear-gradient(90deg, rgba(155, 163, 196, 0.06) 1px, transparent 1px);
     background-size: 32px 32px;
   }
+
+  /*
+    rd-mesh — glow de fondo para secciones hero/autoridad (M22, sep 2026).
+    Tres radiales suaves (primary/secondary/accent) sobre --color-paper, la
+    misma paleta de marca que ya existe en tokens — no introduce color nuevo,
+    solo lo difunde como atmosfera en vez de bloques solidos. Inspirado en el
+    lenguaje visual de herramientas de "AI visibility" (Ahrefs/Trendos/Omnia)
+    pero manteniendo la base oscura + radios de precision del sistema propio
+    en vez de copiar su modo claro/burbujas. `isolate` en el contenedor que lo
+    usa evita que el glow se filtre a hermanos.
+  */
+  .rd-mesh {
+    background:
+      radial-gradient(ellipse 900px 480px at 12% -10%, rgba(99, 91, 255, 0.24), transparent 60%),
+      radial-gradient(ellipse 760px 520px at 108% 12%, rgba(0, 212, 255, 0.16), transparent 55%),
+      radial-gradient(ellipse 640px 420px at 50% 118%, rgba(139, 92, 246, 0.14), transparent 60%);
+  }
+
+  .rd-gradient-text {
+    background: linear-gradient(100deg, var(--color-signal-strong), var(--color-primary) 55%, var(--color-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

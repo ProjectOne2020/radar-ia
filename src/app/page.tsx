@@ -74,19 +74,21 @@ export default async function Home() {
       <JsonLd data={faqSchema} />
       <SiteHeader />
       <main>
-        {/* HERO — pregunta + evidencia real del producto (no ilustracion) */}
-        <section className="border-b border-border">
-          <Container className="grid gap-12 py-14 sm:py-20 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:py-28">
+        {/* HERO — pregunta + evidencia real del producto (no ilustracion).
+            rd-mesh (M22): glow de marca en vez de bloque solido, mismo
+            lenguaje que "AI visibility checker" de la competencia (Ahrefs/
+            Trendos/Omnia) pero sobre la base oscura + radios de precision
+            propios en vez de su modo claro/burbujas — ver globals.css. */}
+        <section className="relative isolate overflow-hidden border-b border-border rd-mesh">
+          <Container className="grid gap-12 py-16 sm:py-24 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:py-32">
             <div>
-              <p className="mb-4 font-mono text-xs uppercase tracking-[0.14em] text-signal-strong">
-                {t("tagline")}
-              </p>
-              <h1 className="text-[2.05rem] leading-[1.14] sm:text-5xl lg:text-[3.25rem]">
+              <Badge tone="signal">{t("tagline")}</Badge>
+              <h1 className="mt-5 text-[2.1rem] leading-[1.12] sm:text-5xl lg:text-[3.4rem]">
                 {t("hookQuestion")}
               </h1>
               <p className="mt-5 max-w-[46ch] text-lg text-text-secondary">{t("hookSub")}</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <ButtonLink href="/auditoria-gratis" size="lg">
+                <ButtonLink href="/auditoria-gratis" size="lg" className="rd-glow-primary">
                   {t("ctaAudit")}
                 </ButtonLink>
                 <ButtonLink href="/precios" variant="secondary" size="lg">
@@ -101,7 +103,11 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="rounded-lg border border-border bg-paper-raised p-6 shadow-md sm:p-7 rd-grid-bg">
+            <div className="relative rounded-lg border border-border-strong bg-paper-raised p-6 shadow-lg sm:p-7 rd-grid-bg">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-signal to-transparent"
+              />
               <div className="flex justify-center">
                 <RadarNetwork className="h-44 w-44 sm:h-52 sm:w-52" />
               </div>
@@ -137,20 +143,30 @@ export default async function Home() {
           </Container>
         </section>
 
-        {/* PROCESO — deteccion -> evidencia -> accion, no una grilla de "features" */}
+        {/* PROCESO — deteccion -> evidencia -> accion, no una grilla de "features".
+            Pasos como tarjetas-instrumento (numero en chip mono + borde que se
+            ilumina en signal) en vez de una simple regla superior — mismo
+            lenguaje "panel de medicion" que el demo del hero. */}
         <section className="border-b border-border bg-surface">
-          <Container className="py-14 sm:py-20">
+          <Container className="py-16 sm:py-24">
             <h2 className="text-2xl sm:text-[1.75rem]">{t("processTitle")}</h2>
-            <p className="mt-3 max-w-[64ch] text-text-secondary">{t("whatWeDoBody")}</p>
+            <p className="mt-4 max-w-[64ch] text-text-secondary">{t("whatWeDoBody")}</p>
 
-            <ol className="mt-10 grid gap-8 sm:grid-cols-3">
+            <ol className="mt-10 grid gap-5 sm:grid-cols-3">
               {steps.map((step, i) => (
-                <li key={step.title} className="border-t-2 border-ink pt-4">
-                  <span className="font-mono text-xs text-text-muted">
+                <li
+                  key={step.title}
+                  className="group relative overflow-hidden rounded-md border border-border bg-paper-raised p-5 transition-colors duration-[var(--duration-micro)] hover:border-signal"
+                >
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-instrument border border-border-strong font-mono text-xs text-signal-strong">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mt-2 text-lg font-semibold text-ink">{step.title}</h3>
+                  <h3 className="mt-4 text-lg font-semibold text-ink">{step.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-text-secondary">{step.body}</p>
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 bg-signal transition-transform duration-[var(--duration-reveal)] group-hover:scale-x-100"
+                  />
                 </li>
               ))}
             </ol>
@@ -164,21 +180,28 @@ export default async function Home() {
           </Container>
         </section>
 
-        {/* GARANTIA — declaracion de confianza explicita, no letra chica */}
+        {/* GARANTIA — declaracion de confianza explicita, no letra chica.
+            Glow signal en el borde del Alert en vez de solo el borde plano,
+            para que la garantia lea como la afirmacion mas fuerte de la
+            pagina, no como un aviso legal. */}
         <section className="border-b border-border">
-          <Container narrow className="py-14 sm:py-20">
+          <Container narrow className="py-16 sm:py-24">
             <h2 className="text-2xl sm:text-[1.75rem]">{t("guaranteeTitle")}</h2>
-            <Alert tone="signal" className="mt-6">
+            <Alert tone="signal" className="mt-6 rd-glow-signal">
               {t("guaranteeBody")}
             </Alert>
           </Container>
         </section>
 
-        {/* PARA QUIEN — los 3 ejes como un solo sistema */}
-        <section>
-          <Container className="py-14 sm:py-20">
+        {/* PARA QUIEN — los 3 ejes como un solo sistema. rd-mesh muy tenue de
+            fondo (isolate para no filtrarse a las secciones vecinas) para que
+            la pagina completa respire el mismo "glow de marca" del hero, sin
+            repetirlo a la misma intensidad. */}
+        <section className="relative isolate overflow-hidden">
+          <div aria-hidden className="absolute inset-0 rd-mesh opacity-40" />
+          <Container className="py-16 sm:py-24">
             <h2 className="text-2xl sm:text-[1.75rem]">{t("forWhomTitle")}</h2>
-            <p className="mt-3 max-w-[64ch] text-text-secondary">{t("forWhomBody")}</p>
+            <p className="mt-4 max-w-[64ch] text-text-secondary">{t("forWhomBody")}</p>
             <p className="mt-6 font-mono text-xs uppercase tracking-wider text-text-muted">
               {t("forWhomExamplesLabel")}
             </p>
@@ -202,11 +225,11 @@ export default async function Home() {
         {/* PREGUNTAS FRECUENTES — dogfooding del pilar 5 (contenido de respuesta
             directa) sobre la marca misma, con JSON-LD FAQPage a juego */}
         <section className="border-t border-border bg-surface">
-          <Container narrow className="py-14 sm:py-20">
+          <Container narrow className="py-16 sm:py-24">
             <h2 className="text-2xl sm:text-[1.75rem]">{t("faqTitle")}</h2>
-            <div className="mt-8 flex flex-col gap-8">
+            <div className="mt-8 flex flex-col divide-y divide-border border-t border-border">
               {faqs.map((faq) => (
-                <div key={faq.q}>
+                <div key={faq.q} className="py-6 first:pt-0">
                   <h3 className="text-base font-semibold text-ink">{faq.q}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-text-secondary">{faq.a}</p>
                 </div>
