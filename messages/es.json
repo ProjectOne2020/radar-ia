@@ -22,7 +22,11 @@
     "agencies": "Agencias",
     "enterprise": "Enterprise",
     "terms": "Términos y condiciones",
-    "privacy": "Tratamiento de datos"
+    "privacy": "Tratamiento de datos",
+    "queEsGeo": "¿Qué es GEO?",
+    "comoAparecerChatGPT": "Cómo aparecer en ChatGPT",
+    "vsMentio": "Radar IA vs Mentio",
+    "cuantoCuestaIA": "Precio del mercado"
   },
   "Terminos": {
     "title": "Términos y condiciones",
@@ -141,7 +145,9 @@
     "faq2A": "Corremos las preguntas reales que tus clientes hacen en ChatGPT, Claude, Gemini y Perplexity sobre tu rubro y ciudad, te mostramos si te mencionaron y con qué fuente, y te damos un plan priorizado de qué corregir primero, con seguimiento para ver si tu score sube.",
     "faq3Q": "¿Qué garantiza Radar IA?",
     "faq4Q": "¿Cuánto cuesta Radar IA?",
-    "faq4A": "La auditoría inicial es gratis. Los planes pagados (Lite, Plus, Pro) tienen un costo de configuración inicial y una cuota mensual que se muestran en tu moneda local antes de pagar — el plan Enterprise tiene precio a medida, cotizado directamente contigo."
+    "faq4A": "La auditoría inicial es gratis. Los planes pagados (Lite, Plus, Pro) tienen un costo de configuración inicial y una cuota mensual que se muestran en tu moneda local antes de pagar — el plan Enterprise tiene precio a medida, cotizado directamente contigo.",
+    "faq5Q": "¿Esto es un timo o funciona de verdad?",
+    "faq5A": "Ni una cosa ni la otra al extremo: no es magia, pero tampoco es humo. Nadie —ni nosotros, ni OpenAI, ni Google— puede garantizarte que una IA te recomiende, así que desconfía de quien te lo prometa. Lo que sí es real es la medición: corremos las preguntas de verdad contra los motores de verdad y te mostramos la respuesta exacta, con fuente, no una estimación. De ahí en adelante, mejorar depende del trabajo real sobre tu negocio."
   },
   "ComoFunciona": {
     "title": "Cómo funciona Radar IA",
@@ -522,5 +528,57 @@
     "trendFlat": "Sin cambio",
     "trendNew": "Nuevo",
     "legacyBadge": "Metodología anterior · no comparable"
+  },
+  "QueEsGeo": {
+    "title": "¿Qué es GEO? Optimización para motores de IA, explicado simple",
+    "hook": "GEO, AEO, \"visibilidad en IA\" — términos nuevos para un problema real: que ChatGPT, Claude, Gemini o Perplexity mencionen tu negocio cuando alguien les pregunta algo de tu rubro.",
+    "q1": "¿Qué significa GEO (Generative Engine Optimization)?",
+    "a1": "GEO es el conjunto de prácticas para que tu negocio sea la fuente que una IA cita o recomienda cuando alguien le pregunta algo relacionado con tu rubro. A diferencia del SEO tradicional, que busca aparecer en una lista de enlaces, el GEO busca que tu negocio sea la respuesta misma, no un resultado más entre diez.",
+    "q2": "¿GEO y AEO son lo mismo?",
+    "a2": "Se usan casi como sinónimos. AEO (Answer Engine Optimization) pone el énfasis en que la IA responda directamente citando tu negocio sin que nadie tenga que hacer clic en nada; GEO es el término más general para optimizar contenido de cara a motores generativos. En la práctica, las técnicas se solapan casi por completo.",
+    "q3": "¿Esto reemplaza al SEO que ya conozco?",
+    "a3": "No, lo complementa. Los motores de IA generativa —sobre todo ChatGPT— se apoyan fuertemente en el índice de buscadores tradicionales para responder con información actualizada, así que seguir posicionando bien ahí sigue importando. Lo nuevo es que ahora también hay que pensar en contenido de respuesta directa, datos estructurados y en que otros sitios te mencionen, no solo en palabras clave.",
+    "q4": "¿Cómo mide Radar IA esto en la práctica?",
+    "a4": "Con 8 pilares reales, no una sola métrica: desde la identidad y consistencia de tu negocio hasta si los motores de IA de verdad te mencionan cuando les preguntamos en tu nombre — con evidencia real de cada respuesta, no una suposición.",
+    "ctaHow": "Ver los 8 pilares en detalle"
+  },
+  "ComoAparecerChatGPT": {
+    "title": "Cómo hacer que ChatGPT recomiende tu negocio",
+    "hook": "La pregunta que más nos hacen. La respuesta corta: no hay atajos pagados, pero sí factores reales que puedes trabajar.",
+    "q1": "¿Puedo pagar para que ChatGPT me recomiende?",
+    "a1": "No. A diferencia de la publicidad en buscadores o redes sociales, no existe un esquema pagado para aparecer en las respuestas orgánicas de ChatGPT, Claude o Gemini — ninguna empresa, incluida la nuestra, puede garantizarte una mención a cambio de dinero. Lo que sí existe es trabajar los factores reales que esos motores usan para decidir a quién mencionar.",
+    "q2": "¿Qué factores usan los motores de IA para decidir a quién mencionar?",
+    "a2": "En resumen: que tu identidad sea consistente en toda la web, que tu sitio tenga datos estructurados (schema) que una IA pueda leer sin ambigüedad, que tengas contenido que responda preguntas reales de forma directa, y que otros sitios (reseñas, directorios, prensa, foros) te mencionen — cuanto más se repita tu nombre junto a las palabras clave de tu rubro, mejor.",
+    "q3": "¿Necesito estar indexado en Google o en Bing?",
+    "a3": "Los dos importan, pero Bing en particular: ChatGPT usa el índice de Bing para sus búsquedas web en tiempo real, así que si tu sitio no está indexado ahí, es más difícil que aparezcas citado — muchos negocios en LATAM nunca verificaron su sitio en Bing Webmaster Tools simplemente porque nadie se los dijo.",
+    "q4": "¿Cuánto tarda en notarse un cambio?",
+    "a4": "Honestamente: no hay una cifra fija, y desconfía de quien te la dé. Los motores de IA generativa no publican cómo ni cuándo actualizan lo que \"saben\" sobre una marca. Lo que sí puedes medir de inmediato son los factores controlables — la aparición real en las respuestas es la consecuencia de mejorarlos, no algo que se fuerce directamente.",
+    "ctaAudit": "Auditar mi negocio gratis"
+  },
+  "RadarVsMentio": {
+    "title": "Radar IA vs Mentio: ¿cuál conviene para medir visibilidad en IA en LATAM?",
+    "hook": "Comparación honesta, no una tabla inflada. Investigamos a Mentio en su propio sitio para esta comparación.",
+    "q1": "¿Qué es Mentio?",
+    "a1": "Es una herramienta que también genera preguntas en idioma nativo por sector y mercado, y mide menciones de marca en varios modelos de IA (ChatGPT, Claude, Gemini, Grok, Perplexity). Tiene un plan gratuito limitado y planes pagados desde aproximadamente US$29 al mes (precio de referencia al momento de escribir esto — puede cambiar, confírmalo en su sitio).",
+    "q2": "¿En qué se diferencia Radar IA?",
+    "a2": "Radar IA está armado específicamente para negocios de LATAM: precios que ves en tu propia moneda al pagar (no solo en dólares), un banco con decenas de miles de preguntas reales escritas país por país y ciudad por ciudad —no traducciones genéricas de plantillas en inglés—, y un sistema de 8 pilares que audita también los factores técnicos y de contenido controlables, no solo la medición de menciones.",
+    "q3": "¿Cuál tiene más países o idiomas cubiertos?",
+    "a3": "No tenemos datos verificados sobre la cobertura exacta de países de Mentio, así que no vamos a inventar una comparación ahí. Lo que sí podemos decirte con certeza: Radar IA está construyendo activamente, país por país, un banco de preguntas nativas en español y portugués para todo Latinoamérica — no una traducción genérica de un set en inglés.",
+    "q4": "¿Puedo usar los dos a la vez?",
+    "a4": "Sí, no son excluyentes. Nuestra recomendación honesta: prueba primero la auditoría gratuita de Radar IA — es la única forma de comparar con datos reales de tu propio negocio en vez de solo comparar funciones en una tabla como esta.",
+    "ctaAudit": "Probar la auditoría gratis de Radar IA"
+  },
+  "CuantoCuestaIA": {
+    "title": "¿Cuánto cuesta medir la visibilidad de una marca en IA?",
+    "hook": "Un panorama honesto de precios del mercado en 2026, y dónde encaja Radar IA.",
+    "q1": "¿Cuánto cobran las herramientas de visibilidad en IA?",
+    "a1": "Varía mucho según la herramienta: hay opciones desde unos US$20-29 al mes hasta US$250-295 al mes para las orientadas a empresas grandes, con algunas cobrando por créditos o consultas en vez de una tarifa fija. Son precios de referencia del mercado internacional al momento de escribir esto — confirma siempre en el sitio de cada proveedor, porque cambian seguido.",
+    "q2": "¿Por qué la mayoría cobra en dólares?",
+    "a2": "Porque son herramientas hechas por y para el mercado angloparlante de Estados Unidos y Europa. Eso significa que, tal como están, un negocio en México o Colombia paga la misma tarifa en dólares que una empresa en Nueva York, sin ningún ajuste por poder adquisitivo local.",
+    "q3": "¿Cómo funciona el precio de Radar IA?",
+    "a3": "Se muestra en tu moneda local al momento de pagar, con conversión automática — no hay una tarifa fija en dólares escondida detrás. La auditoría inicial siempre es gratis y no pide tarjeta.",
+    "q4": "¿Vale la pena pagar por esto todavía?",
+    "a4": "Depende de cuánto dependan tus clientes de preguntarle a una IA antes de decidir. Si tu rubro y ciudad ya tienen volumen real de ese tipo de consultas, medirlo te da evidencia concreta en vez de estar a ciegas; si no estás seguro, la auditoría gratuita te lo muestra sin compromiso antes de que pagues nada.",
+    "ctaPricing": "Ver planes de Radar IA"
   }
 }

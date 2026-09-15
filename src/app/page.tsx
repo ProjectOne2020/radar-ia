@@ -57,6 +57,7 @@ export default async function Home() {
     { q: t("faq2Q"), a: t("faq2A") },
     { q: t("faq3Q"), a: t("guaranteeBody") },
     { q: t("faq4Q"), a: t("faq4A") },
+    { q: t("faq5Q"), a: t("faq5A") },
   ];
 
   const faqSchema = {

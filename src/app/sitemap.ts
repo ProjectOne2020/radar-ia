@@ -15,6 +15,12 @@ const PUBLIC_PATHS = [
   "/terminos",
   "/privacidad",
   "/login",
+  // M28 — paginas de respuesta directa (dogfooding pilar 5), cada una su propia URL
+  // indexable en vez de vivir solo como parrafos dentro de otra pagina.
+  "/que-es-geo",
+  "/como-aparecer-en-chatgpt",
+  "/radar-ia-vs-mentio",
+  "/cuanto-cuesta-medir-visibilidad-ia",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

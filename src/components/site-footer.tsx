@@ -20,32 +20,52 @@ export function SiteFooter() {
           <p className="mt-1 text-sm text-text-muted">{f("tagline")}</p>
         </div>
 
-        <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-text-secondary">
-          <Link href="/como-funciona" className="hover:text-ink">
-            {t("howItWorks")}
-          </Link>
-          <Link href="/precios" className="hover:text-ink">
-            {t("pricing")}
-          </Link>
-          <Link href="/auditoria-gratis" className="hover:text-ink">
-            {t("audit")}
-          </Link>
-          <Link href="/listado" className="hover:text-ink">
-            {f("listado")}
-          </Link>
-          <Link href="/agencias" className="hover:text-ink">
-            {f("agencies")}
-          </Link>
-          <Link href="/empresas" className="hover:text-ink">
-            {f("enterprise")}
-          </Link>
-          <Link href="/terminos" className="hover:text-ink">
-            {f("terms")}
-          </Link>
-          <Link href="/privacidad" className="hover:text-ink">
-            {f("privacy")}
-          </Link>
-        </nav>
+        <div className="flex flex-col gap-3">
+          <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-text-secondary">
+            <Link href="/como-funciona" className="hover:text-ink">
+              {t("howItWorks")}
+            </Link>
+            <Link href="/precios" className="hover:text-ink">
+              {t("pricing")}
+            </Link>
+            <Link href="/auditoria-gratis" className="hover:text-ink">
+              {t("audit")}
+            </Link>
+            <Link href="/listado" className="hover:text-ink">
+              {f("listado")}
+            </Link>
+            <Link href="/agencias" className="hover:text-ink">
+              {f("agencies")}
+            </Link>
+            <Link href="/empresas" className="hover:text-ink">
+              {f("enterprise")}
+            </Link>
+            <Link href="/terminos" className="hover:text-ink">
+              {f("terms")}
+            </Link>
+            <Link href="/privacidad" className="hover:text-ink">
+              {f("privacy")}
+            </Link>
+          </nav>
+
+          {/* M28 — paginas de respuesta directa (dogfooding pilar 5): fila aparte para no
+              saturar la nav principal, pero enlazadas desde todo el sitio via el footer
+              compartido. */}
+          <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-text-muted">
+            <Link href="/que-es-geo" className="hover:text-ink">
+              {f("queEsGeo")}
+            </Link>
+            <Link href="/como-aparecer-en-chatgpt" className="hover:text-ink">
+              {f("comoAparecerChatGPT")}
+            </Link>
+            <Link href="/radar-ia-vs-mentio" className="hover:text-ink">
+              {f("vsMentio")}
+            </Link>
+            <Link href="/cuanto-cuesta-medir-visibilidad-ia" className="hover:text-ink">
+              {f("cuantoCuestaIA")}
+            </Link>
+          </nav>
+        </div>
       </Container>
     </footer>
   );
