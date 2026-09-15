@@ -1,7 +1,6 @@
 // Union de motores para los que existe un adaptador en el repo. NO es la lista de lo que
-// el producto mide: eso lo define ACTIVE_ENGINES mas abajo, que hoy son TRES motores
-// reales — OpenAI, Anthropic y Gemini. `perplexity` sigue en la union porque su adaptador
-// existe (perplexity.ts), pero no se llama ni se anuncia en ninguna pantalla.
+// el producto mide: eso lo define ACTIVE_ENGINES mas abajo — hoy son CUATRO motores reales:
+// OpenAI, Anthropic, Gemini y Perplexity (P0.3, sep 2026).
 //
 // bing_copilot deliberadamente NO esta aqui: la API de citas reales de Copilot (AI
 // Performance) no tiene acceso programatico (confirmado en vivo, agosto 2026). Preferimos
@@ -11,17 +10,21 @@ export type EngineName = "openai" | "anthropic" | "gemini" | "perplexity";
 
 // P0.1 — Motores ACTIVOS del producto, en un solo lugar.
 //
-// Decision del fundador (Fase 0): la base de medicion es de 3 motores. Perplexity queda
-// fuera por dos razones documentadas: (1) `PERPLEXITY_API_KEY` nunca tuvo credito, y
-// (2) el endpoint que implementa perplexity.ts (`/chat/completions`, modelo `sonar`) esta
-// deprecado por el proveedor con soporte hasta el 27 de septiembre de 2026 — migrarlo
-// ahora seria trabajo tirado.
+// P0.3 (sep 2026) — Perplexity vuelve a la base de medicion: el fundador confirmo credito
+// cargado en PERPLEXITY_API_KEY, y perplexity.ts se reescribio contra la Agent API (no la
+// Chat Completions deprecada el 27/09/2026) — ver el comentario de cabecera de ese archivo
+// para el detalle tecnico completo de la migracion.
 //
 // Esta constante es la fuente unica: la usa el motor de medicion para decidir a quien
 // llamar, y debe usarse para cualquier texto de cara al cliente que enumere motores. Asi
 // es imposible que una pantalla prometa un motor que no corre (el defecto que la auditoria
-// encontro en Terminos y en la pantalla de escaneo).
-export const ACTIVE_ENGINES = ["openai", "anthropic", "gemini"] as const satisfies readonly EngineName[];
+// encontro en Terminos y en la pantalla de escaneo, antes de P0.1).
+export const ACTIVE_ENGINES = [
+  "openai",
+  "anthropic",
+  "gemini",
+  "perplexity",
+] as const satisfies readonly EngineName[];
 
 export type ActiveEngine = (typeof ACTIVE_ENGINES)[number];
 

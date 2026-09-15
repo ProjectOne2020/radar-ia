@@ -5,9 +5,9 @@ const CENTER = SIZE / 2;
 const RADIUS = CENTER - 46;
 
 // P0.1 — Los nodos se GENERAN desde AI_ENGINES (que a su vez deriva de ACTIVE_ENGINES),
-// en vez de estar cableados a mano. Antes eran 4 posiciones fijas, una de ellas
-// Perplexity — un motor que nunca corrio. Ahora el hero no puede prometer un motor que el
-// backend no consulta: si la lista activa cambia, el visual se reacomoda solo.
+// en vez de estar cableados a mano. Asi el hero no puede prometer un motor que el backend
+// no consulta: si la lista activa cambia (P0.3 le sumo Perplexity de vuelta, una vez que
+// perplexity.ts se re-escribio contra la Agent API vigente), el visual se reacomoda solo.
 const NODES = AI_ENGINES.map((engine, i) => {
   // Se reparten en circulo empezando arriba, para que cualquier cantidad quede equilibrada.
   const angle = -Math.PI / 2 + (i * 2 * Math.PI) / AI_ENGINES.length;

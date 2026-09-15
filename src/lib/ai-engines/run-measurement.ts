@@ -3,9 +3,7 @@ import type { Json } from "@/types/database";
 import { runOpenAI } from "./openai";
 import { runAnthropic } from "./anthropic";
 import { runGemini } from "./gemini";
-// NOTA: `./perplexity` NO se importa a proposito. El codigo se conserva intacto para una
-// futura migracion a la Agent API (la Chat Completions que implementa queda sin soporte el
-// 27/09/2026), pero el motor esta fuera de ACTIVE_ENGINES y no debe llamarse.
+import { runPerplexity } from "./perplexity";
 import { classifyMention } from "./classify";
 import { extractDomain, isClientDomain, isDirectoryDomain } from "./classify-domain";
 import { ACTIVE_ENGINES, isSkipped, type ActiveEngine, type EngineOutcome } from "./types";
@@ -35,7 +33,7 @@ export interface MeasurementSummary {
 }
 
 // M2 — corre un prompt_set contra los motores ACTIVOS del pilar 8 (OpenAI, Anthropic,
-// Gemini) y persiste tracking_runs + citations.
+// Gemini, Perplexity) y persiste tracking_runs + citations.
 //
 // P0.1 — cada run guarda `prompt_class` y `mention_method`: sin eso la compuerta de TAO no
 // puede distinguir una medicion limpia de una contaminada.
@@ -158,6 +156,7 @@ export async function runMeasurementForPromptSet(
     openai: runOpenAI,
     anthropic: runAnthropic,
     gemini: runGemini,
+    perplexity: runPerplexity,
   };
 
   const settled = await Promise.allSettled(pending.map((engine) => callers[engine](prompt.prompt_text)));
