@@ -54,8 +54,14 @@ export async function POST(request: Request) {
   if (!country || typeof country !== "string") {
     return NextResponse.json({ error: "País requerido." }, { status: 400 });
   }
-  if (!phoneWhatsapp || !/^\+\d{8,15}$/.test(phoneWhatsapp)) {
-    return NextResponse.json({ error: "Teléfono de WhatsApp inválido (usa formato +52...)." }, { status: 400 });
+  // Ver comentario equivalente en /api/free-audit/request/route.ts: el regex nunca fue
+  // exclusivo de Mexico, solo no toleraba espacios en el numero.
+  const normalizedPhone = typeof phoneWhatsapp === "string" ? phoneWhatsapp.replace(/[\s\-().]/g, "") : "";
+  if (!normalizedPhone || !/^\+\d{8,15}$/.test(normalizedPhone)) {
+    return NextResponse.json(
+      { error: "Teléfono de WhatsApp inválido — usa formato internacional, ej. +52, +57, +54... seguido del número." },
+      { status: 400 },
+    );
   }
   if (email !== undefined && email !== null && (typeof email !== "string" || (email && !EMAIL_RE.test(email)))) {
     return NextResponse.json({ error: "Correo inválido." }, { status: 400 });
@@ -74,28 +80,26 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-  } else if (!websiteUrl || typeof websiteUrl !== "string") {
-    return NextResponse.json({ error: "Sitio web requerido." }, { status: 400 });
   }
+  // Ver comentario equivalente en /api/free-audit/request: el sitio web tambien es
+  // opcional aqui para local/ecommerce.
 
   let domain: string | null = null;
-  if (websiteUrl) {
+  if (websiteUrl && typeof websiteUrl === "string") {
     domain = extractDomain(websiteUrl);
     if (!domain) {
       return NextResponse.json({ error: "URL de sitio web inválida." }, { status: 400 });
     }
   } else if (isNativeApp) {
     domain = `app:${iosAppId || androidPackageId}`;
-  }
-
-  if (!domain) {
-    return NextResponse.json({ error: "URL de sitio web inválida." }, { status: 400 });
+  } else {
+    domain = `nosite:${normalizedPhone}`;
   }
 
   const ip = getClientIp(request);
 
   try {
-    const rateLimit = await checkFreeAuditRateLimit(domain, phoneWhatsapp, ip);
+    const rateLimit = await checkFreeAuditRateLimit(domain, normalizedPhone, ip);
     if (!rateLimit.allowed) {
       return NextResponse.json({ error: rateLimit.reason }, { status: 429 });
     }
@@ -103,7 +107,7 @@ export async function POST(request: Request) {
     const admin = createAdminClient();
     const { data: freeAudit, error: freeAuditError } = await admin
       .from("free_audits")
-      .insert({ domain, phone_whatsapp: phoneWhatsapp, ip_address: ip, whatsapp_verified: false })
+      .insert({ domain, phone_whatsapp: normalizedPhone, ip_address: ip, whatsapp_verified: false })
       .select("id")
       .single();
 
@@ -118,7 +122,7 @@ export async function POST(request: Request) {
       city: city.trim(),
       country,
       websiteUrl: websiteUrl || undefined,
-      phoneWhatsapp,
+      phoneWhatsapp: normalizedPhone,
       email: email || undefined,
       publicListingOptIn: publicListingOptIn === true,
       partnerId: partner.id,

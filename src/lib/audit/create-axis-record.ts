@@ -49,8 +49,8 @@ export async function createAxisRecord(
       name: input.businessName,
       city: input.city,
       phone: input.phoneWhatsapp ?? null,
-      website_url: input.websiteUrl,
-      has_own_site: true,
+      website_url: input.websiteUrl ?? null,
+      has_own_site: Boolean(input.websiteUrl),
     });
     if (error) return { error: `No se pudo registrar la sede: ${error.message}` };
   }

@@ -65,13 +65,13 @@ export interface FreeAuditRunResult {
 // auditoria gratis"), asi que ya no puede usarse para decidir la tabla a crear.
 export async function runFreeAudit(input: FreeAuditInput): Promise<FreeAuditRunResult> {
   const admin = createAdminClient();
-  const isApp = input.axis === "app";
 
-  // websiteUrl es obligatorio para local/e-commerce (domain debe resolver), pero opcional
-  // para "app" (una app nativa puede no tener landing propia, solo fichas de tienda) — si
-  // se provee, igual debe ser una URL valida.
+  // websiteUrl es opcional en todos los ejes (negocios sin pagina web deben poder pedir
+  // la auditoria) — si se provee, igual debe ser una URL valida. `domain` queda null
+  // cuando no hay sitio; el score de M3 simplemente omite la parte tecnica del sitio
+  // (ver run-audit.ts: itera solo sobre locations/sku_catalogs con website_url presente).
   const domain = input.websiteUrl ? extractDomain(input.websiteUrl) : null;
-  if (!domain && (!isApp || input.websiteUrl)) throw new Error("URL de sitio inválida.");
+  if (!domain && input.websiteUrl) throw new Error("URL de sitio inválida.");
 
   const { data: client, error: clientError } = await admin
     .from("clients")

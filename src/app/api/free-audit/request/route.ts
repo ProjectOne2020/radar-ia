@@ -58,10 +58,21 @@ export async function POST(request: Request) {
   if (!country || typeof country !== "string") {
     return NextResponse.json({ error: "País requerido." }, { status: 400 });
   }
-  if (!phoneWhatsapp || !/^\+\d{8,15}$/.test(phoneWhatsapp)) {
-    return NextResponse.json({ error: "Teléfono de WhatsApp inválido (usa formato +52...)." }, { status: 400 });
+  // El regex nunca estuvo limitado a Mexico (+CODIGO + 8-15 digitos acepta cualquier pais) —
+  // el bug real es que no toleraba espacios, y la gente los escribe naturalmente al tipear un
+  // numero ("+57 312 3742397"). Se normaliza aqui (unica fuente de verdad: todo lo que se
+  // guarda y se usa despues —free_audits, clients, rate-limit dedup— usa este valor limpio,
+  // nunca el crudo del formulario) en vez de solo relajar la validacion y guardar el crudo.
+  const normalizedPhone = typeof phoneWhatsapp === "string" ? phoneWhatsapp.replace(/[\s\-().]/g, "") : "";
+  if (!normalizedPhone || !/^\+\d{8,15}$/.test(normalizedPhone)) {
+    return NextResponse.json(
+      { error: "Teléfono de WhatsApp inválido — usa formato internacional, ej. +52, +57, +54... seguido del número." },
+      { status: 400 },
+    );
   }
-  if (!email || typeof email !== "string" || email.length > 254 || !EMAIL_RE.test(email)) {
+  // M?? — el correo pasa a ser opcional (pedido explicito: "si no tiene web o no tiene
+  // correo debe igual dejar seguir con la auditoria"), pero si se provee debe ser valido.
+  if (email !== undefined && email !== null && email !== "" && (typeof email !== "string" || email.length > 254 || !EMAIL_RE.test(email))) {
     return NextResponse.json({ error: "Correo inválido." }, { status: 400 });
   }
   if (publicListingOptIn !== undefined && typeof publicListingOptIn !== "boolean") {
@@ -81,9 +92,10 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-  } else if (!websiteUrl || typeof websiteUrl !== "string") {
-    return NextResponse.json({ error: "Sitio web requerido." }, { status: 400 });
   }
+  // M?? — el sitio web pasa a ser opcional para local/ecommerce tambien (mismo pedido:
+  // negocios sin pagina web deben poder completar la auditoria). Sin sitio, se usa una
+  // clave de dedup sintetica analoga a la de app nativa sin landing.
 
   let domain: string | null = null;
   if (websiteUrl) {
@@ -103,16 +115,16 @@ export async function POST(request: Request) {
     // Sin sitio: se usa el identificador de tienda como clave de dedup/anti-abuso,
     // namespaced para no colisionar nunca con un dominio real.
     domain = `app:${iosAppId || androidPackageId}`;
-  }
-
-  if (!domain) {
-    return NextResponse.json({ error: "URL de sitio web inválida." }, { status: 400 });
+  } else {
+    // Local/ecommerce sin sitio web: clave de dedup sintetica basada en el telefono
+    // (unico dato de contacto siempre presente), namespaced igual que el caso de app.
+    domain = `nosite:${normalizedPhone}`;
   }
 
   const ip = getClientIp(request);
 
   try {
-    const rateLimit = await checkFreeAuditRateLimit(domain, phoneWhatsapp, ip);
+    const rateLimit = await checkFreeAuditRateLimit(domain, normalizedPhone, ip);
     if (!rateLimit.allowed) {
       return NextResponse.json({ error: rateLimit.reason }, { status: 429 });
     }
@@ -120,7 +132,7 @@ export async function POST(request: Request) {
     const admin = createAdminClient();
     const { data: freeAudit, error: freeAuditError } = await admin
       .from("free_audits")
-      .insert({ domain, phone_whatsapp: phoneWhatsapp, ip_address: ip, whatsapp_verified: false })
+      .insert({ domain, phone_whatsapp: normalizedPhone, ip_address: ip, whatsapp_verified: false })
       .select("id")
       .single();
 
@@ -135,8 +147,8 @@ export async function POST(request: Request) {
       city: city.trim(),
       country,
       websiteUrl: websiteUrl || undefined,
-      phoneWhatsapp,
-      email: email.trim(),
+      phoneWhatsapp: normalizedPhone,
+      email: typeof email === "string" && email.trim() ? email.trim() : undefined,
       publicListingOptIn: publicListingOptIn === true,
       iosAppId: iosAppId || undefined,
       androidPackageId: androidPackageId || undefined,

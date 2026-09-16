@@ -59,8 +59,9 @@ export default function AuditoriaGratisPage() {
   const stepValid = [
     form.businessName.trim().length > 0 && form.niche.trim().length > 0,
     form.city.trim().length > 0 && form.country.trim().length > 0,
-    isNativeApp || form.websiteUrl.trim().length > 0,
-    form.phoneWhatsapp.trim().length > 0 && EMAIL_RE.test(form.email.trim()),
+    true,
+    form.phoneWhatsapp.trim().length > 0 &&
+      (form.email.trim().length === 0 || EMAIL_RE.test(form.email.trim())),
   ];
 
   const stepTitles = [t("stepBusiness"), t("stepLocation"), t("stepPresence"), t("stepContact")];
@@ -248,7 +249,6 @@ export default function AuditoriaGratisPage() {
                     <Label htmlFor="websiteUrl">{isApp ? t("websiteUrlApp") : t("websiteUrl")}</Label>
                     <Input
                       id="websiteUrl"
-                      required={!isNativeApp}
                       autoFocus={!isApp}
                       type="url"
                       placeholder={t("websiteUrlPlaceholder")}
@@ -277,7 +277,6 @@ export default function AuditoriaGratisPage() {
                     <Input
                       id="email"
                       type="email"
-                      required
                       placeholder={t("emailPlaceholder")}
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
