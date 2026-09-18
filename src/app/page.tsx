@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScoreRing } from "@/components/radar/score-ring";
 import { PillarSignal, type PillarStatus } from "@/components/radar/pillar-signal";
 import { RadarNetwork } from "@/components/radar/radar-network";
+import { CoverageConstellation } from "@/components/radar/coverage-constellation";
 import { JsonLd } from "@/components/seo/json-ld";
 
 // Landing publica de "/". Estructura: pregunta -> deteccion -> evidencia -> accion
@@ -36,7 +37,6 @@ const EXAMPLE_SCORE = 51;
 export default async function Home() {
   const t = await getTranslations("Home");
   const p = await getTranslations("Pillars");
-  const n = await getTranslations("Niches");
   const c = await getTranslations("Common");
   const notMeasuredLabel = await getTranslations("Dashboard").then((d) => d("notMeasured"));
 
@@ -46,7 +46,20 @@ export default async function Home() {
     { title: t("step3Title"), body: t("step3Body") },
   ];
 
-  const niches = ["dental", "estetica", "inmobiliaria", "ecommerce", "app"] as const;
+  const niches = [
+    { key: "dental", title: t("forWhomDentalTitle"), body: t("forWhomDentalBody") },
+    { key: "estetica", title: t("forWhomEsteticaTitle"), body: t("forWhomEsteticaBody") },
+    {
+      key: "inmobiliaria",
+      title: t("forWhomInmobiliariaTitle"),
+      body: t("forWhomInmobiliariaBody"),
+    },
+    { key: "ecommerce", title: t("forWhomEcommerceTitle"), body: t("forWhomEcommerceBody") },
+    { key: "app", title: t("forWhomAppTitle"), body: t("forWhomAppBody") },
+  ] as const;
+  // Ciclo de tonos de marca para las tarjetas de "para quien" — mismos tokens del
+  // sistema de Badge (nunca colores sueltos); 5 tonos para 5 nichos, sin repetir.
+  const nicheTones = ["signal", "observed", "warning", "good", "critical"] as const;
 
   // Barra de credibilidad (cifras reales, no proyectadas — ver nota de no fabricar
   // metricas en 01-CONTEXTO-NEGOCIO.md). Verificado contra Supabase antes de escribir
@@ -155,29 +168,38 @@ export default async function Home() {
           </Container>
         </section>
 
-        {/* CIFRAS — barra de credibilidad justo debajo del hero, primera cosa que ve
-            un visitante nuevo despues de la promesa. Numeros grandes + etiqueta simple,
-            sin jerga — cada cifra es real y verificable (no proyectada, ver nota en
-            01-CONTEXTO-NEGOCIO.md sobre no fabricar metricas). */}
-        <section className="border-b border-border bg-surface">
-          <Container className="py-10 sm:py-14">
-            <p className="text-center font-mono text-xs uppercase tracking-wider text-text-muted">
-              {t("statsTitle")}
-            </p>
-            <dl className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-4">
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <dt className="sr-only">{stat.label}</dt>
-                  <dd className="font-mono text-2xl font-semibold text-signal-strong sm:text-3xl">
-                    {stat.value}
-                  </dd>
-                  <p className="mt-1 text-xs leading-snug text-text-secondary sm:text-sm">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-6 text-center text-xs text-text-muted">{t("statsNote")}</p>
+        {/* CIFRAS — banda de alto contraste con peso visual real: fondo mas oscuro que
+            sus vecinas (surface-sunken) + rd-mesh completo (no atenuado) + la
+            constelacion de 18 paises como imagen, mismo tratamiento de "instrumento
+            de precision" que el panel del hero pero a escala de seccion completa.
+            Grid simetrico imagen/cifras en desktop, apilado en mobile. */}
+        <section className="relative isolate overflow-hidden border-b border-border bg-surface-sunken rd-mesh">
+          <Container className="grid gap-10 py-16 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div className="flex justify-center lg:order-2">
+              <CoverageConstellation
+                centerLabel={t("brand")}
+                className="h-72 w-72 sm:h-80 sm:w-80 lg:h-96 lg:w-96"
+              />
+            </div>
+            <div className="lg:order-1">
+              <p className="font-mono text-xs uppercase tracking-wider text-signal-strong">
+                {t("statsTitle")}
+              </p>
+              <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8">
+                {stats.map((stat) => (
+                  <div key={stat.label}>
+                    <dt className="sr-only">{stat.label}</dt>
+                    <dd className="font-mono text-3xl font-semibold text-ink sm:text-4xl">
+                      {stat.value}
+                    </dd>
+                    <p className="mt-1.5 text-sm leading-snug text-text-secondary">
+                      {stat.label}
+                    </p>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-8 max-w-[46ch] text-sm text-text-muted">{t("statsNote")}</p>
+            </div>
           </Container>
         </section>
 
@@ -255,29 +277,42 @@ export default async function Home() {
           </Container>
         </section>
 
-        {/* PARA QUIEN — los 3 ejes como un solo sistema. rd-mesh muy tenue de
-            fondo (isolate para no filtrarse a las secciones vecinas) para que
-            la pagina completa respire el mismo "glow de marca" del hero, sin
-            repetirlo a la misma intensidad. */}
-        <section className="relative isolate overflow-hidden">
-          <div aria-hidden className="absolute inset-0 rd-mesh opacity-40" />
+        {/* PARA QUIEN — antes era una lista plana de badges; ahora cada nicho es su
+            propia tarjeta-instrumento con el argumento de venta especifico de ese
+            rubro (de 01-CONTEXTO-NEGOCIO.md seccion 5: dental/estetica tienen señal
+            limpia, inmobiliaria compite con portales, e-commerce con marketplaces,
+            apps es el eje mas nuevo). rd-mesh a intensidad completa + tono de marca
+            distinto por tarjeta para que la seccion pese tanto como la de cifras. */}
+        <section className="relative isolate overflow-hidden border-b border-border">
+          <div aria-hidden className="absolute inset-0 rd-mesh opacity-70" />
           <Container className="py-16 sm:py-24">
             <h2 className="text-2xl sm:text-[1.75rem]">{t("forWhomTitle")}</h2>
-            <p className="mt-4 max-w-[64ch] text-text-secondary">{t("forWhomBody")}</p>
-            <p className="mt-6 font-mono text-xs uppercase tracking-wider text-text-muted">
-              {t("forWhomExamplesLabel")}
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {niches.map((key) => (
-                <Badge key={key} tone="neutral">
-                  {n(key)}
-                </Badge>
-              ))}
+            <p className="mt-4 max-w-[64ch] text-lg text-text-secondary">{t("forWhomBody")}</p>
+
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {niches.map((niche, i) => {
+                const tone = nicheTones[i % nicheTones.length];
+                return (
+                  <div
+                    key={niche.key}
+                    className="group relative overflow-hidden rounded-md border border-border bg-paper-raised p-6 transition-colors duration-[var(--duration-micro)] hover:border-signal"
+                  >
+                    <Badge tone={tone}>{niche.title}</Badge>
+                    <p className="mt-4 text-sm leading-relaxed text-text-secondary">
+                      {niche.body}
+                    </p>
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 bg-signal transition-transform duration-[var(--duration-reveal)] group-hover:scale-x-100"
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             <Link
               href="/listado"
-              className="mt-8 inline-block text-sm font-medium text-text underline underline-offset-2"
+              className="mt-10 inline-block text-sm font-medium text-text underline underline-offset-2"
             >
               {t("listadoCta")}
             </Link>
