@@ -175,7 +175,11 @@
     "faq6Q": "¿De dónde salen los datos de Radar IA?",
     "faq6A": "Corremos preguntas reales, escritas en el idioma nativo de cada país (no traducidas), contra las APIs oficiales de OpenAI, Anthropic, Google y Perplexity — no contra una herramienta de terceros revendida. El banco completo cubre más de 116,000 preguntas en los 18 países de LATAM.",
     "faq7Q": "¿En qué países de LATAM funciona Radar IA?",
-    "faq7A": "Cubrimos los 18 países de LATAM: México, Colombia, Argentina, Chile, Perú, Panamá, Venezuela, Ecuador, Honduras, Guatemala, El Salvador, Costa Rica, Bolivia, Paraguay, Uruguay, República Dominicana, Puerto Rico y Brasil — con preguntas nativas en español o portugués según el país, no traducciones."
+    "faq7A": "Cubrimos los 18 países de LATAM: México, Colombia, Argentina, Chile, Perú, Panamá, Venezuela, Ecuador, Honduras, Guatemala, El Salvador, Costa Rica, Bolivia, Paraguay, Uruguay, República Dominicana, Puerto Rico y Brasil — con preguntas nativas en español o portugués según el país, no traducciones.",
+    "faq8Q": "¿En qué se diferencia Radar IA de otras herramientas de visibilidad en IA?",
+    "faq8A": "A diferencia de herramientas genéricas o revendidas, Radar IA está construido específicamente para LATAM: preguntas nativas por país (no traducciones), precios en 6 monedas locales, soporte en español y portugués, y un motor propio que llama directamente a las APIs de OpenAI, Anthropic, Google y Perplexity. No es una versión adaptada de un producto pensado para otro mercado.",
+    "faq9Q": "¿Qué tan grande es la base de preguntas de Radar IA?",
+    "faq9A": "Nuestro banco propio cubre más de 116,000 preguntas reales, repartidas en 43 rubros de negocio y los 18 países de LATAM — cada una escrita en el español o portugués nativo de su país, con sus ciudades, instituciones y modismos locales. Es la base de datos con la que auditamos y medimos a cada cliente, no una muestra ni una plantilla genérica."
   },
   "ComoFunciona": {
     "title": "Cómo funciona Radar IA",

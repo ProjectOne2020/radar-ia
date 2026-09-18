@@ -175,7 +175,11 @@
     "faq6Q": "Where does Radar IA's data come from?",
     "faq6A": "We run real questions, written in each country's native language (never translated), against the official OpenAI, Anthropic, Google, and Perplexity APIs — not a resold third-party tool. The full bank covers more than 116,000 questions across all 18 LATAM countries.",
     "faq7Q": "Which LATAM countries does Radar IA cover?",
-    "faq7A": "We cover all 18 LATAM countries: Mexico, Colombia, Argentina, Chile, Peru, Panama, Venezuela, Ecuador, Honduras, Guatemala, El Salvador, Costa Rica, Bolivia, Paraguay, Uruguay, Dominican Republic, Puerto Rico, and Brazil — with native Spanish or Portuguese questions per country, not translations."
+    "faq7A": "We cover all 18 LATAM countries: Mexico, Colombia, Argentina, Chile, Peru, Panama, Venezuela, Ecuador, Honduras, Guatemala, El Salvador, Costa Rica, Bolivia, Paraguay, Uruguay, Dominican Republic, Puerto Rico, and Brazil — with native Spanish or Portuguese questions per country, not translations.",
+    "faq8Q": "What sets Radar IA apart from other AI-visibility tools?",
+    "faq8A": "Unlike generic or resold tools, Radar IA is built specifically for LATAM: native per-country questions (not translations), pricing in 6 local currencies, Spanish and Portuguese support, and a proprietary engine that calls the OpenAI, Anthropic, Google, and Perplexity APIs directly. It is not an adapted version of a product built for a different market.",
+    "faq9Q": "How large is Radar IA's question bank?",
+    "faq9A": "Our proprietary bank covers over 116,000 real questions, spanning 43 business niches across all 18 LATAM countries — each written in the native Spanish or Portuguese of its country, with local cities, institutions, and idioms. This is the actual dataset we use to audit and measure every client, not a sample or a generic template."
   },
   "ComoFunciona": {
     "title": "How Radar IA works",

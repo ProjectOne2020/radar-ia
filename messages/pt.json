@@ -175,7 +175,11 @@
     "faq6Q": "De onde vêm os dados do Radar IA?",
     "faq6A": "Rodamos perguntas reais, escritas no idioma nativo de cada país (não traduzidas), contra as APIs oficiais da OpenAI, Anthropic, Google e Perplexity — não contra uma ferramenta de terceiros revendida. O banco completo cobre mais de 116.000 perguntas nos 18 países da América Latina.",
     "faq7Q": "Em quais países da América Latina o Radar IA funciona?",
-    "faq7A": "Cobrimos os 18 países da América Latina: México, Colômbia, Argentina, Chile, Peru, Panamá, Venezuela, Equador, Honduras, Guatemala, El Salvador, Costa Rica, Bolívia, Paraguai, Uruguai, República Dominicana, Porto Rico e Brasil — com perguntas nativas em espanhol ou português conforme o país, não traduções."
+    "faq7A": "Cobrimos os 18 países da América Latina: México, Colômbia, Argentina, Chile, Peru, Panamá, Venezuela, Equador, Honduras, Guatemala, El Salvador, Costa Rica, Bolívia, Paraguai, Uruguai, República Dominicana, Porto Rico e Brasil — com perguntas nativas em espanhol ou português conforme o país, não traduções.",
+    "faq8Q": "Em que o Radar IA se diferencia de outras ferramentas de visibilidade em IA?",
+    "faq8A": "Diferente de ferramentas genéricas ou revendidas, o Radar IA foi construído especificamente para a América Latina: perguntas nativas por país (não traduções), preços em 6 moedas locais, suporte em espanhol e português, e um motor próprio que chama diretamente as APIs da OpenAI, Anthropic, Google e Perplexity. Não é uma versão adaptada de um produto pensado para outro mercado.",
+    "faq9Q": "Qual o tamanho da base de perguntas do Radar IA?",
+    "faq9A": "Nosso banco próprio cobre mais de 116.000 perguntas reais, distribuídas em 43 segmentos de negócio e nos 18 países da América Latina — cada uma escrita no espanhol ou português nativo de seu país, com suas cidades, instituições e expressões locais. É a base de dados com a qual auditamos e medimos cada cliente, não uma amostra nem um modelo genérico."
   },
   "ComoFunciona": {
     "title": "Como funciona o Radar IA",

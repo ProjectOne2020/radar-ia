@@ -83,6 +83,8 @@ export default async function Home() {
     { q: t("faq5Q"), a: t("faq5A") },
     { q: t("faq6Q"), a: t("faq6A") },
     { q: t("faq7Q"), a: t("faq7A") },
+    { q: t("faq8Q"), a: t("faq8A") },
+    { q: t("faq9Q"), a: t("faq9A") },
   ];
 
   const faqSchema = {
