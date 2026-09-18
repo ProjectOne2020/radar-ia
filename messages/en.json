@@ -173,7 +173,9 @@
     "faq5Q": "Is this a scam, or does it actually work?",
     "faq5A": "Neither extreme: it's not magic, but it's not smoke and mirrors either. Nobody — not us, not OpenAI, not Google — can guarantee an AI will recommend you, so be wary of anyone who promises that. What's real is the measurement: we run the actual questions against the actual engines and show you the exact answer, with its source, not an estimate. From there, improving depends on real work on your business.",
     "faq6Q": "Where does Radar IA's data come from?",
-    "faq6A": "We run real questions, written in each country's native language (never translated), against the official OpenAI, Anthropic, Google, and Perplexity APIs — not a resold third-party tool. The full bank covers more than 116,000 questions across all 18 LATAM countries."
+    "faq6A": "We run real questions, written in each country's native language (never translated), against the official OpenAI, Anthropic, Google, and Perplexity APIs — not a resold third-party tool. The full bank covers more than 116,000 questions across all 18 LATAM countries.",
+    "faq7Q": "Which LATAM countries does Radar IA cover?",
+    "faq7A": "We cover all 18 LATAM countries: Mexico, Colombia, Argentina, Chile, Peru, Panama, Venezuela, Ecuador, Honduras, Guatemala, El Salvador, Costa Rica, Bolivia, Paraguay, Uruguay, Dominican Republic, Puerto Rico, and Brazil — with native Spanish or Portuguese questions per country, not translations."
   },
   "ComoFunciona": {
     "title": "How Radar IA works",
