@@ -141,7 +141,7 @@
     "stat3Label": "países de LATAM cubiertos",
     "stat4Value": "4",
     "stat4Label": "motores de IA medidos en vivo, vía API directa",
-    "statsNote": "Así es Radar IA completo — no lanzamos hasta tener todo esto cargado y en uso.",
+    "statsNote": "El alcance completo de Radar IA — el banco propio con el que auditamos y medimos cada negocio.",
     "engineTitle": "Un motor propio, no una herramienta revendida",
     "engineBody": "Llamamos directamente a las APIs oficiales de OpenAI, Anthropic, Google y Perplexity — no revendemos ni reempaquetamos otra herramienta de terceros. El dato que ves es la respuesta real del motor, con su fuente, no una estimación ni un promedio de mercado.",
     "bankTitle": "Preguntas reales por país, no traducciones",
