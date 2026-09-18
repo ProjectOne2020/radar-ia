@@ -287,7 +287,7 @@ export default async function Home() {
             apps es el eje mas nuevo). rd-mesh a intensidad completa + tono de marca
             distinto por tarjeta para que la seccion pese tanto como la de cifras. */}
         <section className="relative isolate overflow-hidden border-b border-border">
-          <div aria-hidden className="absolute inset-0 rd-mesh opacity-70" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 rd-mesh opacity-70" />
           <Container className="py-16 sm:py-24">
             <h2 className="text-2xl sm:text-[1.75rem]">{t("forWhomTitle")}</h2>
             <p className="mt-4 max-w-[64ch] text-lg text-text-secondary">{t("forWhomBody")}</p>
