@@ -314,7 +314,7 @@ export default async function Home() {
             </div>
 
             <Link
-              href="/listado"
+              href="/rubros"
               className="mt-10 inline-block text-sm font-medium text-text underline underline-offset-2"
             >
               {t("listadoCta")}
