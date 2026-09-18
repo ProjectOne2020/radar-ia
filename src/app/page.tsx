@@ -48,6 +48,16 @@ export default async function Home() {
 
   const niches = ["dental", "estetica", "inmobiliaria", "ecommerce", "app"] as const;
 
+  // Barra de credibilidad (cifras reales, no proyectadas — ver nota de no fabricar
+  // metricas en 01-CONTEXTO-NEGOCIO.md). Verificado contra Supabase antes de escribir
+  // estos valores; actualizar aqui si el banco de preguntas crece de forma material.
+  const stats = [
+    { value: t("stat1Value"), label: t("stat1Label") },
+    { value: t("stat2Value"), label: t("stat2Label") },
+    { value: t("stat3Value"), label: t("stat3Label") },
+    { value: t("stat4Value"), label: t("stat4Label") },
+  ];
+
   // Dogfooding (05-MARKETING-DISTRIBUCION.md 2.4): mismo contenido de respuesta directa
   // que el pilar 5 audita en los clientes, aplicado al propio sitio — preguntas reales
   // que alguien le haria a una IA sobre el producto, con respuestas que reusan el texto
@@ -58,6 +68,7 @@ export default async function Home() {
     { q: t("faq3Q"), a: t("guaranteeBody") },
     { q: t("faq4Q"), a: t("faq4A") },
     { q: t("faq5Q"), a: t("faq5A") },
+    { q: t("faq6Q"), a: t("faq6A") },
   ];
 
   const faqSchema = {
@@ -144,6 +155,32 @@ export default async function Home() {
           </Container>
         </section>
 
+        {/* CIFRAS — barra de credibilidad justo debajo del hero, primera cosa que ve
+            un visitante nuevo despues de la promesa. Numeros grandes + etiqueta simple,
+            sin jerga — cada cifra es real y verificable (no proyectada, ver nota en
+            01-CONTEXTO-NEGOCIO.md sobre no fabricar metricas). */}
+        <section className="border-b border-border bg-surface">
+          <Container className="py-10 sm:py-14">
+            <p className="text-center font-mono text-xs uppercase tracking-wider text-text-muted">
+              {t("statsTitle")}
+            </p>
+            <dl className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-4">
+              {stats.map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <dt className="sr-only">{stat.label}</dt>
+                  <dd className="font-mono text-2xl font-semibold text-signal-strong sm:text-3xl">
+                    {stat.value}
+                  </dd>
+                  <p className="mt-1 text-xs leading-snug text-text-secondary sm:text-sm">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-6 text-center text-xs text-text-muted">{t("statsNote")}</p>
+          </Container>
+        </section>
+
         {/* PROCESO — deteccion -> evidencia -> accion, no una grilla de "features".
             Pasos como tarjetas-instrumento (numero en chip mono + borde que se
             ilumina en signal) en vez de una simple regla superior — mismo
@@ -191,6 +228,30 @@ export default async function Home() {
             <Alert tone="signal" className="mt-6 rd-glow-signal">
               {t("guaranteeBody")}
             </Alert>
+          </Container>
+        </section>
+
+        {/* POR QUE EL DATO ES DISTINTO — motor propio (llamadas directas a las 4 APIs,
+            sin revender otra herramienta) + banco de preguntas nativo por pais (sin
+            plantillas traducidas). Credibilidad concreta, no adjetivos vacios como
+            "el mejor" o "el mas completo". Dos tarjetas simetricas, mismo lenguaje
+            visual de "tarjeta-instrumento" que la seccion de proceso. */}
+        <section className="border-b border-border bg-surface">
+          <Container className="py-16 sm:py-24">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="rounded-md border border-border bg-paper-raised p-6">
+                <h3 className="text-lg font-semibold text-ink">{t("engineTitle")}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                  {t("engineBody")}
+                </p>
+              </div>
+              <div className="rounded-md border border-border bg-paper-raised p-6">
+                <h3 className="text-lg font-semibold text-ink">{t("bankTitle")}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                  {t("bankBody")}
+                </p>
+              </div>
+            </div>
           </Container>
         </section>
 
