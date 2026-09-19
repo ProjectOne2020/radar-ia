@@ -21,9 +21,14 @@ const COLOR = {
   signalStrong: "#34e0ff",
 };
 
-const DIAGRAM_SIZE = 460;
+// Layout centrado (no lado-a-lado): WhatsApp/Facebook/Telegram recortan la
+// miniatura a un cuadrado centrado sobre esta imagen de 1200x630 — un diseno
+// con texto a la izquierda y diagrama a la derecha pierde la mitad de cada
+// lado en ese recorte. Todo el contenido importante va centrado horizontal
+// y verticalmente, dentro del cuadrado central ~630x630 que sobrevive el recorte.
+const DIAGRAM_SIZE = 380;
 const CENTER = DIAGRAM_SIZE / 2;
-const RADIUS = 175;
+const RADIUS = 145;
 
 // Mismo calculo de angulos que NODES en radar-network.tsx: empieza arriba y
 // reparte en circulo — con 4 motores caen exactamente en los 4 puntos
@@ -46,51 +51,25 @@ export default async function Image() {
           width: "100%",
           height: "100%",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 80px",
+          justifyContent: "center",
           backgroundColor: COLOR.surfaceSunken,
-          backgroundImage: `radial-gradient(ellipse 900px 600px at 0% 0%, rgba(99, 91, 255, 0.28), transparent 60%), radial-gradient(ellipse 700px 500px at 100% 100%, rgba(0, 212, 255, 0.18), transparent 55%)`,
+          backgroundImage: `radial-gradient(ellipse 800px 600px at 50% 0%, rgba(99, 91, 255, 0.28), transparent 60%), radial-gradient(ellipse 800px 500px at 50% 100%, rgba(0, 212, 255, 0.16), transparent 55%)`,
           fontFamily: "sans-serif",
         }}
       >
-        {/* Marca + propuesta */}
-        <div style={{ display: "flex", flexDirection: "column", maxWidth: 520 }}>
-          <div
-            style={{
-              display: "flex",
-              fontSize: 30,
-              fontWeight: 700,
-              letterSpacing: "-0.01em",
-              color: COLOR.ink,
-              marginBottom: 24,
-            }}
-          >
-            Radar IA
-          </div>
-          <div
-            style={{
-              display: "flex",
-              fontSize: 52,
-              fontWeight: 700,
-              lineHeight: 1.15,
-              letterSpacing: "-0.02em",
-              color: COLOR.ink,
-              marginBottom: 24,
-            }}
-          >
-            Visibilidad en IA para negocios LATAM
-          </div>
-          <div
-            style={{
-              display: "flex",
-              fontSize: 26,
-              lineHeight: 1.4,
-              color: COLOR.textSecondary,
-            }}
-          >
-            ¿Recomiendan ChatGPT, Claude, Gemini y Perplexity tu negocio?
-          </div>
+        <div
+          style={{
+            display: "flex",
+            fontSize: 34,
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+            color: COLOR.ink,
+            marginBottom: 28,
+          }}
+        >
+          Radar IA
         </div>
 
         {/* Diagrama: negocio en el centro conectado a los 4 motores de IA */}
@@ -130,9 +109,9 @@ export default async function Image() {
               key={node.engine}
               style={{
                 position: "absolute",
-                left: node.x - 60,
-                top: node.y - 26,
-                width: 120,
+                left: node.x - 55,
+                top: node.y - 22,
+                width: 110,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -141,8 +120,8 @@ export default async function Image() {
               <div
                 style={{
                   display: "flex",
-                  width: 52,
-                  height: 52,
+                  width: 44,
+                  height: 44,
                   borderRadius: 999,
                   backgroundColor: COLOR.paperRaised,
                   border: `2px solid ${COLOR.signalStrong}`,
@@ -151,8 +130,8 @@ export default async function Image() {
               <div
                 style={{
                   display: "flex",
-                  marginTop: 10,
-                  fontSize: 20,
+                  marginTop: 8,
+                  fontSize: 18,
                   fontWeight: 600,
                   color: COLOR.ink,
                 }}
@@ -166,15 +145,30 @@ export default async function Image() {
           <div
             style={{
               position: "absolute",
-              left: CENTER - 46,
-              top: CENTER - 46,
-              width: 92,
-              height: 92,
+              left: CENTER - 38,
+              top: CENTER - 38,
+              width: 76,
+              height: 76,
               borderRadius: 999,
               backgroundColor: COLOR.primary,
               display: "flex",
             }}
           />
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            marginTop: 28,
+            fontSize: 30,
+            fontWeight: 700,
+            lineHeight: 1.2,
+            letterSpacing: "-0.01em",
+            color: COLOR.ink,
+            textAlign: "center",
+          }}
+        >
+          Visibilidad en IA para negocios LATAM
         </div>
       </div>
     ),
