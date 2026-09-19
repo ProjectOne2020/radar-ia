@@ -21,9 +21,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin", "latin-ext"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://radar.omniflowcreator.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Radar IA",
   description: "Visibilidad en IA para negocios LATAM",
+  // M?? — sin esto, compartir el link (WhatsApp, Facebook, LinkedIn) mostraba solo
+  // el favicon como miniatura, sin titulo/descripcion/imagen. opengraph-image.tsx
+  // genera la imagen (diagrama de los 4 motores de IA, mismo lenguaje visual que el
+  // hero); openGraph/twitter aqui solo agregan el resto de las meta tags que la
+  // convencion de archivo no cubre.
+  openGraph: {
+    title: "Radar IA",
+    description: "Visibilidad en IA para negocios LATAM",
+    url: SITE_URL,
+    siteName: "Radar IA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Radar IA",
+    description: "Visibilidad en IA para negocios LATAM",
+  },
   other: {
     // Verificacion de propiedad del sitio en Bing Webmaster Tools (necesaria para
     // obtener la API key de BING_WEBMASTER_API_KEY usada en M2/M3).
