@@ -7,6 +7,7 @@ import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { TrendBarChart } from "@/components/admin/dist-bar-chart";
 import RemeasureButton from "./remeasure-button";
+import CancelSubscriptionButton from "./cancel-subscription-button";
 
 const SEVERITY_TONE = { critical: "critical", warning: "warning", info: "neutral" } as const;
 
@@ -103,21 +104,28 @@ export default async function AdminClienteDetailPage({ params }: { params: Promi
             Suscripción
           </h2>
           {sub ? (
-            <dl className="flex flex-col gap-2 text-sm">
-              <Row label="Estado">
-                <Badge tone={sub.status === "active" ? "good" : sub.status === "past_due" ? "warning" : "neutral"}>
-                  {sub.status}
-                </Badge>
-              </Row>
-              <Row label="Plan"><span className="capitalize">{sub.plan}</span></Row>
-              <Row label="Setup pagado">{sub.setup_fee_paid ? "sí" : "no"}</Row>
-              <Row label="Vence">
-                {sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString("es") : "—"}
-              </Row>
-              <Row label="Stripe subscription">
-                <span className="font-mono text-xs break-all">{sub.stripe_subscription_id ?? "—"}</span>
-              </Row>
-            </dl>
+            <>
+              <dl className="flex flex-col gap-2 text-sm">
+                <Row label="Estado">
+                  <Badge tone={sub.status === "active" ? "good" : sub.status === "past_due" ? "warning" : "neutral"}>
+                    {sub.status}
+                  </Badge>
+                </Row>
+                <Row label="Plan"><span className="capitalize">{sub.plan}</span></Row>
+                <Row label="Setup pagado">{sub.setup_fee_paid ? "sí" : "no"}</Row>
+                <Row label="Vence">
+                  {sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString("es") : "—"}
+                </Row>
+                <Row label="Stripe subscription">
+                  <span className="font-mono text-xs break-all">{sub.stripe_subscription_id ?? "—"}</span>
+                </Row>
+              </dl>
+              {sub.status !== "canceled" && sub.stripe_subscription_id && (
+                <div className="mt-1 flex justify-end border-t border-border pt-3">
+                  <CancelSubscriptionButton clientId={client.id} />
+                </div>
+              )}
+            </>
           ) : (
             <p className="text-sm text-text-muted">Sin suscripción.</p>
           )}
