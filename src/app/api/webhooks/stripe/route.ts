@@ -105,7 +105,10 @@ export async function POST(request: Request) {
 // subscriptions.status en nuestro esquema es 'active' | 'past_due' | 'canceled'
 // (03-ARQUITECTURA-TECNICA.md) — Stripe tiene mas estados (trialing, incomplete, etc.),
 // se mapean a los 3 documentados en vez de inventar valores nuevos.
-function mapStripeStatus(stripeStatus: Stripe.Subscription.Status): string {
+// Exportada (ademas de POST) para poder probarla de verdad en route.test.ts: es pura y
+// determinista, sin tocar Stripe ni Supabase — Next.js ignora exports que no son un
+// metodo HTTP reconocido, asi que esto no cambia el comportamiento de la ruta.
+export function mapStripeStatus(stripeStatus: Stripe.Subscription.Status): string {
   switch (stripeStatus) {
     case "active":
     case "trialing":
@@ -119,7 +122,7 @@ function mapStripeStatus(stripeStatus: Stripe.Subscription.Status): string {
   }
 }
 
-function getCurrentPeriodEnd(sub: Stripe.Subscription): string | null {
+export function getCurrentPeriodEnd(sub: Stripe.Subscription): string | null {
   const item = sub.items.data[0];
   const periodEnd = item?.current_period_end;
   return periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
