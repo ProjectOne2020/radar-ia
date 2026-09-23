@@ -169,7 +169,7 @@
     "faq2A": "We run the real questions your customers ask ChatGPT, Claude, Gemini, and Perplexity about your industry and city, show you whether you were mentioned and which source was cited, and give you a prioritized plan of what to fix first, with follow-up to see if your score goes up.",
     "faq3Q": "What does Radar IA guarantee?",
     "faq4Q": "How much does Radar IA cost?",
-    "faq4A": "The initial audit is free. Paid plans (Lite, Plus, Pro) have a setup cost and a monthly fee shown in your local currency before you pay — the Enterprise plan has custom pricing, quoted directly with you.",
+    "faq4A": "The initial audit is free. Paid plans start at $159 MXN/month for Lite (no setup cost on the self-serve plan), $499 MXN/month for Plus, and $1,699 MXN/month for Pro — the same pricing is shown in your local currency (COP, CLP, PEN, ARS, BRL) before you pay. The Enterprise plan has custom pricing, quoted directly with you.",
     "faq5Q": "Is this a scam, or does it actually work?",
     "faq5A": "Neither extreme: it's not magic, but it's not smoke and mirrors either. Nobody — not us, not OpenAI, not Google — can guarantee an AI will recommend you, so be wary of anyone who promises that. What's real is the measurement: we run the actual questions against the actual engines and show you the exact answer, with its source, not an estimate. From there, improving depends on real work on your business.",
     "faq6Q": "Where does Radar IA's data come from?",
@@ -177,7 +177,7 @@
     "faq7Q": "Which LATAM countries does Radar IA cover?",
     "faq7A": "We cover all 18 LATAM countries: Mexico, Colombia, Argentina, Chile, Peru, Panama, Venezuela, Ecuador, Honduras, Guatemala, El Salvador, Costa Rica, Bolivia, Paraguay, Uruguay, Dominican Republic, Puerto Rico, and Brazil — with native Spanish or Portuguese questions per country, not translations.",
     "faq8Q": "What sets Radar IA apart from other AI-visibility tools?",
-    "faq8A": "Unlike generic or resold tools, Radar IA is built specifically for LATAM: native per-country questions (not translations), pricing in 6 local currencies, Spanish and Portuguese support, and a proprietary engine that calls the OpenAI, Anthropic, Google, and Perplexity APIs directly. It is not an adapted version of a product built for a different market.",
+    "faq8A": "Unlike generic or resold tools, Radar IA is built specifically for LATAM: native per-country questions (not translations), pricing in 6 local currencies, Spanish and Portuguese support, and a proprietary engine that calls the OpenAI, Anthropic, Google, and Perplexity APIs directly. It is not an adapted version of a product built for a different market. If you're comparing AI-visibility software options, these are the three things that actually matter: how many engines it measures (just one, or all 4 major ones?), whether the questions are in your real language and city, and whether it shows you the exact source of each mention instead of an estimate.",
     "faq9Q": "How large is Radar IA's question bank?",
     "faq9A": "Our proprietary bank covers over 116,000 real questions, spanning 43 business niches across all 18 LATAM countries — each written in the native Spanish or Portuguese of its country, with local cities, institutions, and idioms. This is the actual dataset we use to audit and measure every client, not a sample or a generic template."
   },

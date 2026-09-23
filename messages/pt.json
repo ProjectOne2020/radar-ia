@@ -169,7 +169,7 @@
     "faq2A": "Rodamos as perguntas reais que seus clientes fazem no ChatGPT, Claude, Gemini e Perplexity sobre seu ramo e cidade, mostramos se você foi mencionado e com qual fonte, e damos um plano priorizado do que corrigir primeiro, com acompanhamento para ver se seu score sobe.",
     "faq3Q": "O que o Radar IA garante?",
     "faq4Q": "Quanto custa o Radar IA?",
-    "faq4A": "A auditoria inicial é grátis. Os planos pagos (Lite, Plus, Pro) têm um custo de configuração inicial e uma mensalidade mostrados na sua moeda local antes de pagar — o plano Enterprise tem preço sob medida, cotado diretamente com você.",
+    "faq4A": "A auditoria inicial é grátis. Os planos pagos começam em R$47/mês no Lite (sem custo de configuração no plano self-serve), R$149/mês no Plus e R$499/mês no Pro — o mesmo preço aparece na sua moeda local antes de pagar. O plano Enterprise tem preço sob medida, cotado diretamente com você.",
     "faq5Q": "Isso é golpe ou funciona de verdade?",
     "faq5A": "Nem uma coisa nem outra no extremo: não é mágica, mas também não é fumaça. Ninguém — nem nós, nem a OpenAI, nem o Google — pode garantir que uma IA vai te recomendar, então desconfie de quem prometer isso. O que é real é a medição: rodamos as perguntas de verdade contra os motores de verdade e mostramos a resposta exata, com a fonte, não uma estimativa. A partir daí, melhorar depende de trabalho real sobre o seu negócio.",
     "faq6Q": "De onde vêm os dados do Radar IA?",
@@ -177,7 +177,7 @@
     "faq7Q": "Em quais países da América Latina o Radar IA funciona?",
     "faq7A": "Cobrimos os 18 países da América Latina: México, Colômbia, Argentina, Chile, Peru, Panamá, Venezuela, Equador, Honduras, Guatemala, El Salvador, Costa Rica, Bolívia, Paraguai, Uruguai, República Dominicana, Porto Rico e Brasil — com perguntas nativas em espanhol ou português conforme o país, não traduções.",
     "faq8Q": "Em que o Radar IA se diferencia de outras ferramentas de visibilidade em IA?",
-    "faq8A": "Diferente de ferramentas genéricas ou revendidas, o Radar IA foi construído especificamente para a América Latina: perguntas nativas por país (não traduções), preços em 6 moedas locais, suporte em espanhol e português, e um motor próprio que chama diretamente as APIs da OpenAI, Anthropic, Google e Perplexity. Não é uma versão adaptada de um produto pensado para outro mercado.",
+    "faq8A": "Diferente de ferramentas genéricas ou revendidas, o Radar IA foi construído especificamente para a América Latina: perguntas nativas por país (não traduções), preços em 6 moedas locais, suporte em espanhol e português, e um motor próprio que chama diretamente as APIs da OpenAI, Anthropic, Google e Perplexity. Não é uma versão adaptada de um produto pensado para outro mercado. Se você está comparando opções de software de visibilidade em IA, estes são os três pontos que realmente fazem diferença: quantos motores ele mede (só um ou os 4 principais?), se as perguntas estão no seu idioma e cidade reais, e se ele mostra a fonte exata de cada menção em vez de uma estimativa.",
     "faq9Q": "Qual o tamanho da base de perguntas do Radar IA?",
     "faq9A": "Nosso banco próprio cobre mais de 116.000 perguntas reais, distribuídas em 43 segmentos de negócio e nos 18 países da América Latina — cada uma escrita no espanhol ou português nativo de seu país, com suas cidades, instituições e expressões locais. É a base de dados com a qual auditamos e medimos cada cliente, não uma amostra nem um modelo genérico."
   },
