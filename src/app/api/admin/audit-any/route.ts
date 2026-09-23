@@ -99,8 +99,12 @@ export async function POST(request: Request) {
       websiteUrl: websiteUrl || undefined,
       // No hay verificacion de WhatsApp/correo aqui (a diferencia de /auditoria-gratis) —
       // clients.phone_whatsapp es NOT NULL, se deja un valor explicito de "sin dato" si el
-      // admin no lo llena.
+      // admin no lo llena. locationPhone SI puede quedar sin definir (columna nullable) —
+      // sin esto, el placeholder "N/A" terminaba en locations.phone y el chequeo de NAP lo
+      // comparaba contra el telefono real del schema.org del sitio, marcando un "no
+      // coincide" critico falso.
       phoneWhatsapp: (typeof phoneWhatsapp === "string" && phoneWhatsapp.trim()) || "N/A",
+      locationPhone: (typeof phoneWhatsapp === "string" && phoneWhatsapp.trim()) || undefined,
       email: typeof email === "string" && email.trim() ? email.trim() : undefined,
       publicListingOptIn: false,
       iosAppId: iosAppId || undefined,

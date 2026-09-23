@@ -46,25 +46,35 @@ function normalizeName(value: string): string {
 }
 
 // Google Places Text Search es busqueda difusa: para un nombre corto o poco comun puede
-// devolver como primer resultado un negocio totalmente distinto (ej. "Snakesun" matcheo con
-// "Sumincol SAS - Snap-On Colombia", prestandole a Snakesun el rating/reseñas de un
-// distribuidor de herramientas sin ninguna relacion). Sin este filtro, results[0] se
-// aceptaba ciegamente y el pilar 2 y 7 quedaban inflados con datos de un negocio ajeno.
-//
-// Incidente #2 (self-audit de Radar IA): con .some() bastaba UN token generico compartido
-// para matchear — "Radar IA" normaliza a un unico token relevante ("radar", "ia" queda fuera
-// por tener <4 letras) y esa sola palabra hizo matchear "Radar Customs & Logistics S.A.P.I.
-// DE C.V.", una empresa mexicana de logistica sin ninguna relacion. Con un solo token no hay
-// forma de exigir "mas evidencia" sin volver a aceptar cualquier palabra suelta, asi que el
-// fallback de tokens se desactiva por completo para nombres de una sola palabra relevante —
-// esos casos dependen unicamente del chequeo de substring de arriba. Para nombres de varias
-// palabras se exige que TODOS los tokens esten presentes (antes bastaba uno).
+// devolver como primer resultado un negocio totalmente distinto. Sin este filtro,
+// results[0] se aceptaba ciegamente y el pilar 2 y 7 quedaban inflados con datos de un
+// negocio ajeno — historial de incidentes reales en los comentarios de cada rama abajo.
 function looksLikeSameBusiness(queryName: string, placeName: string): boolean {
   const query = normalizeName(queryName);
   const place = normalizeName(placeName);
   if (!query || !place) return false;
-  if (place.includes(query) || query.includes(place)) return true;
 
+  // Direccion 1: el nombre buscado (confiable, declarado por el cliente) aparece completo
+  // dentro del nombre que devolvio Places — patron comun, Places decora con sucursal/ciudad
+  // (ej. "Nike" -> "Nike Store Bogota"). Evidencia fuerte sin importar el largo.
+  if (place.includes(query)) return true;
+
+  // Direccion 2 (place contenido en query): mas riesgosa — Places devolvio un nombre MAS
+  // CORTO/generico que lo buscado. Incidente #3 (self-audit de Radar IA): "Radar IA"
+  // contiene literalmente a un negocio ajeno llamado solo "Radar" (una sola palabra
+  // generica), matcheando por accidente. Solo se acepta si ese nombre corto tiene
+  // suficiente especificidad (2+ palabras o razonablemente largo) — una sola palabra corta
+  // no es evidencia suficiente de que sea el mismo negocio.
+  if (query.includes(place) && (place.split(/\s+/).length >= 2 || place.length >= 8)) return true;
+
+  // Fallback de tokens: solo para nombres de VARIAS palabras (ej. "Café La Esquina" vs
+  // "La Esquina Café Bogotá", orden distinto). Con una sola palabra ≥4 letras ("Radar"),
+  // aceptar cualquier lugar que la contenga es demasiado laxo — matcheo "Radar IA" con
+  // "Radar Customs & Logistics S.A.P.I. DE C.V." (incidente #2), un negocio mexicano sin
+  // ninguna relacion. Exigir TODOS los tokens (no solo uno, incidente original con
+  // "Snakesun" vs "Sumincol SAS - Snap-On Colombia") reduce el riesgo, pero con un solo
+  // token exigir todos equivale a exigir uno — por eso el fallback completo se desactiva
+  // cuando la consulta tiene un unico token relevante.
   const queryTokens = query.split(/\s+/).filter((t) => t.length >= 4);
   if (queryTokens.length < 2) return false;
 

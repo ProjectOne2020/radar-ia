@@ -25,6 +25,15 @@ export interface FreeAuditInput {
   // usa una app WEB para su URL (M23 — appType distingue nativa de web).
   websiteUrl?: string;
   phoneWhatsapp: string;
+  // M?? — separado de phoneWhatsapp: ese campo alimenta clients.phone_whatsapp (NOT NULL
+  // por esquema) y a veces lleva un placeholder tipo "N/A" cuando quien crea el registro
+  // (audit-any, sin OTP) no tiene un telefono real. locations.phone SI es nullable — sin
+  // este campo separado, el placeholder se colaba ahi y auditNapConsistency lo comparaba
+  // contra el telefono real del schema.org del sitio, reportando un "NAP no coincide"
+  // critico falso (paso con el self-audit de Radar IA). Si no se provee, cae a
+  // phoneWhatsapp (comportamiento identico al anterior para /auditoria-gratis y partners,
+  // que siempre traen un telefono real verificado por OTP).
+  locationPhone?: string;
   // M23 — pedido explicito del fundador: la auditoria gratis debe pedir correo, no solo
   // WhatsApp. Se guarda en clients.email (columna ya existente, antes solo la llenaba
   // el registro pagado).
@@ -99,7 +108,7 @@ export async function runFreeAudit(input: FreeAuditInput): Promise<FreeAuditRunR
     axis: input.axis,
     businessName: input.businessName,
     city: input.city,
-    phoneWhatsapp: input.phoneWhatsapp,
+    phoneWhatsapp: input.locationPhone ?? input.phoneWhatsapp,
     websiteUrl: input.websiteUrl,
     iosAppId: input.iosAppId,
     androidPackageId: input.androidPackageId,
