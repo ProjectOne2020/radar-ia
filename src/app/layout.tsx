@@ -62,6 +62,7 @@ async function organizationSchema(appUrl: string) {
     name: "Radar IA",
     url: appUrl,
     description: t("whatWeDoBody"),
+    telephone: "+528128727225",
     areaServed: ["MX", "CO", "CL", "PE", "AR", "BR"],
     makesOffer: {
       "@type": "Offer",
