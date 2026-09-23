@@ -42,7 +42,27 @@ function normalizeTypes(type: unknown): string[] {
   return [];
 }
 
-// Extrae todos los bloques <script type="application/ld+json">, incluyendo arrays y @graph.
+// Recorre las propiedades anidadas de un nodo JSON-LD (ej. Organization.makesOffer.itemOffered
+// con "@type": "Service") y agrega una entidad propia por cada objeto anidado que declare su
+// propio @type. Sin esto, un negocio que sigue el patron recomendado por schema.org de anidar
+// Offer/Service dentro de Organization en vez de declararlo como nodo separado quedaba
+// invisible para el chequeo del pilar 4 — paso el caso real de Radar IA (self-audit).
+function collectNestedTypes(obj: Record<string, unknown>, entities: JsonLdEntity[], depth = 0): void {
+  if (depth > 5) return; // profundidad razonable, evita recursion excesiva en JSON-LD raro
+  for (const value of Object.values(obj)) {
+    if (!value || typeof value !== "object") continue;
+    const items = Array.isArray(value) ? value : [value];
+    for (const item of items) {
+      if (!item || typeof item !== "object") continue;
+      const itemObj = item as Record<string, unknown>;
+      if (itemObj["@type"]) entities.push({ type: normalizeTypes(itemObj["@type"]), raw: itemObj });
+      collectNestedTypes(itemObj, entities, depth + 1);
+    }
+  }
+}
+
+// Extrae todos los bloques <script type="application/ld+json">, incluyendo arrays, @graph y
+// tipos anidados (ver collectNestedTypes).
 export function extractJsonLd(html: string): JsonLdEntity[] {
   const entities: JsonLdEntity[] = [];
   const scriptRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
@@ -63,9 +83,11 @@ export function extractJsonLd(html: string): JsonLdEntity[] {
         if (Array.isArray(obj["@graph"])) {
           for (const graphNode of obj["@graph"] as Record<string, unknown>[]) {
             entities.push({ type: normalizeTypes(graphNode["@type"]), raw: graphNode });
+            collectNestedTypes(graphNode, entities);
           }
         } else {
           entities.push({ type: normalizeTypes(obj["@type"]), raw: obj });
+          collectNestedTypes(obj, entities);
         }
       }
     }

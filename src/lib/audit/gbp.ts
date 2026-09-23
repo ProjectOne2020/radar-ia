@@ -50,14 +50,26 @@ function normalizeName(value: string): string {
 // "Sumincol SAS - Snap-On Colombia", prestandole a Snakesun el rating/reseñas de un
 // distribuidor de herramientas sin ninguna relacion). Sin este filtro, results[0] se
 // aceptaba ciegamente y el pilar 2 y 7 quedaban inflados con datos de un negocio ajeno.
+//
+// Incidente #2 (self-audit de Radar IA): con .some() bastaba UN token generico compartido
+// para matchear — "Radar IA" normaliza a un unico token relevante ("radar", "ia" queda fuera
+// por tener <4 letras) y esa sola palabra hizo matchear "Radar Customs & Logistics S.A.P.I.
+// DE C.V.", una empresa mexicana de logistica sin ninguna relacion. Con un solo token no hay
+// forma de exigir "mas evidencia" sin volver a aceptar cualquier palabra suelta, asi que el
+// fallback de tokens se desactiva por completo para nombres de una sola palabra relevante —
+// esos casos dependen unicamente del chequeo de substring de arriba. Para nombres de varias
+// palabras se exige que TODOS los tokens esten presentes (antes bastaba uno).
 function looksLikeSameBusiness(queryName: string, placeName: string): boolean {
   const query = normalizeName(queryName);
   const place = normalizeName(placeName);
   if (!query || !place) return false;
   if (place.includes(query) || query.includes(place)) return true;
+
   const queryTokens = query.split(/\s+/).filter((t) => t.length >= 4);
+  if (queryTokens.length < 2) return false;
+
   const placeTokens = new Set(place.split(/\s+/).filter((t) => t.length >= 4));
-  return queryTokens.some((t) => placeTokens.has(t));
+  return queryTokens.every((t) => placeTokens.has(t));
 }
 
 interface PlaceDetails {
