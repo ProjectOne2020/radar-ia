@@ -4,19 +4,25 @@ import { runAuditForClient } from "./run-audit";
 import { calculateScoreForSession } from "@/lib/scoring/calculate-score";
 import { consumeTrialAuditForMeasurement } from "@/lib/admin/trial-policy";
 import { closeSession, openSession } from "@/lib/measurement/session";
+import { ensurePromptDepth } from "./ensure-prompt-depth";
+import { TARGET_PROMPT_COUNT } from "./upgrade-audit";
 
 // M42 — boton "Correr auditoria completa ahora" en /admin/clientes/[id], a pedido del
 // fundador. Distinto de dos cosas que ya existen: el cron de M11 (remeasure-due-clients.ts)
 // solo corre por cliente cuando le toca segun la cadencia de su plan, nunca a demanda; y
-// upgradeAuditForClient (upgrade-audit.ts) ademas amplia el set de preguntas al primer
-// pago, logica que no aplica aqui. Esto simplemente vuelve a correr el pipeline completo
-// (M2 medicion en los motores activos + M3 auditoria tecnica pilares 1-7 + M4 recalculo de
-// score) sobre las preguntas activas que el cliente ya tiene. No envia el reporte ni corre
+// upgradeAuditForClient (upgrade-audit.ts) amplia el set de preguntas solo hasta lo que el
+// plan pagado justifica. Este boton es 100% interno para el admin — sin pago de por medio
+// amplia siempre al tope maximo (Pro, mismo TARGET_PROMPT_COUNT.pro) antes de medir, para
+// que "completa" sea real y no solo re-corra las 5 preguntas originales de una auditoria
+// creada desde /admin/auditar (el bug que reporto el fundador: el boton casi no cambiaba
+// nada porque nunca ampliaba el set, solo lo repetia). No envia el reporte ni corre
 // check-alerts — eso es una accion aparte (M10).
 export async function remeasureClientNow(
   admin: ReturnType<typeof createAdminClient>,
   clientId: string,
 ): Promise<void> {
+  await ensurePromptDepth(admin, clientId, TARGET_PROMPT_COUNT.pro);
+
   const { data: activePrompts, error: promptsError } = await admin
     .from("prompt_sets")
     .select("id, prompt_text")

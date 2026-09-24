@@ -19,7 +19,10 @@ export default async function AdminAuditoriasPage() {
   const clientIds = Array.from(new Set((scores ?? []).map((s) => s.client_id).filter(Boolean))) as string[];
   const { data: clients } =
     clientIds.length > 0
-      ? await admin.from("clients").select("id, business_name, plan, verification_status").in("id", clientIds)
+      ? await admin
+          .from("clients")
+          .select("id, business_name, plan, verification_status, onboarding_type")
+          .in("id", clientIds)
       : { data: [] };
 
   const clientById = new Map((clients ?? []).map((c) => [c.id, c]));
@@ -60,11 +63,14 @@ export default async function AdminAuditoriasPage() {
                     {s.calculated_at ? new Date(s.calculated_at).toLocaleString("es") : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    {client && (
-                      <Badge tone={client.verification_status === "flagged" ? "critical" : "neutral"}>
-                        {client.verification_status}
-                      </Badge>
-                    )}
+                    {client &&
+                      (client.onboarding_type === "admin" ? (
+                        <Badge tone="neutral">interno (sin verificar)</Badge>
+                      ) : (
+                        <Badge tone={client.verification_status === "flagged" ? "critical" : "neutral"}>
+                          {client.verification_status}
+                        </Badge>
+                      ))}
                   </td>
                 </tr>
               );

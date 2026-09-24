@@ -8,8 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendBarChart } from "@/components/admin/dist-bar-chart";
 import RemeasureButton from "./remeasure-button";
 import CancelSubscriptionButton from "./cancel-subscription-button";
-
-const SEVERITY_TONE = { critical: "critical", warning: "warning", info: "neutral" } as const;
+import FindingsPanel from "./findings-panel";
 
 export default async function AdminClienteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -87,9 +86,13 @@ export default async function AdminClienteDetailPage({ params }: { params: Promi
             <Row label="Tax ID">{client.tax_id ?? "—"}</Row>
             <Row label="Alta">{client.created_at ? new Date(client.created_at).toLocaleString("es") : "—"}</Row>
             <Row label="Verificación">
-              <Badge tone={client.verification_status === "flagged" ? "critical" : "neutral"}>
-                {client.verification_status}
-              </Badge>
+              {client.onboarding_type === "admin" ? (
+                <Badge tone="neutral">interno (sin verificar)</Badge>
+              ) : (
+                <Badge tone={client.verification_status === "flagged" ? "critical" : "neutral"}>
+                  {client.verification_status}
+                </Badge>
+              )}
             </Row>
             <Row label="Listado público">
               <Badge tone={client.public_listing_opt_in ? "good" : "neutral"}>
@@ -165,34 +168,10 @@ export default async function AdminClienteDetailPage({ params }: { params: Promi
         )}
       </Panel>
 
-      <Panel raised className="mt-4">
-        <h2 className="mb-4 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
-          Hallazgos recientes ({latestFindingsByAudit.length})
-        </h2>
-        {latestFindingsByAudit.length === 0 ? (
-          <p className="text-sm text-text-muted">Sin hallazgos registrados.</p>
-        ) : (
-          <ul className="flex flex-col gap-2.5">
-            {latestFindingsByAudit.map((f) => {
-              const severity = (f.severity ?? "info") as keyof typeof SEVERITY_TONE;
-              return (
-                <li key={f.id} className="flex items-start gap-3 rounded-xs border border-border bg-paper-raised p-3.5">
-                  <Badge tone={SEVERITY_TONE[severity] ?? "neutral"} className="mt-0.5 shrink-0">
-                    Pilar {f.pillar}
-                  </Badge>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm leading-relaxed text-text">{f.finding}</p>
-                    <p className="mt-1 text-xs text-text-muted">
-                      {f.audited_at ? new Date(f.audited_at).toLocaleString("es") : "—"}
-                      {f.detail_locked ? " · detalle bloqueado (free tier)" : ""}
-                    </p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </Panel>
+      <FindingsPanel
+        findings={latestFindingsByAudit}
+        business={{ name: client.business_name, niche: client.niche, country: client.country }}
+      />
     </AdminShell>
   );
 }

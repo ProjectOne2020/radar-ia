@@ -1,10 +1,10 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
-import { buildFreeAuditPrompts, buildPromptsFromBank } from "@/lib/free-audit/prompts";
 import { runMeasurementForPromptSet } from "@/lib/ai-engines/run-measurement";
 import { runAuditForClient } from "./run-audit";
 import { calculateScoreForSession } from "@/lib/scoring/calculate-score";
 import { consumeTrialAuditForMeasurement } from "@/lib/admin/trial-policy";
 import { closeSession, openSession } from "@/lib/measurement/session";
+import { ensurePromptDepth } from "./ensure-prompt-depth";
 
 // 01-CONTEXTO-NEGOCIO.md seccion 4 da el numero de preguntas por plan como un RANGO
 // (Lite "5-10", Plus "15-30") -- se usa el extremo superior de cada rango como el numero
@@ -12,7 +12,7 @@ import { closeSession, openSession } from "@/lib/measurement/session";
 // Pro no tiene un numero literal en el documento (solo "semanal" de cadencia) -- 40 es una
 // extrapolacion, NO un numero confirmado por el fundador; ver nota en
 // 04-MODULOS-CONSTRUCCION.md, ajustar si lo corrige.
-const TARGET_PROMPT_COUNT: Record<string, number> = {
+export const TARGET_PROMPT_COUNT: Record<string, number> = {
   lite: 10,
   plus: 30,
   pro: 40,
@@ -31,32 +31,7 @@ export async function upgradeAuditForClient(
   const target = TARGET_PROMPT_COUNT[plan];
   if (!target) return;
 
-  const [{ data: client }, { data: existingPrompts }, { data: location }, { data: appListing }] = await Promise.all([
-    admin.from("clients").select("business_name, niche, country").eq("id", clientId).single(),
-    admin.from("prompt_sets").select("id, prompt_text").eq("client_id", clientId).eq("active", true),
-    admin.from("locations").select("city").eq("client_id", clientId).maybeSingle(),
-    admin.from("app_listings").select("id").eq("client_id", clientId).maybeSingle(),
-  ]);
-  if (!client) return;
-
-  const currentCount = existingPrompts?.length ?? 0;
-  if (currentCount >= target) return;
-
-  const axis: "local" | "ecommerce" | "app" = appListing ? "app" : location ? "local" : "ecommerce";
-  const city = location?.city ?? "";
-  const needed = target - currentCount;
-
-  const bankPrompts = await buildPromptsFromBank(client.niche, client.country, axis, city, target);
-  const candidateTexts = bankPrompts ?? buildFreeAuditPrompts(client.niche, city, client.business_name, axis);
-
-  const existingTexts = new Set((existingPrompts ?? []).map((p) => p.prompt_text));
-  const newTexts = candidateTexts.filter((t) => !existingTexts.has(t)).slice(0, needed);
-
-  if (newTexts.length > 0) {
-    await admin
-      .from("prompt_sets")
-      .insert(newTexts.map((prompt_text) => ({ client_id: clientId, prompt_text, category: "general" })));
-  }
+  await ensurePromptDepth(admin, clientId, target);
 
   const { data: allActivePrompts } = await admin
     .from("prompt_sets")

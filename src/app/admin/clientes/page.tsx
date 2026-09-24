@@ -76,9 +76,13 @@ export default async function AdminClientesPage() {
                   <td className="px-4 py-3 text-text-secondary">{c.country}</td>
                   <td className="px-4 py-3 text-text-secondary">{c.niche}</td>
                   <td className="px-4 py-3">
-                    <Badge tone={c.verification_status === "flagged" ? "critical" : "neutral"}>
-                      {c.verification_status}
-                    </Badge>
+                    {c.onboarding_type === "admin" ? (
+                      <Badge tone="neutral">interno (sin verificar)</Badge>
+                    ) : (
+                      <Badge tone={c.verification_status === "flagged" ? "critical" : "neutral"}>
+                        {c.verification_status}
+                      </Badge>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-mono text-ink">{score !== undefined ? Math.round(score) : "—"}</td>
                   <td className="px-4 py-3 text-text-secondary">
