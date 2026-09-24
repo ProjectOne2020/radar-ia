@@ -1,5 +1,46 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
+function normalizeForMatch(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "");
+}
+
+// Incidente real (self-audit + cliente real "Sissai"): el match exacto de arriba fallaba
+// por diferencias triviales de texto — "Joyería" (como el cliente lo escribio) vs
+// "Joyerías" (el rubro_label real en el banco, con 150 preguntas) no coincidian por una
+// sola "s" de plural, y el cliente se quedaba con el fallback generico de 5 preguntas para
+// siempre (ni pagar un plan superior lo arreglaba, upgradeAuditForClient usa esta misma
+// funcion). Compara sin acentos/mayusculas y por substring en cualquier direccion contra
+// question_bank_coverage (vista con ~43 rubros por pais, muy por debajo del limite de 1000
+// filas de PostgREST) — cubre singular/plural ("joyeria" dentro de "joyerias") y prefijos
+// como "Clinica dental" conteniendo "dental".
+async function findFuzzyRubroMatches(
+  admin: ReturnType<typeof createAdminClient>,
+  niche: string,
+  country: string,
+): Promise<string[]> {
+  const { data: rubros } = await admin.from("question_bank_coverage").select("rubro, rubro_label").eq("country", country);
+  if (!rubros) return [];
+
+  const nicheKey = normalizeForMatch(niche);
+  if (!nicheKey) return [];
+
+  return rubros
+    .filter((r) => {
+      const labelKey = normalizeForMatch(r.rubro_label ?? "");
+      const rubroKey = normalizeForMatch((r.rubro ?? "").replace(/_/g, " "));
+      return (
+        (labelKey.length > 0 && (nicheKey.includes(labelKey) || labelKey.includes(nicheKey))) ||
+        (rubroKey.length > 0 && (nicheKey.includes(rubroKey) || rubroKey.includes(nicheKey)))
+      );
+    })
+    .map((r) => r.rubro)
+    .filter((r): r is string => !!r);
+}
+
 // M28 — banco de preguntas nativas por rubro+pais en la tabla `question_bank` (pedido
 // explicito del fundador: "las 150 preguntas son el motor de Radar IA", un banco curado
 // por combinacion rubro+pais, no traducido del ingles, mucho mas grande que las 4-5
@@ -46,7 +87,22 @@ export async function buildPromptsFromBank(
       .ilike("rubro_label", normalized),
   ]);
 
-  const matched = [...(byRubro ?? []), ...(byLabel ?? [])];
+  let matched = [...(byRubro ?? []), ...(byLabel ?? [])];
+
+  if (matched.length === 0) {
+    const fuzzyRubros = await findFuzzyRubroMatches(admin, niche, country);
+    if (fuzzyRubros.length > 0) {
+      const { data: fuzzyMatched } = await admin
+        .from("question_bank")
+        .select("question_text")
+        .eq("country", country)
+        .eq("category_type", categoryType)
+        .eq("active", true)
+        .in("rubro", fuzzyRubros);
+      matched = fuzzyMatched ?? [];
+    }
+  }
+
   if (matched.length === 0) return null;
 
   const shuffled = [...matched].sort(() => Math.random() - 0.5);
