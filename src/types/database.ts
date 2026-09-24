@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -98,6 +98,7 @@ export type Database = {
           android_package_id: string | null
           app_name: string
           app_type: string | null
+          city: string | null
           client_id: string | null
           created_at: string | null
           id: string
@@ -108,6 +109,7 @@ export type Database = {
           android_package_id?: string | null
           app_name: string
           app_type?: string | null
+          city?: string | null
           client_id?: string | null
           created_at?: string | null
           id?: string
@@ -118,6 +120,7 @@ export type Database = {
           android_package_id?: string | null
           app_name?: string
           app_type?: string | null
+          city?: string | null
           client_id?: string | null
           created_at?: string | null
           id?: string
@@ -542,6 +545,68 @@ export type Database = {
           },
         ]
       }
+      measurement_sessions: {
+        Row: {
+          classifier_version: string
+          client_id: string
+          code_sha: string | null
+          completed_at: string | null
+          engine_set: string[]
+          execution_status: string
+          expected_runs: number
+          failure_reason: string | null
+          id: string
+          methodology_version: string
+          prompt_set_hash: string
+          publication_status: string
+          scoring_version: string
+          started_at: string
+          trigger_source: string
+        }
+        Insert: {
+          classifier_version: string
+          client_id: string
+          code_sha?: string | null
+          completed_at?: string | null
+          engine_set: string[]
+          execution_status?: string
+          expected_runs: number
+          failure_reason?: string | null
+          id?: string
+          methodology_version: string
+          prompt_set_hash: string
+          publication_status?: string
+          scoring_version: string
+          started_at?: string
+          trigger_source: string
+        }
+        Update: {
+          classifier_version?: string
+          client_id?: string
+          code_sha?: string | null
+          completed_at?: string | null
+          engine_set?: string[]
+          execution_status?: string
+          expected_runs?: number
+          failure_reason?: string | null
+          id?: string
+          methodology_version?: string
+          prompt_set_hash?: string
+          publication_status?: string
+          scoring_version?: string
+          started_at?: string
+          trigger_source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_intake: {
         Row: {
           client_id: string
@@ -846,111 +911,6 @@ export type Database = {
           },
         ]
       }
-      measurement_sessions: {
-        Row: {
-          classifier_version: string
-          client_id: string
-          code_sha: string | null
-          completed_at: string | null
-          engine_set: string[]
-          execution_status: string
-          expected_runs: number
-          failure_reason: string | null
-          id: string
-          methodology_version: string
-          prompt_set_hash: string
-          publication_status: string
-          scoring_version: string
-          started_at: string
-          trigger_source: string
-        }
-        Insert: {
-          classifier_version: string
-          client_id: string
-          code_sha?: string | null
-          completed_at?: string | null
-          engine_set: string[]
-          execution_status?: string
-          expected_runs: number
-          failure_reason?: string | null
-          id?: string
-          methodology_version: string
-          prompt_set_hash: string
-          publication_status?: string
-          scoring_version: string
-          started_at?: string
-          trigger_source: string
-        }
-        Update: {
-          classifier_version?: string
-          client_id?: string
-          code_sha?: string | null
-          completed_at?: string | null
-          engine_set?: string[]
-          execution_status?: string
-          expected_runs?: number
-          failure_reason?: string | null
-          id?: string
-          methodology_version?: string
-          prompt_set_hash?: string
-          publication_status?: string
-          scoring_version?: string
-          started_at?: string
-          trigger_source?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "measurement_sessions_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      trial_consumptions: {
-        Row: {
-          client_id: string
-          consumed_at: string
-          grant_id: string
-          session_id: string
-        }
-        Insert: {
-          client_id: string
-          consumed_at?: string
-          grant_id: string
-          session_id: string
-        }
-        Update: {
-          client_id?: string
-          consumed_at?: string
-          grant_id?: string
-          session_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trial_consumptions_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trial_consumptions_grant_id_fkey"
-            columns: ["grant_id"]
-            isOneToOne: false
-            referencedRelation: "trial_grants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trial_consumptions_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: true
-            referencedRelation: "measurement_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       tracking_runs: {
         Row: {
           attempt: number
@@ -1045,6 +1005,49 @@ export type Database = {
           },
         ]
       }
+      trial_consumptions: {
+        Row: {
+          client_id: string
+          consumed_at: string
+          grant_id: string
+          session_id: string
+        }
+        Insert: {
+          client_id: string
+          consumed_at?: string
+          grant_id: string
+          session_id: string
+        }
+        Update: {
+          client_id?: string
+          consumed_at?: string
+          grant_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_consumptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trial_consumptions_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "trial_grants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trial_consumptions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "measurement_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trial_grants: {
         Row: {
           active: boolean
@@ -1100,12 +1103,25 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      question_bank_coverage: {
+        Row: {
+          count_distinct: number | null
+          count_total: number | null
+          country: string | null
+          is_complete: boolean | null
+          rubro: string | null
+          rubro_label: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_scores_by_day: {
         Args: { days_back?: number }
-        Returns: { count: number; day: string }[]
+        Returns: {
+          count: number
+          day: string
+        }[]
       }
       consume_trial_audit_for_session: {
         Args: { p_client_id: string; p_session_id: string }
@@ -1140,12 +1156,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1169,11 +1185,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1194,11 +1210,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1219,11 +1235,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1236,11 +1252,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

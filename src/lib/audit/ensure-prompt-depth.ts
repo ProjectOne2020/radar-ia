@@ -14,7 +14,7 @@ export async function ensurePromptDepth(
     admin.from("clients").select("business_name, niche, country").eq("id", clientId).single(),
     admin.from("prompt_sets").select("prompt_text").eq("client_id", clientId).eq("active", true),
     admin.from("locations").select("city").eq("client_id", clientId).maybeSingle(),
-    admin.from("app_listings").select("id").eq("client_id", clientId).maybeSingle(),
+    admin.from("app_listings").select("id, city").eq("client_id", clientId).maybeSingle(),
   ]);
   if (!client) return;
 
@@ -22,7 +22,11 @@ export async function ensurePromptDepth(
   if (currentCount >= target) return;
 
   const axis: "local" | "ecommerce" | "app" = appListing ? "app" : location ? "local" : "ecommerce";
-  const city = location?.city ?? "";
+  // Un eje "app" no tiene fila en `locations` — su ciudad (si se capturo al crear el
+  // cliente) vive en app_listings.city. Sin este fallback, un cliente app se quedaba sin
+  // ciudad aqui y los prompts nuevos salian con "...recomiendan en ?" (incidente real,
+  // self-audit interno "Contracta Facil").
+  const city = location?.city ?? appListing?.city ?? "";
   const needed = target - currentCount;
 
   const bankPrompts = await buildPromptsFromBank(client.niche, client.country, axis, city, target);

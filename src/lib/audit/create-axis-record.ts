@@ -32,6 +32,12 @@ export async function createAxisRecord(
       android_package_id: input.androidPackageId ?? null,
       landing_url: input.websiteUrl ?? null,
       app_type: input.appType ?? null,
+      // Antes se perdia despues de crear el cliente: no habia ninguna fila `locations`
+      // para un eje "app", asi que la ciudad solo servia para armar los primeros prompts
+      // y despues no quedaba en ningun lado consultable. ensurePromptDepth (M42) la
+      // necesitaba para ampliar el set de preguntas mas adelante y, al no encontrarla,
+      // generaba prompts con la ciudad vacia ("...recomiendan en ?").
+      city: input.city ?? null,
     });
     if (error) return { error: `No se pudo registrar la app: ${error.message}` };
   } else if (input.axis === "ecommerce") {
