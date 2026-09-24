@@ -1,9 +1,16 @@
-// M28 — catalogo acordado con el fundador para el banco de preguntas nativas: 43 rubros
-// (31 verticales fisicos/de servicio de alto ticket + 12 categorias de apps, que son un
+// M28 — catalogo acordado con el fundador para el banco de preguntas nativas: 44 rubros
+// (32 verticales fisicos/de servicio de alto ticket + 12 categorias de apps, que son un
 // mercado propio, no "la version app de un rubro fisico") x 18 paises (17 hispanohablantes
 // + Brasil en portugues). Vive en codigo (no solo en la tabla `question_bank`) para que el
 // panel de admin pueda mostrar TODAS las combinaciones posibles, incluidas las que
 // todavia no tienen ni una sola pregunta cargada — el hueco es la informacion util.
+//
+// "distribuidora_veterinaria" agregado despues del lanzamiento inicial (43 rubros): el
+// unico rubro existente relacionado, "veterinaria", mide intencion de clinica (dueños de
+// mascotas buscando donde atender a su animal) — una distribuidora mayorista de insumos
+// veterinarios (vende a clinicas/tiendas, no al dueño de la mascota) tiene intencion de
+// busqueda distinta, confirmado al intentar auditar un negocio real de este tipo y no
+// encontrar ningun rubro que aplicara.
 export interface RubroDef {
   slug: string;
   label: string;
@@ -16,6 +23,7 @@ export const RUBROS: RubroDef[] = [
   { slug: "estetica", label: "Clínicas de estética / medicina estética", categoryType: "vertical" },
   { slug: "cirugia_plastica", label: "Cirugía plástica", categoryType: "vertical" },
   { slug: "veterinaria", label: "Clínicas veterinarias", categoryType: "vertical" },
+  { slug: "distribuidora_veterinaria", label: "Distribuidoras de productos veterinarios", categoryType: "vertical" },
   { slug: "optica", label: "Ópticas / oftalmología", categoryType: "vertical" },
   { slug: "fisioterapia", label: "Fisioterapia y rehabilitación", categoryType: "vertical" },
   { slug: "psicologia", label: "Psicología / salud mental", categoryType: "vertical" },

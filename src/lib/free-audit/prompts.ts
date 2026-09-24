@@ -8,15 +8,37 @@ function normalizeForMatch(value: string): string {
     .replace(/\p{Diacritic}/gu, "");
 }
 
+// Singularizacion cruda (quitar "s"/"es" final de cada palabra) — suficiente para
+// espanol/portugues en este contexto, no pretende ser un stemmer real.
+function singularizeWord(word: string): string {
+  if (word.length > 4 && word.endsWith("es")) return word.slice(0, -2);
+  if (word.length > 3 && word.endsWith("s")) return word.slice(0, -1);
+  return word;
+}
+
+// Version palabra-por-palabra de normalizeForMatch: singulariza cada palabra por separado,
+// no solo el final de la frase completa. Necesario porque el plural puede caer en medio de
+// la frase, no al final — "Distribuidora de productos veterinarios" (singular, como lo
+// escribio el usuario) vs "Distribuidoras de productos veterinarios" (rubro_label real, en
+// plural) no coincidian por substring simple: la "s" extra de "Distribuidoras" rompe la
+// cadena de caracteres a la mitad, aunque ambas frases sean la misma idea.
+function wordsKey(value: string): string {
+  return normalizeForMatch(value)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(singularizeWord)
+    .join(" ");
+}
+
 // Incidente real (self-audit + cliente real "Sissai"): el match exacto de arriba fallaba
 // por diferencias triviales de texto — "Joyería" (como el cliente lo escribio) vs
 // "Joyerías" (el rubro_label real en el banco, con 150 preguntas) no coincidian por una
 // sola "s" de plural, y el cliente se quedaba con el fallback generico de 5 preguntas para
 // siempre (ni pagar un plan superior lo arreglaba, upgradeAuditForClient usa esta misma
-// funcion). Compara sin acentos/mayusculas y por substring en cualquier direccion contra
-// question_bank_coverage (vista con ~43 rubros por pais, muy por debajo del limite de 1000
-// filas de PostgREST) — cubre singular/plural ("joyeria" dentro de "joyerias") y prefijos
-// como "Clinica dental" conteniendo "dental".
+// funcion). Compara sin acentos/mayusculas, singularizando palabra por palabra, y por
+// substring en cualquier direccion contra question_bank_coverage (vista con ~44 rubros por
+// pais, muy por debajo del limite de 1000 filas de PostgREST) — cubre singular/plural en
+// cualquier posicion de la frase y prefijos como "Clinica dental" conteniendo "dental".
 async function findFuzzyRubroMatches(
   admin: ReturnType<typeof createAdminClient>,
   niche: string,
@@ -25,13 +47,13 @@ async function findFuzzyRubroMatches(
   const { data: rubros } = await admin.from("question_bank_coverage").select("rubro, rubro_label").eq("country", country);
   if (!rubros) return [];
 
-  const nicheKey = normalizeForMatch(niche);
+  const nicheKey = wordsKey(niche);
   if (!nicheKey) return [];
 
   return rubros
     .filter((r) => {
-      const labelKey = normalizeForMatch(r.rubro_label ?? "");
-      const rubroKey = normalizeForMatch((r.rubro ?? "").replace(/_/g, " "));
+      const labelKey = wordsKey(r.rubro_label ?? "");
+      const rubroKey = wordsKey((r.rubro ?? "").replace(/_/g, " "));
       return (
         (labelKey.length > 0 && (nicheKey.includes(labelKey) || labelKey.includes(nicheKey))) ||
         (rubroKey.length > 0 && (nicheKey.includes(rubroKey) || rubroKey.includes(nicheKey)))
