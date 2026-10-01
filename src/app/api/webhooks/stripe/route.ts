@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { upsertSubscription } from "@/lib/stripe/upsert-subscription";
 import { sendEnterpriseInviteEmail } from "@/lib/enterprise/send-invite-email";
 import { upgradeAuditForClient } from "@/lib/audit/upgrade-audit";
+import { recordCommissionForPayment } from "@/lib/partners/record-commission";
 import type Stripe from "stripe";
 
 // M9 — actualiza subscriptions.status y subscriptions.setup_fee_paid tal como pide
@@ -81,6 +82,19 @@ export async function POST(request: Request) {
         // envia una contraseña en texto plano).
         await createEnterpriseAccount(admin, clientId);
       }
+
+      // Comision de partner (si este cliente vino atribuido a una agencia) — cubre la
+      // adquisicion (setup fee / primer pago / Enterprise), no renovaciones recurrentes.
+      // after() porque puede incluir una transferencia real a Stripe Connect, no debe
+      // retrasar ni arriesgar la respuesta al webhook.
+      after(() =>
+        recordCommissionForPayment(admin, {
+          clientId,
+          stripeEventId: event.id,
+          amountTotal: session.amount_total,
+          currency: session.currency,
+        }),
+      );
       break;
     }
 

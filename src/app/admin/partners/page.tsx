@@ -5,21 +5,27 @@ import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import NewPartnerForm from "./new-partner-form";
 import ApplicationActions from "./application-actions";
+import MarkPaidButton from "./mark-paid-button";
 
 export default async function AdminPartnersPage() {
   await requireAdmin();
   const admin = createAdminClient();
 
-  const [{ data: partners }, { data: applications }] = await Promise.all([
+  const [{ data: partners }, { data: applications }, { data: pendingCommissions }] = await Promise.all([
     admin
       .from("partner_accounts")
-      .select("id, agency_name, revenue_share_pct, status, created_at")
+      .select("id, agency_name, country, revenue_share_pct, status, connect_onboarding_status, created_at")
       .order("created_at", { ascending: false }),
     admin
       .from("partner_applications")
       .select(
         "id, agency_name, contact_name, email, phone_whatsapp, website_url, client_count, message, status, created_at",
       )
+      .order("created_at", { ascending: false }),
+    admin
+      .from("partner_commissions")
+      .select("id, amount, currency, created_at, partner_accounts(agency_name), clients(business_name)")
+      .eq("status", "pending_manual")
       .order("created_at", { ascending: false }),
   ]);
 
@@ -92,6 +98,33 @@ export default async function AdminPartnersPage() {
         </section>
       )}
 
+      <section className="mb-8">
+        <h2 className="mb-3 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
+          Comisiones pendientes de pago manual ({pendingCommissions?.length ?? 0})
+        </h2>
+        {(pendingCommissions ?? []).length === 0 ? (
+          <p className="text-sm text-text-muted">Sin comisiones pendientes de pago manual.</p>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {(pendingCommissions ?? []).map((c) => (
+              <Panel key={c.id} className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-ink">
+                    <span className="font-medium">{c.partner_accounts?.agency_name ?? "—"}</span>
+                    <span className="text-text-secondary"> · cliente {c.clients?.business_name ?? "—"}</span>
+                  </p>
+                  <p className="mt-1 font-mono text-sm text-text-secondary">
+                    {(c.amount / 100).toFixed(2)} {c.currency.toUpperCase()} ·{" "}
+                    {c.created_at ? new Date(c.created_at).toLocaleDateString("es") : "—"}
+                  </p>
+                </div>
+                <MarkPaidButton commissionId={c.id} />
+              </Panel>
+            ))}
+          </div>
+        )}
+      </section>
+
       <section>
         <h2 className="mb-3 font-display text-sm font-semibold tracking-wide text-text-secondary uppercase">
           Partners activos
@@ -103,8 +136,10 @@ export default async function AdminPartnersPage() {
             <thead>
               <tr className="border-b border-border-strong bg-paper-raised text-left text-xs tracking-wide text-text-secondary uppercase">
                 <th className="px-4 py-3 font-medium">Agencia</th>
+                <th className="px-4 py-3 font-medium">País</th>
                 <th className="px-4 py-3 font-medium">Revenue share</th>
                 <th className="px-4 py-3 font-medium">Estado</th>
+                <th className="px-4 py-3 font-medium">Pagos automáticos</th>
                 <th className="px-4 py-3 font-medium">Clientes atribuidos</th>
               </tr>
             </thead>
@@ -112,10 +147,20 @@ export default async function AdminPartnersPage() {
               {(partners ?? []).map((p) => (
                 <tr key={p.id} className="border-b border-border last:border-b-0">
                   <td className="px-4 py-3 text-ink">{p.agency_name}</td>
+                  <td className="px-4 py-3 text-text-secondary">{p.country ?? "—"}</td>
                   <td className="px-4 py-3 text-text-secondary">
                     {p.revenue_share_pct !== null ? `${p.revenue_share_pct}%` : "—"}
                   </td>
                   <td className="px-4 py-3 text-text-secondary">{p.status}</td>
+                  <td className="px-4 py-3">
+                    {p.country === "MX" ? (
+                      <Badge tone={p.connect_onboarding_status === "complete" ? "good" : "neutral"}>
+                        {p.connect_onboarding_status === "complete" ? "conectado" : "sin conectar"}
+                      </Badge>
+                    ) : (
+                      <span className="text-text-muted">manual (fuera de MX)</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-mono text-ink">{countsByPartner.get(p.id) ?? 0}</td>
                 </tr>
               ))}

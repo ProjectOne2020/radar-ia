@@ -661,28 +661,94 @@ export type Database = {
         Row: {
           agency_name: string
           api_key: string | null
+          auth_user_id: string | null
+          connect_onboarding_status: string
+          country: string | null
           created_at: string | null
+          email: string | null
           id: string
           revenue_share_pct: number | null
           status: string | null
+          stripe_connect_account_id: string | null
         }
         Insert: {
           agency_name: string
           api_key?: string | null
+          auth_user_id?: string | null
+          connect_onboarding_status?: string
+          country?: string | null
           created_at?: string | null
+          email?: string | null
           id?: string
           revenue_share_pct?: number | null
           status?: string | null
+          stripe_connect_account_id?: string | null
         }
         Update: {
           agency_name?: string
           api_key?: string | null
+          auth_user_id?: string | null
+          connect_onboarding_status?: string
+          country?: string | null
           created_at?: string | null
+          email?: string | null
           id?: string
           revenue_share_pct?: number | null
           status?: string | null
+          stripe_connect_account_id?: string | null
         }
         Relationships: []
+      }
+      partner_commissions: {
+        Row: {
+          amount: number
+          client_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          partner_id: string
+          status: string
+          stripe_event_id: string
+        }
+        Insert: {
+          amount: number
+          client_id?: string | null
+          created_at?: string
+          currency: string
+          id?: string
+          paid_at?: string | null
+          partner_id: string
+          status?: string
+          stripe_event_id: string
+        }
+        Update: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          partner_id?: string
+          status?: string
+          stripe_event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_commissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partner_applications: {
         Row: {

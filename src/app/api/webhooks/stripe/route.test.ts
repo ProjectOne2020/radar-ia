@@ -102,3 +102,46 @@ describe("invariantes de seguridad del webhook", () => {
     expect(responseAt).toBeGreaterThan(defaultAt);
   });
 });
+
+describe("invariantes de comisiones de partners", () => {
+  it("recordCommissionForPayment se llama dentro de checkout.session.completed", () => {
+    const source = read("app", "api", "webhooks", "stripe", "route.ts");
+    const caseAt = source.indexOf('case "checkout.session.completed"');
+    const nextCaseAt = source.indexOf('case "customer.subscription.updated"');
+    const callAt = source.indexOf("recordCommissionForPayment(admin,");
+    expect(callAt).toBeGreaterThan(caseAt);
+    expect(callAt).toBeLessThan(nextCaseAt);
+  });
+
+  it("la comision corre via after() — nunca debe bloquear ni arriesgar la respuesta al webhook de Stripe", () => {
+    const source = read("app", "api", "webhooks", "stripe", "route.ts");
+    expect(source).toMatch(/after\(\(\) =>\s*recordCommissionForPayment/);
+  });
+
+  it("recordCommissionForPayment nunca lanza (todo el cuerpo esta envuelto en try/catch)", () => {
+    const source = read("lib", "partners", "record-commission.ts");
+    const fnAt = source.indexOf("export async function recordCommissionForPayment");
+    const tryAt = source.indexOf("try {", fnAt);
+    expect(fnAt).toBeGreaterThan(-1);
+    // el try debe abrir en las primeras lineas del cuerpo de la funcion, envolviendo todo
+    expect(tryAt - fnAt).toBeLessThan(200);
+  });
+
+  it("stripe_event_id es la clave de idempotencia — un reintento del webhook no duplica la comision", () => {
+    const source = read("lib", "partners", "record-commission.ts");
+    expect(source).toMatch(/stripe_event_id:\s*stripeEventId/);
+  });
+
+  it("la transferencia automatica solo se intenta si el partner es elegible Y ya completo el onboarding de Connect", () => {
+    const source = read("lib", "partners", "record-commission.ts");
+    const canAutoPayAt = source.indexOf("const canAutoPay =");
+    const transferAt = source.indexOf("stripe.transfers.create");
+    expect(source.slice(canAutoPayAt, transferAt)).toContain("isConnectEligible(partner.country)");
+    expect(source.slice(canAutoPayAt, transferAt)).toContain('connect_onboarding_status === "complete"');
+  });
+
+  it("Connect solo es elegible para Mexico (la plataforma de Stripe de Radar IA esta registrada en MX)", () => {
+    const source = read("lib", "stripe", "connect.ts");
+    expect(source).toMatch(/CONNECT_ELIGIBLE_COUNTRY\s*=\s*"MX"/);
+  });
+});
